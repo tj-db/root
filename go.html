@@ -249,6 +249,10 @@
     </div>
   </div>
 
+  <audio id="stone-sound" preload="auto">
+    <source src="go.wav" type="audio/wav">
+  </audio>
+
   <script>
     const boardElement = document.getElementById('board');
     const currentTurnDisplay = document.getElementById('currentTurn');
@@ -260,6 +264,7 @@
     const messageElement = document.getElementById('message');
     const blackCapturesElement = document.getElementById('black-captures');
     const whiteCapturesElement = document.getElementById('white-captures');
+    const stoneSound = document.getElementById('stone-sound');
     
     const CELL_SIZE = window.innerWidth < 500 ? 30 : 40;
     const STONE_SIZE_RATIO = 0.9;
@@ -274,6 +279,17 @@
     let lastMove = null;
     let gameEnded = false;
     let passes = 0;
+    
+    function playStoneSound() {
+      try {
+        stoneSound.currentTime = 0;
+        stoneSound.play().catch(e => {
+          console.log('Audio play failed:', e);
+        });
+      } catch (e) {
+        console.log('Audio error:', e);
+      }
+    }
     
     function initGame() {
       size = parseInt(boardSizeSelect.value);
@@ -469,6 +485,8 @@
         showMessage(moveResult.message);
         return;
       }
+      
+      playStoneSound();
       
       passes = 0;
       lastMove = [x, y];
