@@ -396,15 +396,15 @@
         </div>
 
         <div class="controls">
-            <button class="start-btn" id="startBtn" onclick="startGame()">? Start</button>
-            <button class="reset-btn" onclick="resetGame()">? Reset</button>
+            <button class="start-btn" id="startBtn" onclick="startGame()">🎯 Start</button>
+            <button class="reset-btn" onclick="resetGame()">🔄 Reset</button>
         </div>
     </div>
 
     <div class="modal" id="gameModal">
         <div class="modal-header">
             <div class="modal-title">Good luck</div>
-            <button class="close-btn" onclick="closeGame()">? Close Game</button>
+            <button class="close-btn" onclick="closeGame()">✕ Close Game</button>
         </div>
         <div class="modal-content">
             <div class="game-board-container">
@@ -414,7 +414,7 @@
     </div>
     
     <div class="win-message hidden" id="winMessage">
-        ? Well done ?
+        🎉 Well done 🎉
     </div>
 
     <script>
@@ -582,7 +582,7 @@
                 cardElement.dataset.index = index;
                 cardElement.innerHTML = `
                     <div class="card-inner">
-                        <div class="card-front">?</div>
+                        <div class="card-front">❓</div>
                         <div class="card-back">
                             <img src="${card.src}" alt="Memory card">
                         </div>
