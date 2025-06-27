@@ -189,7 +189,7 @@
       const inputs = document.querySelectorAll('#preview-area input[type="text"]');
       for (let input of inputs) {
         const index = input.getAttribute('data-index');
-        imageData[index].label = input.value || '';
+        imageData[index].label = input.value.trim() || `Image ${+index + 1}`;
       }
 
       if (imageData.length < 2) {
@@ -233,20 +233,22 @@
     function nextRound() {
       round++;
       revealed = false;
-      missingIndex = Math.floor(Math.random() * imageData.length);
+
       const shuffled = [...imageData];
       shuffleArray(shuffled);
+      missingIndex = Math.floor(Math.random() * shuffled.length);
 
       const board = document.getElementById('game-board');
       board.innerHTML = '';
 
-      shuffled.forEach(({ src, label }, i) => {
+      shuffled.forEach((item, i) => {
         const card = document.createElement('div');
         card.classList.add('card');
 
         if (i === missingIndex) {
           card.classList.add('hidden');
           card.textContent = '?';
+
           card.addEventListener('click', () => {
             if (!revealed) {
               revealed = true;
@@ -254,20 +256,26 @@
               card.textContent = '';
 
               const img = document.createElement('img');
-              img.src = src;
+              img.src = item.src;
 
               const caption = document.createElement('div');
               caption.classList.add('label');
-              caption.textContent = label;
+              caption.textContent = item.label;
 
               card.appendChild(img);
               card.appendChild(caption);
             }
           });
+
         } else {
           const img = document.createElement('img');
-          img.src = src;
+          img.src = item.src;
           card.appendChild(img);
+
+          const caption = document.createElement('div');
+          caption.classList.add('label');
+          caption.textContent = item.label;
+          card.appendChild(caption);
         }
 
         board.appendChild(card);
