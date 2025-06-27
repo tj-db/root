@@ -156,8 +156,8 @@
 
   <script>
     let imageData = [];
-    let round = 0;
-    let missingIndex = -1;
+    let shuffledData = [];
+    let hiddenItem = null;
     let revealed = false;
 
     document.getElementById('image-upload').addEventListener('change', (event) => {
@@ -176,10 +176,14 @@
           `;
           document.getElementById('preview-area').appendChild(preview);
 
-          imageData.push({
+          if (!imageData[index]) {
+            imageData[index] = {};
+          }
+          imageData[index] = {
             src: e.target.result,
-            label: ''
-          });
+            label: '',
+            id: index
+          };
         };
         reader.readAsDataURL(file);
       });
@@ -187,24 +191,19 @@
 
     function startGame() {
       const inputs = document.querySelectorAll('#preview-area input[type="text"]');
-      for (let input of inputs) {
-        const index = input.getAttribute('data-index');
-        imageData[index].label = input.value.trim() || `Image ${+index + 1}`;
-      }
+      inputs.forEach((input) => {
+        const index = parseInt(input.getAttribute('data-index'));
+        if (imageData[index]) {
+          imageData[index].label = input.value.trim() || `Image ${index + 1}`;
+        }
+      });
 
       if (imageData.length < 2) {
         alert("Please upload at least 2 images.");
         return;
       }
 
-      // Hide upload UI
       document.getElementById('upload-section').style.display = 'none';
-
-      round = 1;
-      revealed = false;
-      missingIndex = -1;
-
-      document.getElementById('game-board').innerHTML = '';
       document.getElementById('next-button').style.display = 'inline-block';
       showAllImagesWithLabels();
     }
@@ -231,21 +230,23 @@
     }
 
     function nextRound() {
-      round++;
       revealed = false;
 
-      const shuffled = [...imageData];
-      shuffleArray(shuffled);
-      missingIndex = Math.floor(Math.random() * shuffled.length);
+      shuffledData = [...imageData];
+      shuffleArray(shuffledData);
+      
+      const randomIndex = Math.floor(Math.random() * shuffledData.length);
+      hiddenItem = shuffledData[randomIndex];
 
       const board = document.getElementById('game-board');
       board.innerHTML = '';
 
-      shuffled.forEach((item, i) => {
+      shuffledData.forEach((item) => {
         const card = document.createElement('div');
         card.classList.add('card');
 
-        if (i === missingIndex) {
+        if (item.id === hiddenItem.id) {
+          // This is the item that should be hidden
           card.classList.add('hidden');
           card.textContent = '?';
 
