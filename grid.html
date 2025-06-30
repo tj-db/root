@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3x3 Grid with 4 Lines</title>
+  <style>
+    body {
+      margin: 0;
+      background: white;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .grid {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      border: 2px solid black;
+    }
+
+    .line {
+      position: absolute;
+      background: black;
+    }
+
+    /* Vertical lines */
+    .v1, .v2 {
+      width: 2px;
+      height: 100%;
+      top: 0;
+    }
+
+    .v1 { left: 33.33%; }
+    .v2 { left: 66.66%; }
+
+    /* Horizontal lines */
+    .h1, .h2 {
+      height: 2px;
+      width: 100%;
+      left: 0;
+    }
+
+    .h1 { top: 33.33%; }
+    .h2 { top: 66.66%; }
+  </style>
+</head>
+<body>
+  <div class="grid">
+    <div class="line v1"></div>
+    <div class="line v2"></div>
+    <div class="line h1"></div>
+    <div class="line h2"></div>
+  </div>
+</body>
+</html>
