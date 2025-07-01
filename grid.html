@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3x3 Grid with 4 Lines</title>
+  <title>4x4 Grid with Download</title>
   <style>
     body {
       margin: 0;
       background: white;
       height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
     }
@@ -26,32 +27,87 @@
     }
 
     /* Vertical lines */
-    .v1, .v2 {
+    .v1, .v2, .v3 {
       width: 2px;
       height: 100%;
       top: 0;
     }
 
-    .v1 { left: 33.33%; }
-    .v2 { left: 66.66%; }
+    .v1 { left: 25%; }
+    .v2 { left: 50%; }
+    .v3 { left: 75%; }
 
     /* Horizontal lines */
-    .h1, .h2 {
+    .h1, .h2, .h3 {
       height: 2px;
       width: 100%;
       left: 0;
     }
 
-    .h1 { top: 33.33%; }
-    .h2 { top: 66.66%; }
+    .h1 { top: 25%; }
+    .h2 { top: 50%; }
+    .h3 { top: 75%; }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
-  <div class="grid">
+  <div class="grid" id="grid">
     <div class="line v1"></div>
     <div class="line v2"></div>
+    <div class="line v3"></div>
     <div class="line h1"></div>
     <div class="line h2"></div>
+    <div class="line h3"></div>
   </div>
+  <button onclick="downloadGrid()">Download as JPG</button>
+
+  <script>
+    function downloadGrid() {
+      const grid = document.getElementById("grid");
+      const canvas = document.createElement("canvas");
+      const width = grid.offsetWidth;
+      const height = grid.offsetHeight;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      // Fill background white
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw outer border
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(0, 0, width, height);
+
+      // Draw vertical lines
+      const spacingV = width / 4;
+      for (let i = 1; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(spacingV * i, 0);
+        ctx.lineTo(spacingV * i, height);
+        ctx.stroke();
+      }
+
+      // Draw horizontal lines
+      const spacingH = height / 4;
+      for (let i = 1; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, spacingH * i);
+        ctx.lineTo(width, spacingH * i);
+        ctx.stroke();
+      }
+
+      const link = document.createElement("a");
+      link.download = "4x4-grid.jpg";
+      link.href = canvas.toDataURL("image/jpeg", 1.0);
+      link.click();
+    }
+  </script>
 </body>
 </html>
