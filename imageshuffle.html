@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Shuffler</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: white;
+      font-family: sans-serif;
+      flex-direction: column;
+    }
+    #image-container img {
+      max-width: 90vw;
+      max-height: 90vh;
+      display: none;
+    }
+    #controls {
+      margin-top: 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="image-container">
+    <img id="main-image" />
+  </div>
+
+  <div id="controls">
+    <input type="file" id="image-upload" accept="image/*" multiple>
+    <button id="next-button">Next</button>
+  </div>
+
+  <script>
+    const uploadInput = document.getElementById('image-upload');
+    const nextButton = document.getElementById('next-button');
+    const mainImage = document.getElementById('main-image');
+    const controls = document.getElementById('controls');
+
+    let imageURLs = [];
+    let shuffledQueue = [];
+    let currentIndex = 0;
+    let started = false;
+
+    function shuffle(array) {
+      let shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function nextImage() {
+      if (shuffledQueue.length === 0) {
+        shuffledQueue = shuffle(imageURLs);
+      }
+      const nextSrc = shuffledQueue.shift();
+      mainImage.src = nextSrc;
+      mainImage.style.display = 'block';
+    }
+
+    uploadInput.addEventListener('change', () => {
+      const files = Array.from(uploadInput.files);
+      imageURLs = files.map(file => URL.createObjectURL(file));
+      shuffledQueue = shuffle(imageURLs);
+    });
+
+    nextButton.addEventListener('click', () => {
+      if (imageURLs.length === 0) return;
+      nextImage();
+      if (!started) {
+        started = true;
+        // After first click, hide UI and enable key controls
+        controls.style.display = 'none';
+        document.body.style.cursor = 'none';
+        window.addEventListener('keydown', () => {
+          nextImage();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
