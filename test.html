@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Demo Translation</title>
+  <title>Demo Translation & Q&As</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -68,13 +68,99 @@ These students are at the start of a long journey, and I’m excited to see how 
 
   <button onclick="downloadText()">Download as text.txt</button>
 
+  <h2>Q&As</h2>
+  <button onclick="downloadQAs()">Download Q&As as qas.txt</button>
+
+  <!-- Hidden Q&A content -->
+  <pre id="qas-content" style="display: none;">
+How are you?
+What's your name?
+Where do you live?
+How old are you?
+What time is it?
+Where do you go to school?
+What's your favorite color?
+How many people are there in your family?
+Do you like?
+What's his/her name?
+How much is _____+/- _____ ?
+Who are they?
+What's your favorite animal?
+What do you like to eat?
+Do you like to eat __?
+What's your favorite number?
+How many ______s do you have?
+How do you go to school?
+What do you like to drink?
+Where is the _?
+Whose is this?
+Are you_? Yes, I am. / No, l'm not.
+What do you like to do?
+Do you like to _?
+He is a boy. / She is a girl.
+What do you like to draw?
+Is he ...? Yes, he is. / No, he isn't.
+What's your favorite fruit?
+What do you like to read?
+Is she ...? Yes, she is. / No, she isn't.
+Is your favorite color green / fruit an apple?
+Who is this? This is my Who are your English teachers?
+Whose turn is it? It's _______'s turn.
+What color is your schoolbag?
+Who is your best friend?
+Are they ...? Yes, they are. / No, they aren't.
+What color are your shoes / eyes?
+How many days are there in a week? What are they?
+Is this your ____? Yes, it is. / No, it isn't.
+What's your father / mother like?
+What day is today / tomorrow / was yesterday?
+Which is your n.? The adi. n..
+Are you _____ or ______?
+What nationality are you?
+Give me a _______ /two___s. Here you are.
+Is your father / mother ____ or ____?
+Can you swim / draw / dance...?
+I'm not_______. I'm
+What animal can fly / swim / jump / run?
+What do you want to buy?
+How much is this____? It's_ dollars.
+What time do you get up / go to school / go home / go to bed?
+Where is my ____? It's on / in / under the _____.
+Who do you play with?
+How many months are there in a year? What are they?
+Are my_s over there? No, they aren't here.
+What's the first / last month of the year?
+Where is your mother / father? He's/She's at home / work.
+What's your first / last name?
+I'm hungry / thirsty. Have some chicken / water.
+How's the weather today?
+What's the date today?
+What are you doing? I'm When is your birthday?
+How many seasons are there in a year? What are they?
+What's he/she doing? He's/She's swimming.
+What's it like in spring / summer / fall / winter?
+What do you have? I have a(n)/some
+What time do you eat breakfast / lunch / dinner?
+  </pre>
+
   <script>
     function downloadText() {
       const text = document.getElementById('text-content').innerText;
-      const blob = new Blob([text], { type: 'text/plain' });
+      const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const blob = new Blob([bom, text], { type: 'text/plain' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = 'text.txt';
+      link.click();
+    }
+
+    function downloadQAs() {
+      const qas = document.getElementById('qas-content').innerText;
+      const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const blob = new Blob([bom, qas], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'qas.txt';
       link.click();
     }
   </script>
