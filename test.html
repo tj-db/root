@@ -1,60 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo Translation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      line-height: 1.6;
+    }
+    h2 {
+      margin-top: 2em;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    pre {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
 
-🛋️ Living Room Furniture
-	•	Sofa / Couch
-	•	Armchair
-	•	Coffee table
-	•	TV stand
-	•	Bookshelf
-	•	Rug
-	•	Side table
-	•	Floor lamp
-	•	Bean bag
-	•	Ottoman
+  <h1>Demo Translation</h1>
 
-🛏️ Bedroom Furniture
-	•	Bed
-	•	Bunk bed
-	•	Nightstand
-	•	Wardrobe
-	•	Dresser / Chest of drawers
-	•	Vanity table
-	•	Desk
-	•	Chair
-	•	Mirror
-	•	Closet
+  <pre id="text-content">
+導言：
 
-🍽️ Dining Room Furniture
-	•	Dining table
-	•	Dining chairs
-	•	High chair (for kids)
-	•	China cabinet
-	•	Bar stool
-	•	Bench
-	•	Sideboard / Buffet table
+學生們充滿活力、好奇心，並真誠地渴望學習與成長。
+他們正在建立堅實的基礎，這不僅將支持他們進入下一個學習階段，更將在未來許多年中發揮作用。
 
-🧑‍💻 Office Furniture
-	•	Office desk
-	•	Office chair
-	•	Filing cabinet
-	•	Bookshelf
-	•	Rolling chair
-	•	Whiteboard
-	•	Computer table
-	•	Printer stand
+雙語能力為學生開啟許多大門，不僅在學術與職場上，在文化與社交層面上也是如此，無論在本地或國際上皆然。
 
-🧸 Kids’ Room Furniture
-	•	Toy chest
-	•	Crib
-	•	Changing table
-	•	Kids’ table and chairs
-	•	Play mat
-	•	Rocking chair
+這項能力需要長時間的努力與投入才能培養，但我毫不懷疑，這筆投資絕對值得。
 
-🧺 Other Household Furniture
-	•	Shoe rack
-	•	Coat rack
-	•	Laundry basket
-	•	Hallway bench
-	•	Folding table
-	•	Storage shelves
-	•	TV cabinet
+Introduction:
+
+The students are full of energy, curiosity, and a genuine eagerness to learn and grow.
+
+They are building a strong foundation, one that will support them not only in the next phase of their education but for many years to come. 
+
+Bilingualism opens doors, not only academically and professionally, but also culturally and socially, both locally and abroad.
+
+This skill may take years of hard work and dedication but I have no doubt the investment is well worth it.
+
+⸻
+
+整體評語：
+
+語言學習的關鍵在於積極參與。
+
+光是聆聽與做筆記是不夠的——學生需要勇於提問、發表意見，並積極參與課堂活動。
+
+這些學生正站在一段漫長旅程的起點，我非常期待看到他們憑藉持續的好奇心、努力與勇氣，能走得多遠。
+
+General Comments:
+
+Language learning thrives on engagement. 
+
+It’s not enough to simply listen and take notes—students need to ask questions, speak up, and participate actively. 
+
+These students are at the start of a long journey, and I’m excited to see how far they will go with their continued curiosity, effort, and courage.
+  </pre>
+
+  <button onclick="downloadText()">Download as text.txt</button>
+
+  <script>
+    function downloadText() {
+      const text = document.getElementById('text-content').innerText;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'text.txt';
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
