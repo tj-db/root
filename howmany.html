@@ -4,9 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>How Many Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Nunito', sans-serif;
       background-color: #fffdf5;
       color: #333;
       text-align: center;
@@ -17,6 +18,7 @@
 
     h1 {
       margin-bottom: 20px;
+      font-weight: 700;
     }
 
     .grid {
@@ -42,7 +44,7 @@
 
     .name {
       font-size: 0.9rem;
-      font-weight: bold;
+      font-weight: 600;
       line-height: 1.2;
     }
 
@@ -60,7 +62,7 @@
 
     .floating-emoji {
       position: absolute;
-      font-size: 4rem;
+      font-size: 5rem;
       user-select: none;
       pointer-events: none;
       border-radius: 50%;
@@ -72,8 +74,8 @@
     }
 
     #question {
-      font-size: 1.5rem;
-      font-weight: bold;
+      font-size: 3.5rem;
+      font-weight: 700;
       margin: 20px 0;
       min-height: 40px;
     }
@@ -204,7 +206,6 @@
       emoji2.vx += impulse * normalX;
       emoji2.vy += impulse * normalY;
       
-      // Separate overlapping emojis
       const overlap = emoji1.size * 0.8 - distance;
       if (overlap > 0) {
         emoji1.x += normalX * overlap * 0.5;
@@ -221,11 +222,10 @@
       const maxY = gameAreaRect.height - 80;
 
       emojis.forEach(emoji => {
-        // Update position
+
         emoji.x += emoji.vx;
         emoji.y += emoji.vy;
 
-        // Bounce off walls
         if (emoji.x <= 0 || emoji.x >= maxX) {
           emoji.vx = -emoji.vx;
           emoji.x = Math.max(0, Math.min(maxX, emoji.x));
@@ -235,14 +235,13 @@
           emoji.y = Math.max(0, Math.min(maxY, emoji.y));
         }
 
-        // Update element position
+
         if (emoji.element) {
           emoji.element.style.left = `${emoji.x}px`;
           emoji.element.style.top = `${emoji.y}px`;
         }
       });
 
-      // Check collisions between emojis
       for (let i = 0; i < emojis.length; i++) {
         for (let j = i + 1; j < emojis.length; j++) {
           if (checkCollision(emojis[i], emojis[j])) {
@@ -282,7 +281,7 @@
       currentCount = Math.floor(Math.random() * 9) + 2;
 
       const pluralName = currentObject.name.endsWith("s") ? currentObject.name : currentObject.name + "s";
-      question.textContent = `There are ____ ${pluralName}`;
+      question.textContent = `There are _ ${pluralName}`;
       gameState = 'counting';
 
       const gameAreaRect = gameArea.getBoundingClientRect();
@@ -316,8 +315,21 @@
       }
     }
 
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
     document.addEventListener("keydown", (e) => {
       if (gameState === 'menu') {
+        toggleFullscreen();
         startGame();
       } else if (gameState === 'counting' || gameState === 'revealed') {
         revealAnswer();
