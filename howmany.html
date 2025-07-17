@@ -74,7 +74,7 @@
     }
 
     #question {
-      font-size: 3.5rem;
+      font-size: 5.5rem;
       font-weight: 700;
       margin: 20px 0;
       min-height: 40px;
@@ -152,6 +152,7 @@
     let currentObject = null;
     let availableObjects = [];
     let usedObjects = [];
+    let gameStartTime = 0;
 
     function getObjectsFromGrid() {
       const items = document.querySelectorAll('#object-grid .item');
@@ -203,6 +204,8 @@
         y: Math.random() * (gameAreaRect.height - size),
         vx: (Math.random() - 0.5) * 4,
         vy: (Math.random() - 0.5) * 4,
+        baseVx: (Math.random() - 0.5) * 4,
+        baseVy: (Math.random() - 0.5) * 4,
         size: size
       };
     }
@@ -254,20 +257,28 @@
       const maxX = gameAreaRect.width - 80;
       const maxY = gameAreaRect.height - 80;
 
+      // Calculate speed multiplier based on time elapsed
+      const timeElapsed = (Date.now() - gameStartTime) / 1000; // in seconds
+      const speedMultiplier = 1 + (timeElapsed * 0.1); // Speed increases by 10% per second
+
       emojis.forEach(emoji => {
+        // Apply speed multiplier to base velocity
+        emoji.vx = emoji.baseVx * speedMultiplier;
+        emoji.vy = emoji.baseVy * speedMultiplier;
 
         emoji.x += emoji.vx;
         emoji.y += emoji.vy;
 
         if (emoji.x <= 0 || emoji.x >= maxX) {
           emoji.vx = -emoji.vx;
+          emoji.baseVx = -emoji.baseVx; // Update base velocity too
           emoji.x = Math.max(0, Math.min(maxX, emoji.x));
         }
         if (emoji.y <= 0 || emoji.y >= maxY) {
           emoji.vy = -emoji.vy;
+          emoji.baseVy = -emoji.baseVy; // Update base velocity too
           emoji.y = Math.max(0, Math.min(maxY, emoji.y));
         }
-
 
         if (emoji.element) {
           emoji.element.style.left = `${emoji.x}px`;
@@ -279,6 +290,11 @@
         for (let j = i + 1; j < emojis.length; j++) {
           if (checkCollision(emojis[i], emojis[j])) {
             resolveCollision(emojis[i], emojis[j]);
+            // Update base velocities after collision
+            emojis[i].baseVx = emojis[i].vx / speedMultiplier;
+            emojis[i].baseVy = emojis[i].vy / speedMultiplier;
+            emojis[j].baseVx = emojis[j].vx / speedMultiplier;
+            emojis[j].baseVy = emojis[j].vy / speedMultiplier;
           }
         }
       }
@@ -315,6 +331,7 @@
 
       question.textContent = `There are _ ${currentObject.name}`;
       gameState = 'counting';
+      gameStartTime = Date.now(); // Reset timer for new question
 
       const gameAreaRect = gameArea.getBoundingClientRect();
 
