@@ -150,6 +150,8 @@
     let emojis = [];
     let currentCount = 0;
     let currentObject = null;
+    let availableObjects = [];
+    let usedObjects = [];
 
     function getObjectsFromGrid() {
       const items = document.querySelectorAll('#object-grid .item');
@@ -159,6 +161,37 @@
           name: item.querySelector('.name').textContent.trim()
         };
       });
+    }
+
+    function initializeObjectQueue() {
+      const allObjects = getObjectsFromGrid();
+      availableObjects = [...allObjects];
+      usedObjects = [];
+      
+      // Shuffle the available objects for variety
+      for (let i = availableObjects.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableObjects[i], availableObjects[j]] = [availableObjects[j], availableObjects[i]];
+      }
+    }
+
+    function getNextObject() {
+      // If we've used all objects, reset and reshuffle
+      if (availableObjects.length === 0) {
+        availableObjects = [...usedObjects];
+        usedObjects = [];
+        
+        // Shuffle again for the next cycle
+        for (let i = availableObjects.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [availableObjects[i], availableObjects[j]] = [availableObjects[j], availableObjects[i]];
+        }
+      }
+      
+      // Get the next object from available objects
+      const nextObject = availableObjects.pop();
+      usedObjects.push(nextObject);
+      return nextObject;
     }
 
     function createEmojiObject(emoji, gameAreaRect) {
@@ -263,6 +296,7 @@
       gameArea.style.display = "block";
 
       gameState = 'counting';
+      initializeObjectQueue();
       setupNewQuestion();
     }
 
@@ -276,12 +310,10 @@
       gameArea.querySelectorAll(".floating-emoji").forEach(e => e.remove());
       emojis = [];
 
-      const objects = getObjectsFromGrid();
-      currentObject = objects[Math.floor(Math.random() * objects.length)];
+      currentObject = getNextObject();
       currentCount = Math.floor(Math.random() * 9) + 2;
 
-      const pluralName = currentObject.name.endsWith("s") ? currentObject.name : currentObject.name + "s";
-      question.textContent = `There are _ ${pluralName}`;
+      question.textContent = `There are _ ${currentObject.name}`;
       gameState = 'counting';
 
       const gameAreaRect = gameArea.getBoundingClientRect();
@@ -307,8 +339,7 @@
       const question = document.getElementById("question");
       
       if (gameState === 'counting') {
-        const pluralName = currentObject.name.endsWith("s") ? currentObject.name : currentObject.name + "s";
-        question.textContent = `There are ${currentCount} ${pluralName}`;
+        question.textContent = `There are ${currentCount} ${currentObject.name}`;
         gameState = 'revealed';
       } else if (gameState === 'revealed') {
         setupNewQuestion();
