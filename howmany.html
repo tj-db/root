@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>How Many Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fffdf5;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .item {
+      background-color: #f0f8ff;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .emoji {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .name {
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    #game-area {
+      position: relative;
+      width: 90vw;
+      height: 70vh;
+      margin: 0 auto;
+      overflow: hidden;
+      display: none;
+      border: 2px dashed #ccc;
+      border-radius: 10px;
+      background-color: #fffefb;
+    }
+
+    .floating-emoji {
+      position: absolute;
+      font-size: 4rem;
+      user-select: none;
+      pointer-events: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      height: 80px;
+    }
+
+    #question {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 20px 0;
+      min-height: 40px;
+    }
+
+    .instruction {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- This title will be removed when game starts -->
+  <h1 id="title">How Many Game</h1>
+
+  <!-- Object Grid -->
+  <div class="grid" id="object-grid">
+    <div class="item"><div class="emoji">🍎</div><div class="name">Apple</div></div>
+    <div class="item"><div class="emoji">🍌</div><div class="name">Banana</div></div>
+    <div class="item"><div class="emoji">🍉</div><div class="name">Watermelon</div></div>
+    <div class="item"><div class="emoji">🎂</div><div class="name">Cake</div></div>
+    <div class="item"><div class="emoji">🍪</div><div class="name">Cookie</div></div>
+    <div class="item"><div class="emoji">🐶</div><div class="name">Dog</div></div>
+    <div class="item"><div class="emoji">🐱</div><div class="name">Cat</div></div>
+    <div class="item"><div class="emoji">🐭</div><div class="name">Mouse</div></div>
+    <div class="item"><div class="emoji">🦁</div><div class="name">Lion</div></div>
+    <div class="item"><div class="emoji">🐘</div><div class="name">Elephant</div></div>
+    <div class="item"><div class="emoji">🐻</div><div class="name">Bear</div></div>
+    <div class="item"><div class="emoji">⭐</div><div class="name">Star</div></div>
+    <div class="item"><div class="emoji">🔴</div><div class="name">Red Circle</div></div>
+    <div class="item"><div class="emoji">🟡</div><div class="name">Yellow Circle</div></div>
+    <div class="item"><div class="emoji">🟢</div><div class="name">Green Circle</div></div>
+    <div class="item"><div class="emoji">🟥</div><div class="name">Red Square</div></div>
+    <div class="item"><div class="emoji">🟦</div><div class="name">Blue Square</div></div>
+    <div class="item"><div class="emoji">🟧</div><div class="name">Orange Square</div></div>
+  </div>
+
+  <!-- Game Area -->
+  <div id="game-area">
+    <div id="question">How many do you see?</div>
+  </div>
+
+  <script>
+    let gameState = 'menu'; // 'menu', 'counting', 'revealed'
+    let animationId;
+    let emojis = [];
+    let currentCount = 0;
+    let currentObject = null;
+
+    function getObjectsFromGrid() {
+      const items = document.querySelectorAll('#object-grid .item');
+      return Array.from(items).map(item => {
+        return {
+          emoji: item.querySelector('.emoji').textContent.trim(),
+          name: item.querySelector('.name').textContent.trim()
+        };
+      });
+    }
+
+    function createEmojiObject(emoji, gameAreaRect) {
+      const size = 80;
+      return {
+        element: null,
+        emoji: emoji,
+        x: Math.random() * (gameAreaRect.width - size),
+        y: Math.random() * (gameAreaRect.height - size),
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        size: size
+      };
+    }
+
+    function checkCollision(emoji1, emoji2) {
+      const dx = emoji1.x - emoji2.x;
+      const dy = emoji1.y - emoji2.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return distance < emoji1.size * 0.8;
+    }
+
+    function resolveCollision(emoji1, emoji2) {
+      const dx = emoji1.x - emoji2.x;
+      const dy = emoji1.y - emoji2.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance === 0) return;
+      
+      const normalX = dx / distance;
+      const normalY = dy / distance;
+      
+      const relativeVelocityX = emoji1.vx - emoji2.vx;
+      const relativeVelocityY = emoji1.vy - emoji2.vy;
+      
+      const velocityInNormal = relativeVelocityX * normalX + relativeVelocityY * normalY;
+      
+      if (velocityInNormal > 0) return;
+      
+      const restitution = 0.8;
+      const impulse = 2 * velocityInNormal * restitution / 2;
+      
+      emoji1.vx -= impulse * normalX;
+      emoji1.vy -= impulse * normalY;
+      emoji2.vx += impulse * normalX;
+      emoji2.vy += impulse * normalY;
+      
+      // Separate overlapping emojis
+      const overlap = emoji1.size * 0.8 - distance;
+      if (overlap > 0) {
+        emoji1.x += normalX * overlap * 0.5;
+        emoji1.y += normalY * overlap * 0.5;
+        emoji2.x -= normalX * overlap * 0.5;
+        emoji2.y -= normalY * overlap * 0.5;
+      }
+    }
+
+    function animate() {
+      const gameArea = document.getElementById('game-area');
+      const gameAreaRect = gameArea.getBoundingClientRect();
+      const maxX = gameAreaRect.width - 80;
+      const maxY = gameAreaRect.height - 80;
+
+      emojis.forEach(emoji => {
+        // Update position
+        emoji.x += emoji.vx;
+        emoji.y += emoji.vy;
+
+        // Bounce off walls
+        if (emoji.x <= 0 || emoji.x >= maxX) {
+          emoji.vx = -emoji.vx;
+          emoji.x = Math.max(0, Math.min(maxX, emoji.x));
+        }
+        if (emoji.y <= 0 || emoji.y >= maxY) {
+          emoji.vy = -emoji.vy;
+          emoji.y = Math.max(0, Math.min(maxY, emoji.y));
+        }
+
+        // Update element position
+        if (emoji.element) {
+          emoji.element.style.left = `${emoji.x}px`;
+          emoji.element.style.top = `${emoji.y}px`;
+        }
+      });
+
+      // Check collisions between emojis
+      for (let i = 0; i < emojis.length; i++) {
+        for (let j = i + 1; j < emojis.length; j++) {
+          if (checkCollision(emojis[i], emojis[j])) {
+            resolveCollision(emojis[i], emojis[j]);
+          }
+        }
+      }
+
+      animationId = requestAnimationFrame(animate);
+    }
+
+    function startGame() {
+      const title = document.getElementById("title");
+      const objectGrid = document.getElementById("object-grid");
+      const gameArea = document.getElementById("game-area");
+
+      if (title) title.remove();
+      objectGrid.style.display = "none";
+      gameArea.style.display = "block";
+
+      gameState = 'counting';
+      setupNewQuestion();
+    }
+
+    function setupNewQuestion() {
+      const gameArea = document.getElementById("game-area");
+      const question = document.getElementById("question");
+
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+      gameArea.querySelectorAll(".floating-emoji").forEach(e => e.remove());
+      emojis = [];
+
+      const objects = getObjectsFromGrid();
+      currentObject = objects[Math.floor(Math.random() * objects.length)];
+      currentCount = Math.floor(Math.random() * 9) + 2;
+
+      const pluralName = currentObject.name.endsWith("s") ? currentObject.name : currentObject.name + "s";
+      question.textContent = `There are ____ ${pluralName}`;
+      gameState = 'counting';
+
+      const gameAreaRect = gameArea.getBoundingClientRect();
+
+      for (let i = 0; i < currentCount; i++) {
+        const emojiData = createEmojiObject(currentObject.emoji, gameAreaRect);
+        
+        const emojiEl = document.createElement("div");
+        emojiEl.className = "floating-emoji";
+        emojiEl.textContent = emojiData.emoji;
+        emojiEl.style.left = `${emojiData.x}px`;
+        emojiEl.style.top = `${emojiData.y}px`;
+        
+        emojiData.element = emojiEl;
+        gameArea.appendChild(emojiEl);
+        emojis.push(emojiData);
+      }
+
+      animate();
+    }
+
+    function revealAnswer() {
+      const question = document.getElementById("question");
+      
+      if (gameState === 'counting') {
+        const pluralName = currentObject.name.endsWith("s") ? currentObject.name : currentObject.name + "s";
+        question.textContent = `There are ${currentCount} ${pluralName}`;
+        gameState = 'revealed';
+      } else if (gameState === 'revealed') {
+        setupNewQuestion();
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (gameState === 'menu') {
+        startGame();
+      } else if (gameState === 'counting' || gameState === 'revealed') {
+        revealAnswer();
+      }
+    });
+  </script>
+</body>
+</html>
