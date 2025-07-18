@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spin the Wheel Game</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; font-family: Arial, sans-serif;
+    height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #f0f0f0;
+  }
+  #input-section {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  input[type="text"] {
+    width: 300px;
+    padding: 8px;
+    font-size: 16px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-left: 10px;
+    cursor: pointer;
+  }
+  #wheel-container {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 1000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+#pointer {
+  position: absolute;
+  bottom: 278px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 30px solid red;
+  z-index: 1001;
+}
+
+  #spin-btn {
+    margin-top: 30px;
+    padding: 15px 30px;
+    font-size: 18px;
+  }
+  #close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 18px;
+    background: #eee;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  canvas {
+    border: 6px solid #333;
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    background: white;
+  }
+</style>
+</head>
+<body>
+
+<div id="input-section">
+  <label for="luckyNumbers">LUCKY NUMBERS </label>
+  <input type="text" id="luckyNumbers" placeholder="example 5, 12, 23, 7" />
+  <button id="startBtn">Start</button>
+</div>
+
+<div id="wheel-container">
+  <button id="close-btn">X Close</button>
+  <div id="pointer"></div>
+  <canvas id="wheel" width="400" height="400"></canvas>
+  <button id="spin-btn">Spin</button>
+</div>
+
+<script>
+  const startBtn = document.getElementById('startBtn');
+  const wheelContainer = document.getElementById('wheel-container');
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const spinBtn = document.getElementById('spin-btn');
+  const closeBtn = document.getElementById('close-btn');
+  const input = document.getElementById('luckyNumbers');
+
+  let segments = [];
+  let rotation = 0;
+  let spinning = false;
+  const radius = canvas.width / 2;
+  
+  function drawWheel() {
+    const segmentCount = segments.length;
+    const anglePerSegment = (2 * Math.PI) / segmentCount;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(radius, radius);
+    ctx.rotate(rotation);
+
+    for (let i = 0; i < segmentCount; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.fillStyle = `hsl(${(i * 360 / segmentCount)}, 70%, 70%)`;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.arc(0, 0, radius, i * anglePerSegment, (i + 1) * anglePerSegment);
+      ctx.lineTo(0, 0);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.save();
+      ctx.fillStyle = '#333';
+      ctx.translate(
+        radius * 0.65 * Math.cos(i * anglePerSegment + anglePerSegment / 2),
+        radius * 0.65 * Math.sin(i * anglePerSegment + anglePerSegment / 2)
+      );
+      ctx.rotate(i * anglePerSegment + anglePerSegment / 2 + Math.PI / 2);
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(segments[i], 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  function spinWheel() {
+    if (spinning) return;
+    spinning = true;
+    spinBtn.disabled = true;
+
+    const segmentCount = segments.length;
+    const anglePerSegment = 360 / segmentCount;
+
+    const spins = Math.floor(Math.random() * 3) + 3;
+    const randomSegment = Math.floor(Math.random() * segmentCount);
+    const extraDegrees = randomSegment * anglePerSegment + anglePerSegment / 2;
+
+    const finalRotationDeg = spins * 360 + extraDegrees;
+    const finalRotationRad = finalRotationDeg * Math.PI / 180;
+
+    const animationDuration = 5000;
+    const startRotation = rotation;
+    const endRotation = rotation + finalRotationRad;
+    const startTime = performance.now();
+
+    function animate(time) {
+      let elapsed = time - startTime;
+      if (elapsed > animationDuration) elapsed = animationDuration;
+      const easeOutCubic = t => (--t) * t * t + 1;
+      const progress = easeOutCubic(elapsed / animationDuration);
+
+      rotation = startRotation + (endRotation - startRotation) * progress;
+      drawWheel();
+
+      if (elapsed < animationDuration) {
+        requestAnimationFrame(animate);
+      } else {
+        spinning = false;
+        spinBtn.disabled = false;
+
+        let degrees = (rotation * 180 / Math.PI) % 360;
+        if (degrees < 0) degrees += 360;
+
+        const pointerAngle = 90;
+        const adjustedDegrees = (360 + pointerAngle - degrees) % 360;
+
+        const winningIndex = Math.floor(adjustedDegrees / anglePerSegment);
+
+        alert(`You won: ${segments[winningIndex]}`);
+      }
+    }
+    requestAnimationFrame(animate);
+  }
+
+  startBtn.addEventListener('click', () => {
+    const rawInput = input.value.trim();
+    if (!rawInput) {
+      alert('Please enter at least one lucky number.');
+      return;
+    }
+    segments = rawInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    if (segments.length === 0) {
+      alert('Please enter valid lucky numbers.');
+      return;
+    }
+    rotation = 0;
+    drawWheel();
+    wheelContainer.style.display = 'flex';
+  });
+
+  spinBtn.addEventListener('click', spinWheel);
+
+  closeBtn.addEventListener('click', () => {
+    wheelContainer.style.display = 'none';
+  });
+</script>
+
+</body>
+</html>
