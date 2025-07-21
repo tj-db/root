@@ -130,7 +130,7 @@ margin-bottom: 11px;
         &#x1F680;
         </button>
 
-<button id="githubBtn" class="fixed-button" title="Open GitHub" onclick="window.open('https://thomasdebeer.online/gitpush2', '_blank')">
+<button id="githubBtn" class="fixed-button" title="Gitpush">
     <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" stroke-width="1.5" class="h-6 w-6" viewBox="0 0 24 24" fill="#ffffff">
         <title>GitHub</title>
         <path fill-rule="evenodd" clip-rule="evenodd"
@@ -233,6 +233,21 @@ margin-bottom: 11px;
             editor.select();
         });
 
+    document.getElementById('githubBtn').addEventListener('click', async function () {
+        const editor = document.getElementById('editor');
+
+        editor.select();
+
+        try {
+            await navigator.clipboard.writeText(editor.value);
+            console.log("Text copied to clipboard");
+        } catch (err) {
+            console.error("Failed to copy text: ", err);
+        }
+
+        window.open('https://thomasdebeer.online/gitpush2', '_blank');
+    });
+        
         document.getElementById('undoBtn').addEventListener('click', function() {
             if (undoStack.length > 1) {
                 redoStack.push(undoStack.pop());
