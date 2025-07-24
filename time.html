@@ -167,17 +167,27 @@
         let minuteRotation = 0;
 
         spinButton.addEventListener('click', () => {
+            // Immediately change the text to show the clock is spinning
+            timeText.textContent = 'Spinning...';
+
             const randomHours = Math.floor(Math.random() * 13) + 12;
 
-            currentHour = (currentHour + randomHours - 1) % 12 + 1;
+            // Calculate the new hour but don't update the global variable yet
+            const newHour = (currentHour + randomHours - 1) % 12 + 1;
             
+            // Update rotation values to make the hands spin
             hourRotation += randomHours * 30;
             minuteRotation += randomHours * 360;
 
             hourHand.style.transform = `translateX(-50%) rotate(${hourRotation}deg)`;
             minuteHand.style.transform = `translateX(-50%) rotate(${minuteRotation}deg)`;
 
-            timeText.textContent = `It's ${currentHour} o'clock!`;
+            // Wait for the animation to finish (2500ms = 2.5s)
+            setTimeout(() => {
+                // Now update the current hour and display the new time
+                currentHour = newHour;
+                timeText.textContent = `It's ${currentHour} o'clock!`;
+            }, 2500); 
         });
     </script>
 
