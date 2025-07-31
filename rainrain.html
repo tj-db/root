@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Smart Page Rotation</title>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2&display=swap" rel="stylesheet">
+  <title>Weather Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2&display=swap" rel="stylesheet" />
   <style>
     body {
       margin: 0;
@@ -18,13 +18,15 @@
       text-align: center;
       background-color: #3b82f6;
       flex-direction: column;
+      overflow: hidden;
     }
 
     .page {
       display: none;
-      font-size: 2em;
       padding: 20px;
       max-width: 90%;
+      position: relative;
+      z-index: 2;
     }
 
     .active {
@@ -47,14 +49,16 @@
       background-color: white;
       color: #3b82f6;
       border: none;
-      font-size: 1.5em;
+      font-size: 3.3em;
       padding: 1em 2em;
-      border-radius: 12px;
+      border-radius: 33px;
       cursor: pointer;
       font-family: 'Baloo 2', cursive;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
       transition: transform 0.2s;
       margin-bottom: 20px;
+      z-index: 10;
+      position: relative;
     }
 
     #start-btn:hover {
@@ -68,25 +72,23 @@
       max-width: 90%;
       color: white;
       font-weight: bold;
+      position: relative;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
   <button id="start-btn">Start</button>
 
-  <div id="rain" class="page">🌧️ Rain rain go away, come back another day.</div>
-  <div id="sun" class="page">☀️ Sun sun go away, come back another day.</div>
-  <div id="cloud" class="page">☁️ Cloud clouds go away, come back another day.</div>
+  <div id="rain" class="page"></div>
+  <div id="sun" class="page"></div>
+  <div id="cloud" class="page"></div>
+
   <div id="pause-message">How’s the weather today?</div>
 
   <audio id="beep-sound">
-    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
-    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.mp3" type="audio/mpeg">
-  </audio>
-
-  <audio id="long-beep-sound">
-    <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" type="audio/ogg">
-    <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.mp3" type="audio/mpeg">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg" />
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.mp3" type="audio/mpeg" />
   </audio>
 
   <script>
@@ -98,8 +100,8 @@
         texts: [
           "🌧️ Rain rain go away, come back another day.",
           "🌧️ Rain rain, go away.",
-          "🌧️ Rain, rain.",
-          "🌧️ Rain"
+          "Rain, rain.",
+          "Rain"
         ]
       },
       {
@@ -109,8 +111,8 @@
         texts: [
           "☀️ Sun sun go away, come back another day.",
           "☀️ Sun sun, go away.",
-          "☀️ Sun, sun.",
-          "☀️ Sun"
+          "Sun, sun.",
+          "Sun"
         ]
       },
       {
@@ -118,16 +120,15 @@
         el: document.getElementById("cloud"),
         bg: "cloudy-bg",
         texts: [
-          "☁️ Cloud clouds go away, come back another day.",
-          "☁️ Cloud clouds, go away.",
-          "☁️ Cloud, clouds.",
-          "☁️ Clouds"
+          "☁️ Clouds clouds go away, come back another day.",
+          "☁️ Clouds clouds, go away.",
+          "Clouds, clouds.",
+          "Clouds"
         ]
       }
     ];
 
     const beep = document.getElementById("beep-sound");
-    const longBeep = document.getElementById("long-beep-sound");
     const body = document.body;
     const startBtn = document.getElementById("start-btn");
     const pauseMessage = document.getElementById("pause-message");
@@ -151,10 +152,15 @@
         p.el.classList.remove("active");
         body.classList.remove(p.bg);
       });
+
       pauseMessage.style.display = "none";
+
+      const fontSizes = ["3.3em", "4em", "5em", "6em"];
       page.el.innerText = page.texts[textIndex];
+      page.el.style.fontSize = fontSizes[textIndex];
       page.el.classList.add("active");
       body.classList.add(page.bg);
+
       beep.currentTime = 0;
       beep.play().catch(() => {});
     }
@@ -184,8 +190,6 @@
       hidePages();
       pauseMessage.style.display = "block";
       body.className = "";
-      longBeep.currentTime = 0;
-      longBeep.play().catch(() => {});
     }
 
     function resume() {
