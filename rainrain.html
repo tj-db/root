@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Page Rotation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Baloo 2', cursive;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: white;
+      transition: background-color 1s;
+      text-align: center;
+      background-color: #3b82f6;
+      flex-direction: column;
+    }
+
+    .page {
+      display: none;
+      font-size: 2em;
+      padding: 20px;
+      max-width: 90%;
+    }
+
+    .active {
+      display: block;
+    }
+
+    .rainy-bg {
+      background-color: #3b82f6;
+    }
+
+    .sunny-bg {
+      background-color: #f97316;
+    }
+
+    .cloudy-bg {
+      background-color: #9ca3af;
+    }
+
+    #start-btn {
+      background-color: white;
+      color: #3b82f6;
+      border: none;
+      font-size: 1.5em;
+      padding: 1em 2em;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Baloo 2', cursive;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s;
+      margin-bottom: 20px;
+    }
+
+    #start-btn:hover {
+      transform: scale(1.05);
+    }
+
+    #pause-message {
+      display: none;
+      font-size: 3em;
+      padding: 20px;
+      max-width: 90%;
+      color: white;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <button id="start-btn">Start</button>
+
+  <div id="rain" class="page">🌧️ Rain rain go away, come back another day.</div>
+  <div id="sun" class="page">☀️ Sun sun go away, come back another day.</div>
+  <div id="cloud" class="page">☁️ Cloud clouds go away, come back another day.</div>
+  <div id="pause-message">How’s the weather today?</div>
+
+  <audio id="beep-sound">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.mp3" type="audio/mpeg">
+  </audio>
+
+  <audio id="long-beep-sound">
+    <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" type="audio/ogg">
+    <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const pages = [
+      {
+        id: "rain",
+        el: document.getElementById("rain"),
+        bg: "rainy-bg",
+        texts: [
+          "🌧️ Rain rain go away, come back another day.",
+          "🌧️ Rain rain, go away.",
+          "🌧️ Rain, rain.",
+          "🌧️ Rain"
+        ]
+      },
+      {
+        id: "sun",
+        el: document.getElementById("sun"),
+        bg: "sunny-bg",
+        texts: [
+          "☀️ Sun sun go away, come back another day.",
+          "☀️ Sun sun, go away.",
+          "☀️ Sun, sun.",
+          "☀️ Sun"
+        ]
+      },
+      {
+        id: "cloud",
+        el: document.getElementById("cloud"),
+        bg: "cloudy-bg",
+        texts: [
+          "☁️ Cloud clouds go away, come back another day.",
+          "☁️ Cloud clouds, go away.",
+          "☁️ Cloud, clouds.",
+          "☁️ Clouds"
+        ]
+      }
+    ];
+
+    const beep = document.getElementById("beep-sound");
+    const longBeep = document.getElementById("long-beep-sound");
+    const body = document.body;
+    const startBtn = document.getElementById("start-btn");
+    const pauseMessage = document.getElementById("pause-message");
+
+    let current = pages[0];
+    let intervalTime = 5000;
+    const minInterval = 1000;
+    const step = 250;
+    let timerId = null;
+    let paused = false;
+
+    function getTextIndex(interval) {
+      if (interval <= 1000) return 3;
+      if (interval < 2000) return 2;
+      if (interval < 3000) return 1;
+      return 0;
+    }
+
+    function showPage(page, textIndex) {
+      pages.forEach(p => {
+        p.el.classList.remove("active");
+        body.classList.remove(p.bg);
+      });
+      pauseMessage.style.display = "none";
+      page.el.innerText = page.texts[textIndex];
+      page.el.classList.add("active");
+      body.classList.add(page.bg);
+      beep.currentTime = 0;
+      beep.play().catch(() => {});
+    }
+
+    function hidePages() {
+      pages.forEach(p => p.el.classList.remove("active"));
+      pages.forEach(p => body.classList.remove(p.bg));
+    }
+
+    function getNextRandomPage(currentId) {
+      const options = pages.filter(p => p.id !== currentId);
+      return options[Math.floor(Math.random() * options.length)];
+    }
+
+    function rotate() {
+      if (paused) return;
+      const textIndex = getTextIndex(intervalTime);
+      current = getNextRandomPage(current.id);
+      showPage(current, textIndex);
+      intervalTime = Math.max(minInterval, intervalTime - step);
+      timerId = setTimeout(rotate, intervalTime);
+    }
+
+    function pause() {
+      paused = true;
+      clearTimeout(timerId);
+      hidePages();
+      pauseMessage.style.display = "block";
+      body.className = "";
+      longBeep.currentTime = 0;
+      longBeep.play().catch(() => {});
+    }
+
+    function resume() {
+      paused = false;
+      pauseMessage.style.display = "none";
+      const textIndex = getTextIndex(intervalTime);
+      showPage(current, textIndex);
+      timerId = setTimeout(rotate, intervalTime);
+    }
+
+    startBtn.addEventListener("click", () => {
+      startBtn.style.display = "none";
+      const textIndex = getTextIndex(intervalTime);
+      showPage(current, textIndex);
+      timerId = setTimeout(rotate, intervalTime);
+    });
+
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (!startBtn.style.display || startBtn.style.display !== "none") return;
+        if (paused) {
+          resume();
+        } else {
+          pause();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
