@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rain vs Clouds Chanting Challenge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Fredoka', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: white;
+      background: linear-gradient(135deg, #3b82f6, #1e40af);
+      text-align: center;
+      transition: all 0.8s ease;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body.cloud-mode {
+      background: linear-gradient(135deg, #6b7280, #374151);
+    }
+
+    body.rain-mode {
+      background: linear-gradient(135deg, #3b82f6, #1e40af);
+    }
+
+    /* Animated background effects */
+    .rain-drops {
+      position: fixed;
+      top: -10px;
+      left: 0;
+      width: 100%;
+      height: 110%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .rain-drops.active {
+      opacity: 0.6;
+    }
+
+    .rain-drop {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 0 0 50% 50%;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      from { transform: translateY(-100vh); }
+      to { transform: translateY(100vh); }
+    }
+
+    .clouds-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .clouds-bg.active {
+      opacity: 0.3;
+    }
+
+    .cloud-shape {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50px;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      50% { transform: translateX(20px) translateY(-10px); }
+    }
+
+    .game-content {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 1200px;
+      padding: 20px;
+    }
+
+    .title {
+      font-size: 3.5em;
+      font-weight: 600;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      background: linear-gradient(45deg, #ffffff, #e0e7ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #start-btn {
+      background: linear-gradient(45deg, #ffffff, #f1f5f9);
+      color: #1e40af;
+      border: none;
+      font-size: 2.2em;
+      font-weight: 500;
+      padding: 0.8em 2em;
+      border-radius: 50px;
+      cursor: pointer;
+      font-family: 'Fredoka', sans-serif;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #start-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: left 0.5s;
+    }
+
+    #start-btn:hover::before {
+      left: 100%;
+    }
+
+    #start-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      width: 100%;
+    }
+
+    .chant-container {
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 25px;
+      padding: 30px 40px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-width: 90%;
+      transition: all 0.5s ease;
+    }
+
+    .line {
+      font-size: 3.2em;
+      font-weight: 500;
+      line-height: 1.2;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .timers {
+      display: flex;
+      gap: 80px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 2.5em;
+      padding: 25px 35px;
+      border-radius: 20px;
+      transition: all 0.4s ease;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(5px);
+      border: 2px solid transparent;
+      min-width: 180px;
+    }
+
+    .team .emoji {
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .team span {
+      font-size: 1.2em;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .team.active {
+      border: 3px solid rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    }
+
+    .team.active .emoji {
+      animation: bounce 0.6s ease-in-out;
+      transform: scale(1.2);
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0) scale(1.2); }
+      40% { transform: translateY(-10px) scale(1.3); }
+      60% { transform: translateY(-5px) scale(1.25); }
+    }
+
+    @keyframes flash {
+      0%, 100% { 
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.8);
+      }
+      50% { 
+        background: rgba(239, 68, 68, 0.4);
+        border-color: rgba(239, 68, 68, 0.9);
+      }
+    }
+
+    .progress-bars {
+      display: flex;
+      gap: 60px;
+      margin-top: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .progress-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-bar {
+      width: 200px;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      transition: width 0.1s ease;
+      border-radius: 6px;
+    }
+
+    .progress-fill.rain {
+      background: linear-gradient(45deg, #60a5fa, #3b82f6);
+    }
+
+    .progress-fill.cloud {
+      background: linear-gradient(45deg, #9ca3af, #6b7280);
+    }
+
+    .controls {
+      margin-top: 30px;
+      font-size: 1.4em;
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(0, 0, 0, 0.2);
+      padding: 15px 25px;
+      border-radius: 15px;
+      backdrop-filter: blur(5px);
+    }
+
+    .final-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #000, #1a1a2e);
+      color: #fbbf24;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 1000;
+      padding: 2em;
+      flex-direction: column;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .final-message {
+      font-size: 4em;
+      font-weight: 600;
+      margin-bottom: 30px;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+      animation: celebrate 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes celebrate {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+
+    .play-again-btn {
+      background: linear-gradient(45deg, #fbbf24, #f59e0b);
+      color: #000;
+      border: none;
+      font-size: 1.8em;
+      font-weight: 500;
+      padding: 0.8em 2em;
+      border-radius: 50px;
+      cursor: pointer;
+      font-family: 'Fredoka', sans-serif;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+      margin-top: 20px;
+    }
+
+    .play-again-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    }
+
+    .stats {
+      font-size: 1.5em;
+      margin-top: 20px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    @media (max-width: 768px) {
+      .title { font-size: 2.5em; }
+      .line { font-size: 2.2em; }
+      .team { font-size: 2em; gap: 40px; }
+      .timers { gap: 40px; }
+      .progress-bars { gap: 30px; }
+      .progress-bar { width: 150px; }
+      .final-message { font-size: 2.5em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="rain-drops" id="rain-drops"></div>
+  <div class="clouds-bg" id="clouds-bg"></div>
+  
+  <div class="game-content">
+    <div class="title">☔️ Rain vs Clouds ☁️</div>
+    <button id="start-btn">Start!</button>
+
+    <div class="game-container" style="display:none;">
+      <div class="chant-container">
+        <div class="line" id="chant-line">Get ready to chant!</div>
+      </div>
+
+      <div class="timers">
+        <div class="team" id="rain-team">
+          <div class="emoji">☔️</div>
+          <span id="rain-timer">0.0s</span>
+        </div>
+        <div class="team" id="cloud-team">
+          <div class="emoji">☁️</div>
+          <span id="cloud-timer">0.0s</span>
+        </div>
+      </div>
+
+      <div class="progress-bars">
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill rain" id="rain-progress"></div>
+          </div>
+          <div style="color: rgba(255,255,255,0.8); font-size: 0.9em;">Rain</div>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill cloud" id="cloud-progress"></div>
+          </div>
+          <div style="color: rgba(255,255,255,0.8); font-size: 0.9em;">Clouds</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        You have 30 seconds!
+      </div>
+    </div>
+  </div>
+
+  <div class="final-screen" id="final-screen">
+    <div class="final-message" id="final-message"></div>
+    <div class="stats" id="final-stats"></div>
+    <button class="play-again-btn" id="play-again-btn">Play Again</button>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById('start-btn');
+    const gameContainer = document.querySelector('.game-container');
+    const chantLine = document.getElementById('chant-line');
+    const rainTimerEl = document.getElementById('rain-timer');
+    const cloudTimerEl = document.getElementById('cloud-timer');
+    const finalScreen = document.getElementById('final-screen');
+    const finalMessage = document.getElementById('final-message');
+    const finalStats = document.getElementById('final-stats');
+    const playAgainBtn = document.getElementById('play-again-btn');
+    const rainTeamEl = document.getElementById('rain-team');
+    const cloudTeamEl = document.getElementById('cloud-team');
+    const rainProgressEl = document.getElementById('rain-progress');
+    const cloudProgressEl = document.getElementById('cloud-progress');
+    const rainDropsEl = document.getElementById('rain-drops');
+    const cloudsBgEl = document.getElementById('clouds-bg');
+    const body = document.body;
+
+    let rainTime = 0;
+    let cloudTime = 0;
+    let activeTeam = null;
+    let intervalId = null;
+    let gameStartTime = 0;
+    const intervalStep = 100;
+    const maxTime = 30.0;
+    const warningTime = 22.0;
+
+    const chants = {
+      rain: "☔️ Rain, rain, go away, come back some other day!",
+      cloud: "☁️ Clouds, clouds, blow away, come back some other day!"
+    };
+
+    function createRainDrops() {
+      for (let i = 0; i < 20; i++) {
+        const drop = document.createElement('div');
+        drop.className = 'rain-drop';
+        drop.style.left = Math.random() * 100 + '%';
+        drop.style.width = (Math.random() * 3 + 2) + 'px';
+        drop.style.height = (Math.random() * 15 + 10) + 'px';
+        drop.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        drop.style.animationDelay = Math.random() * 2 + 's';
+        rainDropsEl.appendChild(drop);
+      }
+    }
+
+    function createClouds() {
+      for (let i = 0; i < 8; i++) {
+        const cloud = document.createElement('div');
+        cloud.className = 'cloud-shape';
+        cloud.style.left = Math.random() * 90 + '%';
+        cloud.style.top = Math.random() * 60 + '%';
+        cloud.style.width = (Math.random() * 80 + 60) + 'px';
+        cloud.style.height = (Math.random() * 40 + 30) + 'px';
+        cloud.style.animationDelay = Math.random() * 4 + 's';
+        cloudsBgEl.appendChild(cloud);
+      }
+    }
+
+    function playSound(frequency, duration) {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+      } catch (e) {
+      }
+    }
+
+    function updateTimers() {
+      if (activeTeam === 'rain') {
+        rainTime += intervalStep / 1000;
+        rainTimerEl.textContent = `${rainTime.toFixed(1)}s`;
+        rainProgressEl.style.width = `${(rainTime / maxTime) * 100}%`;
+       
+        if (rainTime >= warningTime) {
+          rainTeamEl.style.animation = 'flash 0.5s infinite';
+          rainProgressEl.style.background = 'linear-gradient(45deg, #ef4444, #dc2626)';
+        }
+        
+        if (rainTime >= maxTime) endGame('rain');
+      } else if (activeTeam === 'cloud') {
+        cloudTime += intervalStep / 1000;
+        cloudTimerEl.textContent = `${cloudTime.toFixed(1)}s`;
+        cloudProgressEl.style.width = `${(cloudTime / maxTime) * 100}%`;
+        
+        // Flash red when close to losing
+        if (cloudTime >= warningTime) {
+          cloudTeamEl.style.animation = 'flash 0.5s infinite';
+          cloudProgressEl.style.background = 'linear-gradient(45deg, #ef4444, #dc2626)';
+        }
+        
+        if (cloudTime >= maxTime) endGame('clouds');
+      }
+    }
+
+    function getRandomChant(team) {
+      return chants[team];
+    }
+
+    function switchTeam() {
+      if (!activeTeam || finalScreen.style.display === 'flex') return;
+      
+      playSound(activeTeam === 'rain' ? 400 : 300, 0.2);
+     
+      rainTeamEl.style.animation = '';
+      cloudTeamEl.style.animation = '';
+      rainProgressEl.style.background = 'linear-gradient(45deg, #60a5fa, #3b82f6)';
+      cloudProgressEl.style.background = 'linear-gradient(45deg, #9ca3af, #6b7280)';
+      
+      if (activeTeam === 'rain') {
+        activeTeam = 'cloud';
+        chantLine.textContent = getRandomChant('cloud');
+        rainTeamEl.classList.remove("active");
+        cloudTeamEl.classList.add("active");
+        body.className = 'cloud-mode';
+        rainDropsEl.classList.remove('active');
+        cloudsBgEl.classList.add('active');
+       
+        if (cloudTime >= warningTime) {
+          cloudTeamEl.style.animation = 'flash 0.5s infinite';
+          cloudProgressEl.style.background = 'linear-gradient(45deg, #ef4444, #dc2626)';
+        }
+      } else {
+        activeTeam = 'rain';
+        chantLine.textContent = getRandomChant('rain');
+        cloudTeamEl.classList.remove("active");
+        rainTeamEl.classList.add("active");
+        body.className = 'rain-mode';
+        cloudsBgEl.classList.remove('active');
+        rainDropsEl.classList.add('active');
+       
+        if (rainTime >= warningTime) {
+          rainTeamEl.style.animation = 'flash 0.5s infinite';
+          rainProgressEl.style.background = 'linear-gradient(45deg, #ef4444, #dc2626)';
+        }
+      }
+    }
+
+    function startGame() {
+      rainTime = 0;
+      cloudTime = 0;
+      gameStartTime = Date.now();
+      rainTimerEl.textContent = `0.0s`;
+      cloudTimerEl.textContent = `0.0s`;
+      rainProgressEl.style.width = '0%';
+      cloudProgressEl.style.width = '0%';
+      rainProgressEl.style.background = 'linear-gradient(45deg, #60a5fa, #3b82f6)';
+      cloudProgressEl.style.background = 'linear-gradient(45deg, #9ca3af, #6b7280)';
+      rainTeamEl.style.animation = '';
+      cloudTeamEl.style.animation = '';
+      finalScreen.style.display = 'none';
+      activeTeam = 'rain';
+      chantLine.textContent = getRandomChant('rain');
+      startBtn.style.display = 'none';
+      gameContainer.style.display = 'flex';
+      rainTeamEl.classList.add("active");
+      cloudTeamEl.classList.remove("active");
+      body.className = 'rain-mode';
+      rainDropsEl.classList.add('active');
+      cloudsBgEl.classList.remove('active');
+      
+      playSound(500, 0.3);
+      intervalId = setInterval(updateTimers, intervalStep);
+    }
+
+    function endGame(loserTeam) {
+      clearInterval(intervalId);
+      const gameDuration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+      
+      playSound(loserTeam === 'rain' ? 600 : 400, 1);
+      
+      if (loserTeam === 'rain') {
+        finalMessage.textContent = `It's RAINY today! 🌧️`;
+        finalScreen.style.background = 'linear-gradient(135deg, #1e40af, #3730a3)';
+      } else {
+        finalMessage.textContent = `It's CLOUDY today! ☁️`;
+        finalScreen.style.background = 'linear-gradient(135deg, #374151, #1f2937)';
+      }
+      
+      finalStats.innerHTML = `
+        Game Duration: ${gameDuration}s<br>
+        Rain Time: ${rainTime.toFixed(1)}s | Cloud Time: ${cloudTime.toFixed(1)}s
+      `;
+      
+      finalScreen.style.display = 'flex';
+     
+      rainTeamEl.classList.remove("active");
+      cloudTeamEl.classList.remove("active");
+      rainDropsEl.classList.remove('active');
+      cloudsBgEl.classList.remove('active');
+    }
+
+    function resetGame() {
+      startBtn.style.display = 'block';
+      gameContainer.style.display = 'none';
+      finalScreen.style.display = 'none';
+      body.className = '';
+      body.style.background = 'linear-gradient(135deg, #3b82f6, #1e40af)';
+      chantLine.textContent = "Get ready to chant!";
+      activeTeam = null;
+    }
+    startBtn.addEventListener('click', startGame);
+    playAgainBtn.addEventListener('click', resetGame);
+
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (activeTeam && finalScreen.style.display !== 'flex') {
+          switchTeam();
+        }
+      }
+    });
+    createRainDrops();
+    createClouds();
+  </script>
+</body>
+</html>
