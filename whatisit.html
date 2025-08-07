@@ -8,7 +8,6 @@
   <style>
     body {
       font-family: 'Fredoka', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       margin: 0;
       padding: 0;
       min-height: 100vh;
@@ -19,6 +18,7 @@
       color: white;
       text-align: center;
       overflow: hidden;
+      transition: background 1s ease;
     }
 
     .emoji {
@@ -34,18 +34,6 @@
       min-height: 100px;
     }
 
-    .score {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(255,255,255,0.9);
-      color: #333;
-      padding: 10px 20px;
-      border-radius: 20px;
-      font-size: 1.4rem;
-      font-weight: bold;
-    }
-
     @keyframes bounce {
       0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
       40% { transform: translateY(-30px); }
@@ -54,7 +42,6 @@
   </style>
 </head>
 <body>
-  <div class="score">Score: <span id="score">0</span>/<span id="total">0</span></div>
   <div class="emoji" id="emoji">🐱</div>
   <div class="answer" id="answer"></div>
 
@@ -104,29 +91,41 @@
       { emoji: '🍔', answer: 'Hamburger' }
     ];
 
+    const gradients = [
+      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)',
+      'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
+      'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+      'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+      'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)',
+      'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+      'linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%)',
+      'linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%)',
+      'linear-gradient(135deg, #ff9966 0%, #ff5e62 100%)'
+    ];
+
     let current = 0;
-    let score = 0;
     let showingAnswer = false;
 
     const emojiDiv = document.getElementById('emoji');
     const answerDiv = document.getElementById('answer');
-    const scoreSpan = document.getElementById('score');
-    const totalSpan = document.getElementById('total');
 
-    totalSpan.textContent = gameData.length;
+    function setRandomBackground() {
+      const gradient = gradients[Math.floor(Math.random() * gradients.length)];
+      document.body.style.background = gradient;
+    }
 
     function showEmoji() {
       const item = gameData[current];
       emojiDiv.textContent = item.emoji;
       answerDiv.textContent = '';
       showingAnswer = false;
+      setRandomBackground();
     }
 
     function showAnswer() {
       const item = gameData[current];
       answerDiv.textContent = item.answer;
-      score++;
-      scoreSpan.textContent = score;
       showingAnswer = true;
     }
 
