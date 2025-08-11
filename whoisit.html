@@ -23,7 +23,7 @@ html,body{
   justify-content:center;
 }
 .container{
-  width:min(1000px, 96%);
+  width:min(1200px, 96%);
   background:var(--card);
   border-radius:24px;
   padding:48px;
@@ -180,7 +180,9 @@ const adjectivesList = [
   {emoji:'🤗', label:'friendly'},
   {emoji:'😄', label:'happy'},
   {emoji:'📢', label:'loud'},
-  {emoji:'🤫', label:'quiet'}
+  {emoji:'🤫', label:'quiet'},
+  {emoji:'🦒', label:'tall'},
+  {emoji:'📏', label:'short'}
 ];
 let index = 0;
 let stage = 'ask'; // 'ask', 'spell', 'describe'
@@ -192,6 +194,7 @@ const spellingPrefixEl = document.getElementById('spellingPrefix');
 const spellingWordEl = document.getElementById('spellingWord');
 const sentenceEl = document.getElementById('sentence');
 const adjectivesEl = document.getElementById('adjectives');
+let availableAdjectives = [...adjectivesList];
 let selected = new Set();
 
 function renderAsk(){
@@ -263,7 +266,7 @@ function updateSentence(){
 function buildAdjectiveChips(){
   adjectivesEl.innerHTML = '';
   selected.clear();
-  const shuffled = adjectivesList.map(a => ({...a, r: Math.random()})).sort((x,y) => x.r - y.r);
+  const shuffled = availableAdjectives.map(a => ({...a, r: Math.random()})).sort((x,y) => x.r - y.r);
   shuffled.forEach(adj => {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -281,6 +284,8 @@ function toggleAdjective(label, el){
   } else {
     selected.add(label);
     el.classList.add('selected');
+    // Remove the adjective from the available list permanently
+    availableAdjectives = availableAdjectives.filter(adj => adj.label !== label);
   }
   updateSentence();
 }
