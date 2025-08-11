@@ -144,7 +144,7 @@ html,body{
     </div>
   </div>
   <div class="spelling" id="spelling" style="display:none">
-    <span>My </span> <span class="spelling-word" id="spellingWord">_____</span><span>.</span>
+    <span id="spellingPrefix">She is my</span> <span class="spelling-word" id="spellingWord">_____</span><span>.</span>
   </div>
   <div class="sentence" id="sentence" style="display:none"></div>
   <div class="adjectives" id="adjectives" style="display:none"></div>
@@ -178,6 +178,7 @@ let spellingProgress = 0;
 const whoEmojiEl = document.getElementById('whoEmoji');
 const promptTextEl = document.getElementById('promptText');
 const spellingEl = document.getElementById('spelling');
+const spellingPrefixEl = document.getElementById('spellingPrefix');
 const spellingWordEl = document.getElementById('spellingWord');
 const sentenceEl = document.getElementById('sentence');
 const adjectivesEl = document.getElementById('adjectives');
@@ -197,6 +198,8 @@ function renderAsk(){
 function renderSpelling(){
   const p = people[index];
   stage = 'spell';
+  const pronounCap = p.pronoun.charAt(0).toUpperCase() + p.pronoun.slice(1);
+  spellingPrefixEl.textContent = `${pronounCap} is my`;
   spellingEl.style.display = 'flex';
   sentenceEl.style.display = 'none';
   adjectivesEl.style.display = 'none';
