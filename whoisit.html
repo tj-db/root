@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Who Is This? — Spacebar Game for Kids</title>
+  <style>
+    :root{
+      --bg: #f6fbff;
+      --card: #ffffff;
+      --accent: #4b8cff;
+      --muted: #7a8799;
+      --shadow: 0 8px 22px rgba(37,63,97,0.08);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background: linear-gradient(180deg, #f6fbff 0%, #eef7ff 100%);
+      color:#17324d;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .container{
+      width:min(860px, 96%);
+      background:var(--card);
+      border-radius:18px;
+      padding:28px;
+      box-shadow:var(--shadow);
+      text-align:center;
+    }
+    .stage {
+      display:flex;
+      gap:20px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .whoCard{
+      min-width:210px;
+      min-height:170px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      border-radius:12px;
+      background:linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+      box-shadow: 0 6px 18px rgba(21,36,60,0.06);
+      padding:16px;
+    }
+    .whoEmoji{
+      font-size:72px;
+      line-height:1;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) }
+      50% { transform: translateY(-8px) }
+      100% { transform: translateY(0) }
+    }
+    .prompt {
+      font-size:20px;
+      color:var(--muted);
+      font-weight:600;
+    }
+    .adjectives {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      margin-top:12px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background: #f3f8ff;
+      border: 1px solid rgba(74, 142, 255, 0.08);
+      cursor:pointer;
+      user-select:none;
+      transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
+      box-shadow: 0 4px 10px rgba(33,68,150,0.04);
+      font-weight:600;
+      color:#143c61;
+    }
+    .chip:active{ transform: translateY(2px) }
+    .chip.selected{
+      background: linear-gradient(90deg, rgba(75,140,255,0.12), rgba(75,140,255,0.06));
+      box-shadow: 0 6px 18px rgba(33,68,150,0.08);
+      border: 1px solid rgba(75,140,255,0.2);
+    }
+    .sentence {
+      margin-top: 18px;
+      font-size:20px;
+      font-weight:700;
+      color:#0f2740;
+      min-height:36px;
+    }
+    .blank {
+      display:inline-block;
+      min-width:120px;
+      padding:6px 10px;
+      border-radius:8px;
+      background: #fbfdff;
+      margin-left:8px;
+      font-weight:800;
+      color: #0b3b63;
+    }
+    @media (max-width:520px){
+      .whoEmoji{ font-size:64px }
+      .whoCard{ min-width:170px; min-height:150px }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="stage" id="stage">
+      <div class="whoCard" id="whoCard">
+        <div class="prompt" id="promptText">Who is she?</div>
+        <div class="whoEmoji" id="whoEmoji">👩</div>
+      </div>
+    </div>
+    <div class="sentence" id="sentence" style="display:none"></div>
+    <div class="adjectives" id="adjectives" style="display:none"></div>
+  </div>
+
+  <script>
+    const people = [
+      { label: 'mother', emoji: '👩', pronoun: 'she' },
+      { label: 'father', emoji: '👨', pronoun: 'he' },
+      { label: 'grandfather', emoji: '👴', pronoun: 'he' },
+      { label: 'grandmother', emoji: '👵', pronoun: 'she' },
+      { label: 'sister', emoji: '👧', pronoun: 'she' },
+      { label: 'brother', emoji: '👦', pronoun: 'he' }
+    ];
+
+    const adjectivesList = [
+      {emoji:'💪', label:'strong'},
+      {emoji:'😊', label:'nice'},
+      {emoji:'🤝', label:'kind'},
+      {emoji:'🦁', label:'brave'},
+      {emoji:'🧠', label:'smart'},
+      {emoji:'😂', label:'funny'},
+      {emoji:'❤️', label:'caring'},
+      {emoji:'🛠️', label:'hardworking'},
+      {emoji:'🌸', label:'pretty'},
+      {emoji:'🤵', label:'handsome'},
+      {emoji:'🕰️', label:'old'},
+      {emoji:'🌱', label:'young'}
+    ];
+
+    let index = 0;
+    let stage = 'ask';
+    const whoEmojiEl = document.getElementById('whoEmoji');
+    const promptTextEl = document.getElementById('promptText');
+    const sentenceEl = document.getElementById('sentence');
+    const adjectivesEl = document.getElementById('adjectives');
+    let selected = new Set();
+
+    function renderAsk(){
+      const p = people[index];
+      stage = 'ask';
+      promptTextEl.textContent = `Who is ${p.pronoun}?`;
+      whoEmojiEl.textContent = p.emoji;
+      sentenceEl.style.display = 'none';
+      adjectivesEl.style.display = 'none';
+    }
+
+    function renderDescribe(){
+      const p = people[index];
+      stage = 'describe';
+      promptTextEl.textContent = `What is ${p.pronoun} like?`;
+      sentenceEl.style.display = 'block';
+      adjectivesEl.style.display = 'flex';
+      updateSentence();
+      buildAdjectiveChips();
+    }
+
+    function updateSentence(){
+      const p = people[index];
+      const pronounCap = p.pronoun.charAt(0).toUpperCase() + p.pronoun.slice(1);
+      let words = Array.from(selected);
+      let fill = words.length ? words.join(', ') : '__________';
+      sentenceEl.innerHTML = `${pronounCap} is <span class="blank">${fill}</span>.`;
+    }
+
+    function buildAdjectiveChips(){
+      adjectivesEl.innerHTML = '';
+      selected.clear();
+      const shuffled = adjectivesList
+        .map(a => ({...a, r: Math.random()}))
+        .sort((x,y) => x.r - y.r);
+      shuffled.forEach(adj => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip';
+        btn.innerHTML = `<span>${adj.emoji}</span><span>${adj.label}</span>`;
+        btn.addEventListener('click', () => toggleAdjective(adj.label, btn));
+        adjectivesEl.appendChild(btn);
+      });
+    }
+
+    function toggleAdjective(label, el){
+      if (selected.has(label)){
+        selected.delete(label);
+        el.classList.remove('selected');
+      } else {
+        selected.add(label);
+        el.classList.add('selected');
+      }
+      updateSentence();
+    }
+
+    function onSpace(){
+      if (stage === 'ask'){
+        renderDescribe();
+      } else {
+        index = (index + 1) % people.length;
+        renderAsk();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.key === ' '){
+        e.preventDefault();
+        onSpace();
+      }
+    });
+
+    document.getElementById('whoCard').addEventListener('click', onSpace);
+
+    renderAsk();
+  </script>
+</body>
+</html>
