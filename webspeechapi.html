@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text-to-Speech Playground</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.5;
+    }
+    h1 {
+      text-align: center;
+    }
+    .control-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    select, textarea, input[type="range"] {
+      width: 100%;
+      padding: 6px;
+      box-sizing: border-box;
+      margin-bottom: 6px;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    .slider-value {
+      text-align: right;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 1rem;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <h1>Text-to-Speech Playground</h1>
+
+  <div class="control-group">
+    <label for="voice-select">Select Voice</label>
+    <select id="voice-select"></select>
+  </div>
+
+  <div class="control-group">
+    <label for="rate">Rate <span class="slider-value" id="rate-value">1</span></label>
+    <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1" />
+  </div>
+
+  <div class="control-group">
+    <label for="pitch">Pitch <span class="slider-value" id="pitch-value">1</span></label>
+    <input type="range" id="pitch" min="0" max="2" step="0.1" value="1" />
+  </div>
+
+  <div class="control-group">
+    <label for="volume">Volume <span class="slider-value" id="volume-value">1</span></label>
+    <input type="range" id="volume" min="0" max="1" step="0.1" value="1" />
+  </div>
+
+  <div class="control-group">
+    <label for="text-input">Enter Text to Speak</label>
+    <textarea id="text-input" placeholder="Type something..."></textarea>
+  </div>
+
+  <button id="speak-btn" disabled>Speak</button>
+
+  <script>
+    const voiceSelect = document.getElementById('voice-select');
+    const rateInput   = document.getElementById('rate');
+    const pitchInput  = document.getElementById('pitch');
+    const volumeInput = document.getElementById('volume');
+    const textInput   = document.getElementById('text-input');
+    const speakBtn    = document.getElementById('speak-btn');
+
+    const rateValue   = document.getElementById('rate-value');
+    const pitchValue  = document.getElementById('pitch-value');
+    const volumeValue = document.getElementById('volume-value');
+
+    let voices = [];
+
+    function populateVoices() {
+      voices = window.speechSynthesis.getVoices();
+      voiceSelect.innerHTML = voices
+        .map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`)
+        .join('');
+      speakBtn.disabled = voices.length === 0;
+    }
+
+    window.speechSynthesis.onvoiceschanged = populateVoices;
+    populateVoices();
+
+    rateInput.oninput = () => rateValue.textContent = rateInput.value;
+    pitchInput.oninput = () => pitchValue.textContent = pitchInput.value;
+    volumeInput.oninput = () => volumeValue.textContent = volumeInput.value;
+
+    speakBtn.onclick = () => {
+      const utterance = new SpeechSynthesisUtterance(textInput.value);
+      const selectedVoice = voices[voiceSelect.value];
+      if (selectedVoice) utterance.voice = selectedVoice;
+      utterance.rate   = parseFloat(rateInput.value);
+      utterance.pitch  = parseFloat(pitchInput.value);
+      utterance.volume = parseFloat(volumeInput.value);
+      window.speechSynthesis.speak(utterance);
+    };
+
+    textInput.oninput = () => {
+      speakBtn.disabled = textInput.value.trim() === '' || voices.length === 0;
+    };
+  </script>
+</body>
+</html>
