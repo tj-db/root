@@ -210,17 +210,18 @@
     </div>
 
     <script>
+        
 const wordPairs = [
     { target: "soccer", forbidden: ["ball", "goal", "kick", "field", "team"] },
-    { target: "basketball", forbidden: ["hoop", "dribble", "court", "shoot", "NBA"] },
-    { target: "baseball", forbidden: ["bat", "pitch", "glove", "home run", "diamond"] },
-    { target: "football", forbidden: ["touchdown", "quarterback", "field", "helmet", "NFL"] },
-    { target: "tennis", forbidden: ["racket", "court", "serve", "net", "ball"] },
-    { target: "golf", forbidden: ["club", "hole", "swing", "green", "tee"] },
+    { target: "basketball", forbidden: ["ball", "hoop", "dribble", "court", "NBA"] },
+    { target: "baseball", forbidden: ["ball", "bat", "pitch", "glove", "home run"] },
+    { target: "tennis", forbidden: ["ball", "racket", "court", "serve", "net"] },
+    { target: "golf", forbidden: ["ball", "club", "hole", "swing", "green"] },
+    { target: "volleyball", forbidden: ["ball", "net", "spike", "serve", "court"] },
     { target: "swimming", forbidden: ["pool", "water", "laps", "goggles", "freestyle"] },
-    { target: "hockey", forbidden: ["puck", "ice", "stick", "goalie", "skates"] },
-    { target: "volleyball", forbidden: ["net", "spike", "serve", "court", "block"] },
-    { target: "track", forbidden: ["running", "race", "sprinter", "lane", "finish"] }
+    { target: "horse racing", forbidden: ["horse", "jockey", "track", "race", "saddle", "finish"] },
+    { target: "archery", forbidden: ["arrow", "bow", "target", "shoot", "bullseye"] },
+    { target: "chess", forbidden: ["board", "king", "queen", "pieces", "checkmate"] }
 ];
 
         let usedWords = [];
