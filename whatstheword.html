@@ -210,46 +210,18 @@
     </div>
 
     <script>
-        const wordPairs = [
-            { target: "apple", forbidden: ["fruit", "red", "eat", "tree", "pie"] },
-            { target: "doctor", forbidden: ["hospital", "medicine", "nurse", "sick", "patient"] },
-            { target: "car", forbidden: ["drive", "wheels", "road", "vehicle", "fast"] },
-            { target: "teacher", forbidden: ["school", "students", "teach", "class", "lesson"] },
-            { target: "beach", forbidden: ["sand", "sea", "sun", "swim", "holiday"] },
-            { target: "book", forbidden: ["read", "pages", "library", "story", "author"] },
-            { target: "dog", forbidden: ["pet", "bark", "animal", "tail", "walk"] },
-            { target: "birthday", forbidden: ["cake", "party", "gift", "celebrate", "candles"] },
-            { target: "airplane", forbidden: ["fly", "pilot", "airport", "sky", "travel"] },
-            { target: "computer", forbidden: ["keyboard", "screen", "internet", "mouse", "technology"] },
-            { target: "restaurant", forbidden: ["food", "eat", "menu", "waiter", "table"] },
-            { target: "city", forbidden: ["buildings", "big", "people", "traffic", "urban"] },
-            { target: "music", forbidden: ["song", "sing", "listen", "sound", "band"] },
-            { target: "family", forbidden: ["parents", "children", "home", "relatives", "love"] },
-            { target: "holiday", forbidden: ["vacation", "travel", "beach", "relax", "trip"] },
-            { target: "phone", forbidden: ["call", "mobile", "ring", "text", "screen"] },
-            { target: "man", forbidden: ["male", "father", "boy", "adult", "strong"] },
-            { target: "woman", forbidden: ["female", "mother", "girl", "adult", "lady"] },
-            { target: "elephant", forbidden: ["big", "gray", "trunk", "zoo", "Africa"] },
-            { target: "pizza", forbidden: ["cheese", "Italian", "round", "slice", "tomato"] },
-            { target: "rainbow", forbidden: ["colors", "rain", "sky", "pretty", "arch"] },
-            { target: "bicycle", forbidden: ["pedal", "ride", "two", "wheel", "chain"] },
-            { target: "butterfly", forbidden: ["wings", "colorful", "fly", "flower", "insect"] },
-            { target: "castle", forbidden: ["king", "princess", "stone", "tower", "medieval"] },
-            { target: "guitar", forbidden: ["strings", "music", "play", "sound", "instrument"] },
-            { target: "ice cream", forbidden: ["cold", "sweet", "cone", "vanilla", "summer"] },
-            { target: "dragon", forbidden: ["fire", "fantasy", "wings", "scary", "mythical"] },
-            { target: "robot", forbidden: ["machine", "metal", "future", "artificial", "computer"] },
-            { target: "ocean", forbidden: ["water", "blue", "fish", "waves", "deep"] },
-            { target: "cookie", forbidden: ["sweet", "bake", "chocolate", "eat", "round"] },
-            { target: "superhero", forbidden: ["powers", "cape", "save", "strong", "comic"] },
-            { target: "telescope", forbidden: ["stars", "space", "look", "moon", "astronomy"] },
-            { target: "volcano", forbidden: ["hot", "lava", "mountain", "eruption", "fire"] },
-            { target: "treasure", forbidden: ["gold", "pirate", "valuable", "hidden", "chest"] },
-            { target: "sandwich", forbidden: ["bread", "eat", "lunch", "meat", "cheese"] },
-            { target: "garden", forbidden: ["flowers", "plants", "grow", "green", "water"] },
-            { target: "moon", forbidden: ["night", "white", "space", "round", "stars"] },
-            { target: "tiger", forbidden: ["orange", "stripes", "cat", "wild", "jungle"] }
-        ];
+const wordPairs = [
+    { target: "soccer", forbidden: ["ball", "goal", "kick", "field", "team"] },
+    { target: "basketball", forbidden: ["hoop", "dribble", "court", "shoot", "NBA"] },
+    { target: "baseball", forbidden: ["bat", "pitch", "glove", "home run", "diamond"] },
+    { target: "football", forbidden: ["touchdown", "quarterback", "field", "helmet", "NFL"] },
+    { target: "tennis", forbidden: ["racket", "court", "serve", "net", "ball"] },
+    { target: "golf", forbidden: ["club", "hole", "swing", "green", "tee"] },
+    { target: "swimming", forbidden: ["pool", "water", "laps", "goggles", "freestyle"] },
+    { target: "hockey", forbidden: ["puck", "ice", "stick", "goalie", "skates"] },
+    { target: "volleyball", forbidden: ["net", "spike", "serve", "court", "block"] },
+    { target: "track", forbidden: ["running", "race", "sprinter", "lane", "finish"] }
+];
 
         let usedWords = [];
 
