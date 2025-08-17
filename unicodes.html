@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🧭 System Emoji Explorer</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f0f0;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 0.5rem;
+    }
+    .emoji-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .emoji-card:hover {
+      transform: scale(1.1);
+      background: #ffe;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧭 System Emoji Explorer</h1>
+  <input type="text" id="search" placeholder="Search by Unicode or emoji...">
+  <div class="emoji-grid" id="emojiGrid"></div>
+
+  <script>
+    const emojiGrid = document.getElementById("emojiGrid");
+    const searchInput = document.getElementById("search");
+
+    function isEmoji(char) {
+      // Heuristic: emojis are wide and not blank
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      ctx.font = "32px serif";
+      const width = ctx.measureText(char).width;
+      return width > 10;
+    }
+
+    function generateEmojis() {
+      const emojis = [];
+      for (let i = 0x1F300; i <= 0x1FAFF; i++) {
+        const char = String.fromCodePoint(i);
+        if (isEmoji(char)) {
+          emojis.push({ char, code: "U+" + i.toString(16).toUpperCase() });
+        }
+      }
+      return emojis;
+    }
+
+    function renderEmojis(emojis) {
+      emojiGrid.innerHTML = "";
+      emojis.forEach(e => {
+        const card = document.createElement("div");
+        card.className = "emoji-card";
+        card.innerHTML = `${e.char}<div style="font-size:0.7rem;">${e.code}</div>`;
+        card.onclick = () => navigator.clipboard.writeText(e.char);
+        emojiGrid.appendChild(card);
+      });
+    }
+
+    const allEmojis = generateEmojis();
+    renderEmojis(allEmojis);
+
+    searchInput.addEventListener("input", () => {
+      const filtered = allEmojis.filter(e =>
+        e.char.includes(searchInput.value) || e.code.includes(searchInput.value.toUpperCase())
+      );
+      renderEmojis(filtered);
+    });
+  </script>
+</body>
+</html>
