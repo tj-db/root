@@ -206,8 +206,7 @@ function renderAsk(){
   spellingEl.style.display = 'none';
   sentenceEl.style.display = 'none';
   adjectivesEl.style.display = 'none';
-  // Reset adjectives for the new person
-  availableAdjectives = [...adjectivesList];
+  // Only clear the selected adjectives, keep the available list shrinking
   selected.clear();
 }
 
