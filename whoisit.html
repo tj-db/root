@@ -206,6 +206,9 @@ function renderAsk(){
   spellingEl.style.display = 'none';
   sentenceEl.style.display = 'none';
   adjectivesEl.style.display = 'none';
+  // Reset adjectives for the new person
+  availableAdjectives = [...adjectivesList];
+  selected.clear();
 }
 
 function renderSpelling(){
@@ -281,11 +284,18 @@ function toggleAdjective(label, el){
   if (selected.has(label)){
     selected.delete(label);
     el.classList.remove('selected');
+    // Add the adjective back to the available list
+    const originalAdj = adjectivesList.find(adj => adj.label === label);
+    if (originalAdj) {
+      availableAdjectives.push(originalAdj);
+    }
   } else {
     selected.add(label);
     el.classList.add('selected');
-    // Remove the adjective from the available list permanently
+    // Remove the adjective from the available list immediately
     availableAdjectives = availableAdjectives.filter(adj => adj.label !== label);
+    // Hide the chip immediately
+    el.style.display = 'none';
   }
   updateSentence();
 }
