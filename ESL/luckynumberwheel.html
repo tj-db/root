@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spin the Wheel Game</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #f0f0f0;
+      overflow: hidden;
+    }
+    #input-section {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    input[type="text"] {
+      width: 300px;
+      padding: 8px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    #wheel-container {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: white;
+      z-index: 1000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    #pointer {
+      position: absolute;
+      bottom: 278px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid red;
+      z-index: 1001;
+    }
+    #spin-label {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      user-select: none;
+    }
+    /* Pulse animation */
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.6;
+        transform: scale(1.1);
+      }
+    }
+    #spin-btn {
+      margin-top: 30px;
+      padding: 15px 30px;
+      font-size: 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+    canvas {
+      border: 6px solid #333;
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      background: white;
+    }
+  </style>
+</head>
+<body>
+
+<div id="input-section">
+  <label for="luckyNumbers">LUCKY NUMBERS</label>
+  <input type="text" id="luckyNumbers" placeholder="example: 5, 12, 23, 7" />
+  <button id="startBtn">Start</button>
+</div>
+
+<div id="wheel-container">
+  <div id="spin-label">Spin</div>
+  <div id="pointer"></div>
+  <canvas id="wheel" width="400" height="400"></canvas>
+  <button id="spin-btn">Spin</button>
+</div>
+
+<!-- 🎉 Confetti library -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+  const startBtn = document.getElementById('startBtn');
+  const wheelContainer = document.getElementById('wheel-container');
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const spinBtn = document.getElementById('spin-btn');
+  const input = document.getElementById('luckyNumbers');
+  const spinLabel = document.getElementById('spin-label');
+
+  let segments = [];
+  let rotation = 0;
+  let spinning = false;
+  const radius = canvas.width / 2;
+
+  function drawWheel() {
+    const segmentCount = segments.length;
+    const anglePerSegment = (2 * Math.PI) / segmentCount;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(radius, radius);
+    ctx.rotate(rotation);
+
+    for (let i = 0; i < segmentCount; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.fillStyle = `hsl(${(i * 360 / segmentCount)}, 70%, 70%)`;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 2;
+      ctx.arc(0, 0, radius, i * anglePerSegment, (i + 1) * anglePerSegment);
+      ctx.lineTo(0, 0);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.save();
+      ctx.fillStyle = '#333';
+      ctx.translate(
+        radius * 0.65 * Math.cos(i * anglePerSegment + anglePerSegment / 2),
+        radius * 0.65 * Math.sin(i * anglePerSegment + anglePerSegment / 2)
+      );
+      ctx.rotate(i * anglePerSegment + anglePerSegment / 2 + Math.PI / 2);
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(segments[i], 0, 0);
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
+
+  function launchConfetti() {
+    const duration = 3 * 1000;
+    const animationEnd = Date.now() + duration;
+
+    const confettiFrame = () => {
+      confetti({
+        particleCount: 60,
+        startVelocity: 35,
+        spread: 360,
+        ticks: 70,
+        origin: {
+          x: Math.random(),
+          y: Math.random() - 0.2
+        }
+      });
+
+      if (Date.now() < animationEnd) {
+        requestAnimationFrame(confettiFrame);
+      }
+    };
+
+    confettiFrame();
+  }
+
+  function spinWheel() {
+    if (spinning) return;
+    spinning = true;
+    spinBtn.disabled = true;
+    spinLabel.textContent = "SPIN";
+    spinLabel.style.animation = 'pulse 1s infinite';
+
+    const segmentCount = segments.length;
+    const anglePerSegment = 360 / segmentCount;
+
+    const randomSegment = Math.floor(Math.random() * segmentCount);
+    const extraDegrees = randomSegment * anglePerSegment + anglePerSegment / 2;
+
+    const randomRotations = Math.random() * 3 + 10; // 10.0 – 13.0 spins
+    const finalRotationDeg = randomRotations * 360 + extraDegrees;
+    const finalRotationRad = finalRotationDeg * Math.PI / 180;
+
+    const animationDuration = 15000; // 15 seconds
+    const startRotation = rotation;
+    const endRotation = rotation + finalRotationRad;
+    const startTime = performance.now();
+
+    const easeOutQuint = t => 1 + (--t) * t * t * t * t;
+
+    function animate(time) {
+      let elapsed = time - startTime;
+      if (elapsed > animationDuration) elapsed = animationDuration;
+      const progress = easeOutQuint(elapsed / animationDuration);
+
+      rotation = startRotation + (endRotation - startRotation) * progress;
+      drawWheel();
+
+      if (elapsed < animationDuration) {
+        requestAnimationFrame(animate);
+      } else {
+        spinning = false;
+        spinBtn.disabled = false;
+        spinLabel.style.animation = '';
+        let degrees = (rotation * 180 / Math.PI) % 360;
+        if (degrees < 0) degrees += 360;
+
+        const pointerAngle = 90;
+        const adjustedDegrees = (360 + pointerAngle - degrees) % 360;
+        const winningIndex = Math.floor(adjustedDegrees / anglePerSegment);
+
+        spinLabel.textContent = `🎉${segments[winningIndex]} 🎉`;
+        launchConfetti();
+      }
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  startBtn.addEventListener('click', () => {
+    const rawInput = input.value.trim();
+    if (!rawInput) {
+      alert('Please enter at least one lucky number.');
+      return;
+    }
+
+    segments = rawInput
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    if (segments.length === 0) {
+      alert('Please enter valid lucky numbers.');
+      return;
+    }
+
+    rotation = 0;
+    drawWheel();
+    spinLabel.textContent = "Spin";
+    wheelContainer.style.display = 'flex';
+    spinBtn.focus();
+  });
+
+  spinBtn.addEventListener('click', spinWheel);
+  spinBtn.addEventListener('keydown', (e) => {
+    if ((e.key === ' ' || e.key === 'Enter') && !spinning) {
+      e.preventDefault();
+      spinWheel();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (wheelContainer.style.display === 'flex' && (e.key === ' ' || e.key === 'Enter') && !spinning) {
+      e.preventDefault();
+      spinWheel();
+    }
+  });
+</script>
+
+</body>
+</html>
