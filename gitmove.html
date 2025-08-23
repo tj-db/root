@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<!-- Legal Footnote: This content is subject to copyright and should not be reproduced without permission. -->
+<!-- Written and created by Thomas John-Michael de Beer, feel free to contact me via tjdebeer@gmail.com  -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GitHub Repo Navigator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+    select, input, button {
+      margin: 5px;
+      padding: 6px;
+      font-size: 1em;
+    }
+    .file-item {
+      margin: 4px 0;
+      padding: 4px;
+      cursor: default;
+    }
+    .file-item:hover {
+      background: #f0f0f0;
+    }
+    #fileList {
+      margin-top: 10px;
+    }
+    hr {
+      margin: 20px 0;
+    }
+    .valid {
+      border: 2px solid green;
+    }
+    .invalid {
+      border: 2px solid red;
+    }
+    .warning {
+      border: 2px solid orange;
+    }
+    #preview {
+      margin-top: 10px;
+      font-family: monospace;
+      background: #f9f9f9;
+      padding: 10px;
+      border: 1px solid #ccc;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 GitHub Repo Navigator</h1>
+
+  <label for="repoSelect">Select Repo:</label>
+  <select id="repoSelect"></select>
+
+  <div id="pathDisplay">Current Path: /</div>
+  <div id="fileList"></div>
+
+  <hr />
+
+  <h2>🔁 Move File</h2>
+  <input type="text" id="sourcePath" list="sourceSuggestions" placeholder="Source path (e.g. folder/file.txt)" size="40" />
+  <datalist id="sourceSuggestions"></datalist>
+
+  <input type="text" id="targetPath" list="targetSuggestions" placeholder="Target folder (e.g. newfolder/)" size="40" />
+  <datalist id="targetSuggestions"></datalist>
+
+  <button onclick="moveFile()">Move</button>
+
+  <div id="preview"></div>
+
+  <script>
+    const username = 'tj-db';
+    let token = null;
+    let debounceTimer;
+
+    window.onload = () => {
+      token = prompt("🔐 Enter your GitHub token for this session (leave blank to browse only):");
+      fetchRepos();
+      document.getElementById('sourcePath').addEventListener('input', () => debounce(validatePath, 500));
+      document.getElementById('targetPath').addEventListener('input', () => debounce(validatePath, 500));
+    };
+
+    function debounce(fn, delay) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(fn, delay);
+    }
+
+    async function fetchRepos() {
+      const res = await fetch(`https://api.github.com/users/${username}/repos`);
+      const repos = await res.json();
+      const select = document.getElementById('repoSelect');
+
+      repos.forEach(repo => {
+        const opt = document.createElement('option');
+        opt.value = repo.name;
+        opt.textContent = repo.name;
+        select.appendChild(opt);
+      });
+
+      select.onchange = async () => {
+        const repo = select.value;
+        listFiles(repo);
+        const { folders, files } = await fetchAllPaths(repo);
+        populateSuggestions(files, folders);
+      };
+    }
+
+    async function fetchAllPaths(repo, path = '', folders = [], files = []) {
+      const res = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${path}`);
+      const items = await res.json();
+
+      for (const item of items) {
+        if (item.type === 'file') {
+          files.push(item.path);
+        } else if (item.type === 'dir') {
+          folders.push(item.path);
+          await fetchAllPaths(repo, item.path, folders, files);
+        }
+      }
+      return { folders, files };
+    }
+
+    function populateSuggestions(files, folders) {
+      const sourceList = document.getElementById('sourceSuggestions');
+      const targetList = document.getElementById('targetSuggestions');
+      sourceList.innerHTML = '';
+      targetList.innerHTML = '';
+
+      files.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        sourceList.appendChild(opt);
+      });
+
+      folders.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p + '/';
+        targetList.appendChild(opt);
+      });
+    }
+
+    async function listFiles(repo, path = '') {
+      const res = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${path}`);
+      const files = await res.json();
+      const list = document.getElementById('fileList');
+      list.innerHTML = '';
+
+      files.forEach(file => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.textContent = `${file.type === 'dir' ? '📁' : '📄'} ${file.name}`;
+        if (file.type === 'dir') {
+          item.style.cursor = 'pointer';
+          item.onclick = () => listFiles(repo, file.path);
+        }
+        list.appendChild(item);
+      });
+
+      document.getElementById('pathDisplay').textContent = `Current Path: /${path}`;
+    }
+
+    async function validatePath() {
+      const repo = document.getElementById('repoSelect').value;
+      const source = document.getElementById('sourcePath').value;
+      const target = document.getElementById('targetPath').value;
+      const headers = token ? { Authorization: `token ${token}` } : {};
+
+      const sourceInput = document.getElementById('sourcePath');
+      const targetInput = document.getElementById('targetPath');
+      const preview = document.getElementById('preview');
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${source}`, { headers });
+        if (res.ok) {
+          sourceInput.className = 'valid';
+          const data = await res.json();
+          if (data.type === 'file') {
+            const content = atob(data.content);
+            preview.textContent = `📄 Preview of ${source}:\n\n${content.slice(0, 300)}${content.length > 300 ? '...\n[truncated]' : ''}`;
+          }
+        } else {
+          sourceInput.className = 'invalid';
+          preview.textContent = '';
+        }
+      } catch {
+        sourceInput.className = 'invalid';
+        preview.textContent = '';
+      }
+
+      targetInput.className = target.endsWith('/') ? 'valid' : 'warning';
+    }
+
+    async function moveFile() {
+      if (!token) {
+        alert("❌ Token required to move files.");
+        return;
+      }
+
+      const repo = document.getElementById('repoSelect').value;
+      const source = document.getElementById('sourcePath').value;
+      const target = document.getElementById('targetPath').value + source.split('/').pop();
+      const headers = {
+        Authorization: `token ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      const getFile = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${source}`, { headers });
+      const fileData = await getFile.json();
+
+      const putPayload = {
+        message: `Move ${source} to ${target}`,
+        content: fileData.content,
+        sha: fileData.sha
+      };
+
+      await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${target}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(putPayload)
+      });
+
+      const deletePayload = {
+        message: `Delete ${source}`,
+        sha: fileData.sha
+      };
+
+      await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${source}`, {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify(deletePayload)
+      });
+
+      alert(`✅ Moved ${source} to ${target}`);
+      listFiles(repo);
+    }
+  </script>
+</body>
+</html>
