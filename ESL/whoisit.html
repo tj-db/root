@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Who Is This?</title>
+<style>
+:root{
+  --bg: #f6fbff;
+  --card: #ffffff;
+  --accent: #4b8cff;
+  --muted: #7a8799;
+  --shadow: 0 8px 22px rgba(37,63,97,0.08);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+html,body{
+  height:100%;
+  margin:0;
+  background: linear-gradient(180deg, #f6fbff 0%, #eef7ff 100%);
+  color:#17324d;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.container{
+  width:min(1200px, 96%);
+  background:var(--card);
+  border-radius:24px;
+  padding:48px;
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+.stage {
+  display:flex;
+  gap:30px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.whoCard{
+  min-width:400px;
+  min-height:320px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:24px;
+  border-radius:18px;
+  background:linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+  box-shadow: 0 8px 20px rgba(21,36,60,0.06);
+  padding:24px;
+}
+.whoEmoji{
+  font-size:222px;
+  line-height:1;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0% { transform: translateY(0) }
+  50% { transform: translateY(-12px) }
+  100% { transform: translateY(0) }
+}
+.prompt {
+  font-size:40px;
+  color:var(--muted);
+  font-weight:700;
+}
+.spelling {
+  margin-top: 28px;
+  font-size:48px;
+  font-weight:800;
+  color:#0f2740;
+  min-height:70px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+.spelling-word {
+  letter-spacing: 2px;
+}
+.adjectives {
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-top:24px;
+}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:14px;
+  padding:16px 24px;
+  border-radius:999px;
+  background: #f3f8ff;
+  border: 1px solid rgba(74, 142, 255, 0.08);
+  cursor:pointer;
+  user-select:none;
+  transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
+  box-shadow: 0 4px 10px rgba(33,68,150,0.04);
+  font-weight:700;
+  font-size:26px;
+  color:#143c61;
+}
+.chip:active{ transform: translateY(2px) }
+.chip.selected{
+  background: linear-gradient(90deg, rgba(75,140,255,0.12), rgba(75,140,255,0.06));
+  box-shadow: 0 6px 18px rgba(33,68,150,0.08);
+  border: 1px solid rgba(75,140,255,0.2);
+}
+.sentence {
+  margin-top: 28px;
+  font-size:40px;
+  font-weight:800;
+  color:#0f2740;
+  min-height:60px;
+}
+.blank {
+  display:inline-block;
+  min-width:180px;
+  padding:10px 14px;
+  border-radius:8px;
+  background: #fbfdff;
+  margin-left:8px;
+  font-weight:800;
+  color: #0b3b63;
+}
+@media (max-width:520px){
+  .whoEmoji{ font-size:100px }
+  .whoCard{ min-width:240px; min-height:200px }
+  .prompt { font-size:28px }
+  .spelling { font-size:32px }
+  .sentence { font-size:28px }
+  .chip { font-size:20px; padding:12px 18px }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="stage" id="stage">
+    <div class="whoCard" id="whoCard">
+      <div class="prompt" id="promptText">Who is she?</div>
+      <div class="whoEmoji" id="whoEmoji">👩</div>
+    </div>
+  </div>
+  <div class="spelling" id="spelling" style="display:none">
+    <span id="spellingPrefix">She is my</span> <span class="spelling-word" id="spellingWord">_____</span><span>.</span>
+  </div>
+  <div class="sentence" id="sentence" style="display:none"></div>
+  <div class="adjectives" id="adjectives" style="display:none"></div>
+</div>
+<script>
+const people = [
+  { label: 'mother', emoji: '👩', pronoun: 'she' },
+  { label: 'father', emoji: '👨', pronoun: 'he' },
+  { label: 'grandfather', emoji: '👴', pronoun: 'he' },
+  { label: 'grandmother', emoji: '👵', pronoun: 'she' },
+  { label: 'sister', emoji: '👧', pronoun: 'she' },
+  { label: 'brother', emoji: '👦', pronoun: 'he' }
+];
+const adjectivesList = [
+  {emoji:'💪', label:'strong'},
+  {emoji:'😊', label:'nice'},
+  {emoji:'🤝', label:'kind'},
+  {emoji:'🦁', label:'brave'},
+  {emoji:'🧠', label:'smart'},
+  {emoji:'😂', label:'funny'},
+  {emoji:'❤️', label:'caring'},
+  {emoji:'🛠️', label:'hardworking'},
+  {emoji:'🌸', label:'pretty'},
+  {emoji:'🤵', label:'handsome'},
+  {emoji:'🕰️', label:'old'},
+  {emoji:'🌱', label:'young'},
+  {emoji:'⚡', label:'fast'},
+  {emoji:'🐢', label:'slow'},
+  {emoji:'😴', label:'lazy'},
+  {emoji:'😤', label:'mean'},
+  {emoji:'😠', label:'angry'},
+  {emoji:'🏃‍♂️', label:'busy'},
+  {emoji:'🤗', label:'friendly'},
+  {emoji:'😄', label:'happy'},
+  {emoji:'📢', label:'loud'},
+  {emoji:'🤫', label:'quiet'},
+  {emoji:'🦒', label:'tall'},
+  {emoji:'📏', label:'short'}
+];
+let index = 0;
+let stage = 'ask'; // 'ask', 'spell', 'describe'
+let spellingProgress = 0;
+const whoEmojiEl = document.getElementById('whoEmoji');
+const promptTextEl = document.getElementById('promptText');
+const spellingEl = document.getElementById('spelling');
+const spellingPrefixEl = document.getElementById('spellingPrefix');
+const spellingWordEl = document.getElementById('spellingWord');
+const sentenceEl = document.getElementById('sentence');
+const adjectivesEl = document.getElementById('adjectives');
+let availableAdjectives = [...adjectivesList];
+let selected = new Set();
+
+function renderAsk(){
+  const p = people[index];
+  stage = 'ask';
+  spellingProgress = 0;
+  promptTextEl.textContent = `Who is ${p.pronoun}?`;
+  whoEmojiEl.textContent = p.emoji;
+  spellingEl.style.display = 'none';
+  sentenceEl.style.display = 'none';
+  adjectivesEl.style.display = 'none';
+  // Only clear the selected adjectives, keep the available list shrinking
+  selected.clear();
+}
+
+function renderSpelling(){
+  const p = people[index];
+  stage = 'spell';
+  const pronounCap = p.pronoun.charAt(0).toUpperCase() + p.pronoun.slice(1);
+  spellingPrefixEl.textContent = `${pronounCap} is my`;
+  spellingEl.style.display = 'flex';
+  sentenceEl.style.display = 'none';
+  adjectivesEl.style.display = 'none';
+  updateSpelling();
+}
+
+function updateSpelling(){
+  const p = people[index];
+  const word = p.label;
+  let display = '';
+  
+  for(let i = 0; i < word.length; i++){
+    if(i < spellingProgress){
+      display += word[i];
+    } else {
+      display += '_';
+    }
+  }
+  
+  spellingWordEl.textContent = display;
+}
+
+function renderDescribe(){
+  const p = people[index];
+  stage = 'describe';
+  promptTextEl.textContent = `What is ${p.pronoun} like?`;
+  spellingEl.style.display = 'none';
+  sentenceEl.style.display = 'block';
+  adjectivesEl.style.display = 'flex';
+  updateSentence();
+  buildAdjectiveChips();
+}
+
+function updateSentence(){
+  const p = people[index];
+  const pronounCap = p.pronoun.charAt(0).toUpperCase() + p.pronoun.slice(1);
+  let words = Array.from(selected);
+  let fill;
+  if (words.length === 0) {
+    fill = '__________';
+  } else if (words.length === 1) {
+    fill = words[0];
+  } else if (words.length === 2) {
+    fill = words[0] + ' and ' + words[1];
+  } else {
+    fill = words.slice(0, -1).join(', ') + ', and ' + words[words.length - 1];
+  }
+  sentenceEl.innerHTML = `${pronounCap} is <span class="blank">${fill}</span>.`;
+}
+
+function buildAdjectiveChips(){
+  adjectivesEl.innerHTML = '';
+  selected.clear();
+  const shuffled = availableAdjectives.map(a => ({...a, r: Math.random()})).sort((x,y) => x.r - y.r);
+  shuffled.forEach(adj => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip';
+    btn.innerHTML = `<span>${adj.emoji}</span><span>${adj.label}</span>`;
+    btn.addEventListener('click', () => toggleAdjective(adj.label, btn));
+    adjectivesEl.appendChild(btn);
+  });
+}
+
+function toggleAdjective(label, el){
+  if (selected.has(label)){
+    selected.delete(label);
+    el.classList.remove('selected');
+    // Add the adjective back to the available list
+    const originalAdj = adjectivesList.find(adj => adj.label === label);
+    if (originalAdj) {
+      availableAdjectives.push(originalAdj);
+    }
+  } else {
+    selected.add(label);
+    el.classList.add('selected');
+    // Remove the adjective from the available list immediately
+    availableAdjectives = availableAdjectives.filter(adj => adj.label !== label);
+    // Hide the chip immediately
+    el.style.display = 'none';
+  }
+  updateSentence();
+}
+
+function onSpace(){
+  if (stage === 'ask'){
+    renderSpelling();
+  } else if (stage === 'spell'){
+    const p = people[index];
+    spellingProgress++;
+    if(spellingProgress > p.label.length){
+      renderDescribe();
+    } else {
+      updateSpelling();
+    }
+  } else {
+    index = (index + 1) % people.length;
+    renderAsk();
+  }
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.key === ' '){
+    e.preventDefault();
+    onSpace();
+  }
+});
+
+document.getElementById('whoCard').addEventListener('click', onSpace);
+
+renderAsk();
+</script>
+</body>
+</html>
