@@ -21,6 +21,51 @@
             overflow: hidden;
         }
 
+        .setup-screen {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            color: white;
+        }
+
+        .setup-screen h2 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .time-input-group {
+            margin-bottom: 30px;
+        }
+
+        .time-input-group label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .time-input {
+            width: 120px;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .time-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
         .timer-container {
             display: flex;
             gap: 20px;
@@ -166,12 +211,65 @@
             font-weight: 600;
             text-align: center;
         }
+
+        .hidden {
+            display: none;
+        }
+
+        .preset-times {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .time-unit {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="game-status" id="gameStatus"></div>
+    <div class="setup-screen" id="setupScreen">
+        <h2>Set Timer Duration</h2>
+        
+        <div class="preset-times">
+            <button class="preset-btn" onclick="setPresetTime(30)">30s</button>
+            <button class="preset-btn" onclick="setPresetTime(60)">1m</button>
+            <button class="preset-btn" onclick="setPresetTime(180)">3m</button>
+            <button class="preset-btn" onclick="setPresetTime(300)">5m</button>
+            <button class="preset-btn" onclick="setPresetTime(600)">10m</button>
+        </div>
+        
+        <div class="time-input-group">
+            <label for="timeInput">Custom Time (seconds):</label>
+            <input type="number" id="timeInput" class="time-input" value="30" min="1" max="3600">
+            <div class="time-unit">Enter time in seconds (1-3600)</div>
+        </div>
+        
+        <button class="btn" onclick="startGame()">Start Game</button>
+    </div>
 
-    <div class="timer-container">
+    <div class="timer-container hidden" id="timerContainer">
         <div class="player inactive" id="player1" data-player="1">
             <div class="player-name">Team 1</div>
             <div class="time-display" id="time1">30</div>
@@ -183,15 +281,58 @@
         </div>
     </div>
 
-    <div class="controls">
+    <div class="game-status hidden" id="gameStatus"></div>
+
+    <div class="controls hidden" id="controls">
         <button class="btn" id="resetBtn">Reset Game</button>
+        <button class="btn" id="newGameBtn">New Game</button>
     </div>
 
     <script>
+        let timer;
+
+        function setPresetTime(seconds) {
+            document.getElementById('timeInput').value = seconds;
+        }
+
+        function startGame() {
+            const timeInput = document.getElementById('timeInput');
+            const initialTime = parseInt(timeInput.value);
+            
+            if (isNaN(initialTime) || initialTime < 1 || initialTime > 3600) {
+                alert('Please enter a valid time between 1 and 3600 seconds.');
+                return;
+            }
+            
+            // Hide setup screen and show game
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('timerContainer').classList.remove('hidden');
+            document.getElementById('gameStatus').classList.remove('hidden');
+            document.getElementById('controls').classList.remove('hidden');
+            
+            // Initialize timer with custom time
+            timer = new ChessTimer(initialTime);
+        }
+
+        function newGame() {
+            // Show setup screen and hide game
+            document.getElementById('setupScreen').classList.remove('hidden');
+            document.getElementById('timerContainer').classList.add('hidden');
+            document.getElementById('gameStatus').classList.add('hidden');
+            document.getElementById('controls').classList.add('hidden');
+            
+            // Clear existing timer
+            if (timer) {
+                timer.cleanup();
+                timer = null;
+            }
+        }
+
         class ChessTimer {
-            constructor() {
-                this.player1Time = 30;
-                this.player2Time = 30;
+            constructor(initialTime) {
+                this.initialTime = initialTime;
+                this.player1Time = initialTime;
+                this.player2Time = initialTime;
                 this.activePlayer = null;
                 this.gameRunning = false;
                 this.gameEnded = false;
@@ -208,6 +349,7 @@
                 this.time1El = document.getElementById('time1');
                 this.time2El = document.getElementById('time2');
                 this.resetBtn = document.getElementById('resetBtn');
+                this.newGameBtn = document.getElementById('newGameBtn');
                 this.gameStatus = document.getElementById('gameStatus');
             }
 
@@ -232,6 +374,11 @@
                 // Reset button
                 this.resetBtn.addEventListener('click', () => {
                     this.resetGame();
+                });
+
+                // New game button
+                this.newGameBtn.addEventListener('click', () => {
+                    newGame();
                 });
             }
 
@@ -278,12 +425,14 @@
             updateWarningStates() {
                 const currentTime = this.activePlayer === 1 ? this.player1Time : this.player2Time;
                 const activeEl = this.activePlayer === 1 ? this.player1El : this.player2El;
+                const warningTime = Math.max(10, this.initialTime * 0.1);
+                const criticalTime = Math.max(5, this.initialTime * 0.05);
                 
                 activeEl.classList.remove('warning', 'critical');
                 
-                if (currentTime <= 5) {
+                if (currentTime <= criticalTime) {
                     activeEl.classList.add('critical');
-                } else if (currentTime <= 10) {
+                } else if (currentTime <= warningTime) {
                     activeEl.classList.add('warning');
                 }
             }
@@ -304,8 +453,8 @@
             }
 
             resetGame() {
-                this.player1Time = 30;
-                this.player2Time = 30;
+                this.player1Time = this.initialTime;
+                this.player2Time = this.initialTime;
                 this.activePlayer = null;
                 this.gameRunning = false;
                 this.gameEnded = false;
@@ -322,8 +471,8 @@
             }
 
             updateDisplay() {
-                this.time1El.textContent = this.player1Time;
-                this.time2El.textContent = this.player2Time;
+                this.time1El.textContent = this.formatTime(this.player1Time);
+                this.time2El.textContent = this.formatTime(this.player2Time);
 
                 // Update visual states
                 if (this.activePlayer === 1) {
@@ -339,15 +488,23 @@
                 }
             }
 
+            formatTime(seconds) {
+                if (seconds >= 60) {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return `${mins}:${secs.toString().padStart(2, '0')}`;
+                }
+                return seconds.toString();
+            }
+
             updateGameStatus(message) {
                 this.gameStatus.textContent = message;
             }
-        }
 
-        // Initialize the timer when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new ChessTimer();
-        });
+            cleanup() {
+                if (this.interval) clearInterval(this.interval);
+            }
+        }
     </script>
 </body>
 </html>
