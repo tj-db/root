@@ -6,10 +6,7 @@
   <title>Color Number Challenge</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Fredoka', sans-serif;
@@ -25,31 +22,24 @@
       overflow-x: hidden;
       position: relative;
     }
-
-    /* Animated background particles */
     .particles {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       pointer-events: none;
       z-index: 1;
     }
-
     .particle {
       position: absolute;
       border-radius: 50%;
       opacity: 0.6;
       animation: float 6s ease-in-out infinite;
     }
-
     @keyframes float {
-      0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); }
+      0%,100% { transform: translateY(0) translateX(0) rotate(0deg); }
       33% { transform: translateY(-20px) translateX(10px) rotate(120deg); }
       66% { transform: translateY(10px) translateX(-10px) rotate(240deg); }
     }
-
     .game-content {
       position: relative;
       z-index: 10;
@@ -57,7 +47,6 @@
       max-width: 1200px;
       padding: 20px;
     }
-
     .title {
       font-size: 3.5em;
       font-weight: 700;
@@ -66,9 +55,69 @@
       background: linear-gradient(45deg, #ffffff, #fbbf24);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      background-clip: text;
     }
-
+    /* --- Intro Styles --- */
+    .intro {
+        background: rgba(0,0,0,0.25);
+        padding: 25px;
+        border-radius: 20px;
+        margin-bottom: 40px;
+        border: 2px solid rgba(255,255,255,0.2);
+        backdrop-filter: blur(5px);
+    }
+    .intro-title {
+        font-size: 2em;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #fbbf24;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .intro-subtitle {
+        font-size: 1.2em;
+        margin-bottom: 25px;
+        opacity: 0.8;
+    }
+    .intro-subtitle strong {
+        color: #fbbf24;
+    }
+    .color-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 25px;
+        padding: 40px 20px; /* Added padding for scaling effect */
+    }
+    .color-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.1);
+        transition: all 0.4s ease; /* Updated transition */
+        width: 110px;
+        cursor: default;
+    }
+    /* --- New Highlight Style --- */
+    .color-item.highlighted {
+        transform: scale(1.75);
+        z-index: 10;
+        background: rgba(255,255,255,0.2);
+        box-shadow: 0 0 35px rgba(255,255,255,0.6);
+    }
+    .color-swatch {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 3px solid rgba(255,255,255,0.5);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .color-name {
+        font-weight: 500;
+        font-size: 1em;
+    }
     #start-btn {
       background: linear-gradient(45deg, #fbbf24, #f59e0b);
       color: #1a202c;
@@ -85,27 +134,19 @@
       position: relative;
       overflow: hidden;
     }
-
     #start-btn::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
       transition: left 0.5s;
     }
-
-    #start-btn:hover::before {
-      left: 100%;
-    }
-
+    #start-btn:hover::before { left: 100%; }
     #start-btn:hover {
       transform: translateY(-3px) scale(1.05);
       box-shadow: 0 12px 35px rgba(0,0,0,0.4);
     }
-
     .game-container {
       display: flex;
       flex-direction: column;
@@ -113,47 +154,36 @@
       gap: 40px;
       width: 100%;
     }
-
     .number-display {
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0,0,0,0.3);
       backdrop-filter: blur(15px);
       border-radius: 30px;
       padding: 60px 80px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
+      border: 3px solid rgba(255,255,255,0.3);
       box-shadow: 0 15px 40px rgba(0,0,0,0.4);
-      transition: all 0.5s ease;
       min-width: 300px;
       min-height: 200px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
-    .number-display:hover {
-      transform: scale(1.02);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    }
-
     #color-number {
-      font-size: 8em;
+      font-size: 12em;
       font-weight: 700;
       text-shadow: 4px 4px 8px rgba(0,0,0,0.6);
       animation: pulse 2s ease-in-out infinite;
       transition: all 0.3s ease;
     }
-
     @keyframes pulse {
-      0%, 100% { transform: scale(1); }
+      0%,100% { transform: scale(1); }
       50% { transform: scale(1.05); }
     }
-
     .timers {
       display: flex;
       gap: 100px;
       justify-content: center;
       flex-wrap: wrap;
     }
-
     .team {
       display: flex;
       flex-direction: column;
@@ -161,39 +191,28 @@
       font-size: 2.8em;
       padding: 30px 40px;
       border-radius: 25px;
-      transition: all 0.4s ease;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,0.1);
       backdrop-filter: blur(8px);
       border: 3px solid transparent;
       min-width: 200px;
     }
-
     .team-label {
       font-size: 0.6em;
       font-weight: 600;
       margin-bottom: 10px;
       opacity: 0.8;
     }
-
-    .team-timer {
-      font-size: 1.2em;
-      font-weight: 700;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-
+    .team-timer { font-size: 1.2em; font-weight: 700; }
     .team.active {
-      border: 4px solid rgba(255, 255, 255, 0.9);
-      background: rgba(255, 255, 255, 0.25);
+      border: 4px solid rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.25);
       transform: scale(1.08);
-      box-shadow: 0 0 40px rgba(255, 255, 255, 0.4);
       animation: glow 1.5s ease-in-out infinite alternate;
     }
-
     @keyframes glow {
-      from { box-shadow: 0 0 40px rgba(255, 255, 255, 0.4); }
-      to { box-shadow: 0 0 60px rgba(255, 255, 255, 0.6); }
+      from { box-shadow: 0 0 40px rgba(255,255,255,0.4); }
+      to { box-shadow: 0 0 60px rgba(255,255,255,0.6); }
     }
-
     .progress-bars {
       display: flex;
       gap: 80px;
@@ -201,96 +220,44 @@
       justify-content: center;
       flex-wrap: wrap;
     }
-
-    .progress-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-    }
-
+    .progress-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
     .progress-bar {
-      width: 250px;
-      height: 15px;
-      background: rgba(255, 255, 255, 0.2);
+      width: 250px; height: 15px;
+      background: rgba(255,255,255,0.2);
       border-radius: 8px;
       overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      border: 2px solid rgba(255,255,255,0.3);
     }
-
-    .progress-fill {
-      height: 100%;
-      width: 100%;
-      transition: width 0.1s ease;
-      border-radius: 8px;
-    }
-
-    .progress-fill.team1 {
-      background: linear-gradient(45deg, #10b981, #059669);
-    }
-
-    .progress-fill.team2 {
-      background: linear-gradient(45deg, #3b82f6, #2563eb);
-    }
-
-    .progress-fill.warning {
-      background: linear-gradient(45deg, #f59e0b, #d97706) !important;
-      animation: flash-warning 0.5s infinite;
-    }
-
-    .progress-fill.danger {
-      background: linear-gradient(45deg, #ef4444, #dc2626) !important;
-      animation: flash-danger 0.3s infinite;
-    }
-
-    @keyframes flash-warning {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    @keyframes flash-danger {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
+    .progress-fill { height: 100%; width: 100%; transition: width 0.1s ease; border-radius: 8px; }
+    .progress-fill.team1 { background: linear-gradient(45deg, #10b981, #059669); }
+    .progress-fill.team2 { background: linear-gradient(45deg, #3b82f6, #2563eb); }
+    .progress-fill.warning { background: linear-gradient(45deg, #f59e0b, #d97706) !important; animation: flash-warning 0.5s infinite; }
+    .progress-fill.danger { background: linear-gradient(45deg, #ef4444, #dc2626) !important; animation: flash-danger 0.3s infinite; }
+    @keyframes flash-warning { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+    @keyframes flash-danger { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
     .controls {
       margin-top: 30px;
       font-size: 1.6em;
-      color: rgba(255, 255, 255, 0.9);
-      background: rgba(0, 0, 0, 0.3);
+      color: rgba(255,255,255,0.9);
+      background: rgba(0,0,0,0.3);
       padding: 20px 30px;
       border-radius: 20px;
-      backdrop-filter: blur(10px);
-      border: 2px solid rgba(255, 255, 255, 0.2);
     }
-
-    .controls strong {
-      color: #fbbf24;
-    }
-
+    .controls strong { color: #fbbf24; }
     .final-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
       background: linear-gradient(135deg, #000, #1a1a2e);
       color: #fbbf24;
       display: none;
       align-items: center;
       justify-content: center;
-      text-align: center;
+      flex-direction: column;
       z-index: 1000;
       padding: 2em;
-      flex-direction: column;
       animation: fadeIn 0.5s ease;
     }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
     .final-message {
       font-size: 4em;
       font-weight: 700;
@@ -298,12 +265,7 @@
       text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
       animation: celebrate 1.2s ease-in-out infinite alternate;
     }
-
-    @keyframes celebrate {
-      from { transform: scale(1) rotate(-1deg); }
-      to { transform: scale(1.05) rotate(1deg); }
-    }
-
+    @keyframes celebrate { from{transform:scale(1) rotate(-1deg);} to{transform:scale(1.05) rotate(1deg);} }
     .play-again-btn {
       background: linear-gradient(45deg, #fbbf24, #f59e0b);
       color: #1a202c;
@@ -318,239 +280,170 @@
       transition: all 0.3s ease;
       margin-top: 20px;
     }
-
-    .play-again-btn:hover {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 12px 35px rgba(0,0,0,0.5);
-    }
-
-    .stats {
-      font-size: 1.6em;
-      margin-top: 25px;
-      color: rgba(255, 255, 255, 0.9);
-      line-height: 1.5;
-    }
-
+    .play-again-btn:hover { transform: translateY(-3px) scale(1.05); }
+    .stats { font-size: 1.6em; margin-top: 25px; color: rgba(255,255,255,0.9); }
     @media (max-width: 768px) {
       .title { font-size: 2.5em; }
-      #color-number { font-size: 5em; }
-      .team { font-size: 2.2em; gap: 60px; }
+      #color-number { font-size: 8em; }
+      .team { font-size: 2.2em; }
       .timers { gap: 60px; }
-      .progress-bars { gap: 40px; }
       .progress-bar { width: 180px; }
       .final-message { font-size: 2.5em; }
-      .number-display { padding: 40px 50px; min-width: 250px; }
     }
   </style>
 </head>
 <body>
   <div class="particles" id="particles"></div>
-  
   <div class="game-content">
     <div class="title">🎨 Color Number Challenge 🔢</div>
-    <button id="start-btn">Start Challenge!</button>
+    
+    <div class="intro" id="intro-screen">
+        <h2 class="intro-title">Meet the Colors!</h2>
+        <div class="intro-subtitle">Press <strong>SPACEBAR</strong> to cycle through the colors.</div>
+        <div class="color-grid" id="color-grid">
+            </div>
+    </div>
 
+    <button id="start-btn">Start Challenge!</button>
     <div class="game-container" style="display:none;">
       <div class="number-display">
         <div id="color-number">?</div>
       </div>
-
       <div class="timers">
-        <div class="team" id="team1">
-          <div class="team-label">Team 1</div>
-          <div class="team-timer" id="team1-timer">60.0s</div>
-        </div>
-        <div class="team" id="team2">
-          <div class="team-label">Team 2</div>
-          <div class="team-timer" id="team2-timer">60.0s</div>
-        </div>
+        <div class="team" id="team1"><div class="team-label">Team 1</div><div class="team-timer" id="team1-timer">60.0s</div></div>
+        <div class="team" id="team2"><div class="team-label">Team 2</div><div class="team-timer" id="team2-timer">60.0s</div></div>
       </div>
-
       <div class="progress-bars">
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill team1" id="team1-progress"></div>
-          </div>
-          <div style="color: rgba(255,255,255,0.8); font-size: 0.9em; font-weight: 600;">Team 1</div>
-        </div>
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div class="progress-fill team2" id="team2-progress"></div>
-          </div>
-          <div style="color: rgba(255,255,255,0.8); font-size: 0.9em; font-weight: 600;">Team 2</div>
-        </div>
+        <div class="progress-container"><div class="progress-bar"><div class="progress-fill team1" id="team1-progress"></div></div><div>Team 1</div></div>
+        <div class="progress-container"><div class="progress-bar"><div class="progress-fill team2" id="team2-progress"></div></div><div>Team 2</div></div>
       </div>
-
-      <div class="controls">
-        Say the <strong>color and number</strong> out loud, then press <strong>SPACEBAR</strong> to switch teams!
-      </div>
+      <div class="controls">Say the <strong>color and number</strong> out loud, then press <strong>SPACEBAR</strong> to switch teams!</div>
     </div>
   </div>
-
   <div class="final-screen" id="final-screen">
     <div class="final-message" id="final-message"></div>
     <div class="stats" id="final-stats"></div>
     <button class="play-again-btn" id="play-again-btn">Play Again</button>
   </div>
-
   <script>
-    const startBtn = document.getElementById('start-btn');
-    const gameContainer = document.querySelector('.game-container');
-    const colorNumberEl = document.getElementById('color-number');
-    const team1TimerEl = document.getElementById('team1-timer');
-    const team2TimerEl = document.getElementById('team2-timer');
-    const finalScreen = document.getElementById('final-screen');
-    const finalMessage = document.getElementById('final-message');
-    const finalStats = document.getElementById('final-stats');
-    const playAgainBtn = document.getElementById('play-again-btn');
-    const team1El = document.getElementById('team1');
-    const team2El = document.getElementById('team2');
-    const team1ProgressEl = document.getElementById('team1-progress');
-    const team2ProgressEl = document.getElementById('team2-progress');
-    const particlesEl = document.getElementById('particles');
+    const startBtn=document.getElementById('start-btn');
+    const gameContainer=document.querySelector('.game-container');
+    const colorNumberEl=document.getElementById('color-number');
+    const team1TimerEl=document.getElementById('team1-timer');
+    const team2TimerEl=document.getElementById('team2-timer');
+    const finalScreen=document.getElementById('final-screen');
+    const finalMessage=document.getElementById('final-message');
+    const finalStats=document.getElementById('final-stats');
+    const playAgainBtn=document.getElementById('play-again-btn');
+    const team1El=document.getElementById('team1');
+    const team2El=document.getElementById('team2');
+    const team1ProgressEl=document.getElementById('team1-progress');
+    const team2ProgressEl=document.getElementById('team2-progress');
+    const particlesEl=document.getElementById('particles');
+    const introScreen = document.getElementById('intro-screen');
+    const colorGrid = document.getElementById('color-grid');
 
-    let team1Time = 60;
-    let team2Time = 60;
-    let activeTeam = 1;
-    let intervalId = null;
-    let gameStartTime = 0;
-    let totalSwitches = 0;
-    const intervalStep = 100;
-    const maxTime = 60.0;
-    const warningTime = 20.0;
-    const dangerTime = 10.0;
-
-    const colors = [
-      { name: 'RED', value: '#ef4444' },
-      { name: 'BLUE', value: '#3b82f6' },
-      { name: 'GREEN', value: '#10b981' },
-      { name: 'YELLOW', value: '#fbbf24' },
-      { name: 'PURPLE', value: '#8b5cf6' },
-      { name: 'ORANGE', value: '#f97316' },
-      { name: 'PINK', value: '#ec4899' },
-      { name: 'CYAN', value: '#06b6d4' }
+    let team1Time=60, team2Time=60, activeTeam=1, intervalId=null, gameStartTime=0, totalSwitches=0;
+    let highlightedColorIndex = -1; // New state for intro cycling
+    const intervalStep=100, maxTime=60.0, warningTime=20.0, dangerTime=10.0;
+    const colors=[
+      {name:'RED',value:'#FF0000'}, // Changed to a more vibrant red
+      {name:'YELLOW',value:'#fbbf24'},
+      {name:'PINK',value:'#ec4899'},
+      {name:'GREEN',value:'#10b981'},
+      {name:'PURPLE',value:'#8b5cf6'},
+      {name:'ORANGE',value:'#f97316'},
+      {name:'BLUE',value:'#3b82f6'}
     ];
+    const numbers=[0,1,2,3,4,5,6,7,8,9];
 
-    const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    function populateColorIntro() {
+        colorGrid.innerHTML = '';
+        colors.forEach(color => {
+            const item = document.createElement('div');
+            item.className = 'color-item';
+            item.innerHTML = `
+                <div class="color-swatch" style="background-color: ${color.value};"></div>
+                <div class="color-name">${color.name}</div>
+            `;
+            colorGrid.appendChild(item);
+        });
+    }
+    
+    // --- New Function to cycle through intro colors ---
+    function cycleIntroColor() {
+        const colorItems = colorGrid.querySelectorAll('.color-item');
+        if (colorItems.length === 0) return;
 
-    function createParticles() {
-      for (let i = 0; i < 15; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.top = Math.random() * 100 + '%';
-        particle.style.width = (Math.random() * 8 + 4) + 'px';
-        particle.style.height = particle.style.width;
-        particle.style.background = colors[Math.floor(Math.random() * colors.length)].value;
-        particle.style.animationDelay = Math.random() * 6 + 's';
-        particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
-        particlesEl.appendChild(particle);
+        if (highlightedColorIndex > -1) {
+            colorItems[highlightedColorIndex].classList.remove('highlighted');
+        }
+        
+        highlightedColorIndex = (highlightedColorIndex + 1) % colorItems.length;
+        
+        colorItems[highlightedColorIndex].classList.add('highlighted');
+        playSound(300 + highlightedColorIndex * 50, 0.15);
+    }
+
+    function createParticles(){
+      for(let i=0;i<15;i++){
+        const p=document.createElement('div');
+        p.className='particle';
+        p.style.left=Math.random()*100+'%';
+        p.style.top=Math.random()*100+'%';
+        p.style.width=(Math.random()*8+4)+'px';
+        p.style.height=p.style.width;
+        p.style.background=colors[Math.floor(Math.random()*colors.length)].value;
+        p.style.animationDelay=Math.random()*6+'s';
+        p.style.animationDuration=(Math.random()*4+4)+'s';
+        particlesEl.appendChild(p);
       }
     }
-
-    function generateRandomColorNumber() {
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const number = numbers[Math.floor(Math.random() * numbers.length)];
-      
-      colorNumberEl.textContent = number;
-      colorNumberEl.style.color = color.value;
-      
-      // Add a subtle animation when changing
-      colorNumberEl.style.transform = 'scale(0.8)';
-      setTimeout(() => {
-        colorNumberEl.style.transform = 'scale(1)';
-      }, 150);
-      
-      return { color: color.name, number };
+    function generateRandomColorNumber(){
+      const color=colors[Math.floor(Math.random()*colors.length)];
+      const number=numbers[Math.floor(Math.random()*numbers.length)];
+      colorNumberEl.textContent=number;
+      colorNumberEl.style.color=color.value;
+      colorNumberEl.style.transform='scale(0.8)';
+      setTimeout(()=>{colorNumberEl.style.transform='scale(1)';},150);
     }
-
-    function playSound(frequency, duration) {
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = frequency;
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + duration);
-      } catch (e) {
-        // Audio context not available
+    function playSound(freq,dur){
+      try{
+        const ctx=new(window.AudioContext||window.webkitAudioContext)();
+        const osc=ctx.createOscillator(),gain=ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value=freq; osc.type='sine';
+        gain.gain.setValueAtTime(0.1,ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+dur);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime+dur);
+      }catch(e){}
+    }
+    function updateTimers(){
+      if(activeTeam===1){
+        team1Time-=intervalStep/1000;
+        if(team1Time<=0){team1Time=0;endGame(2);return;}
+        team1TimerEl.textContent=`${team1Time.toFixed(1)}s`;
+        team1ProgressEl.style.width=`${(team1Time/maxTime)*100}%`;
+        if(team1Time<=dangerTime){team1ProgressEl.classList.add('danger');team1ProgressEl.classList.remove('warning');}
+        else if(team1Time<=warningTime){team1ProgressEl.classList.add('warning');team1ProgressEl.classList.remove('danger');}
+        else team1ProgressEl.classList.remove('warning','danger');
+      }else{
+        team2Time-=intervalStep/1000;
+        if(team2Time<=0){team2Time=0;endGame(1);return;}
+        team2TimerEl.textContent=`${team2Time.toFixed(1)}s`;
+        team2ProgressEl.style.width=`${(team2Time/maxTime)*100}%`;
+        if(team2Time<=dangerTime){team2ProgressEl.classList.add('danger');team2ProgressEl.classList.remove('warning');}
+        else if(team2Time<=warningTime){team2ProgressEl.classList.add('warning');team2ProgressEl.classList.remove('danger');}
+        else team2ProgressEl.classList.remove('warning','danger');
       }
     }
-
-    function updateTimers() {
-      if (activeTeam === 1) {
-        team1Time -= intervalStep / 1000;
-        if (team1Time <= 0) {
-          team1Time = 0;
-          endGame(2); // Team 2 wins
-          return;
-        }
-        team1TimerEl.textContent = `${team1Time.toFixed(1)}s`;
-        team1ProgressEl.style.width = `${(team1Time / maxTime) * 100}%`;
-        
-        // Warning and danger states
-        if (team1Time <= dangerTime) {
-          team1ProgressEl.classList.add('danger');
-          team1ProgressEl.classList.remove('warning');
-        } else if (team1Time <= warningTime) {
-          team1ProgressEl.classList.add('warning');
-          team1ProgressEl.classList.remove('danger');
-        } else {
-          team1ProgressEl.classList.remove('warning', 'danger');
-        }
-      } else {
-        team2Time -= intervalStep / 1000;
-        if (team2Time <= 0) {
-          team2Time = 0;
-          endGame(1); // Team 1 wins
-          return;
-        }
-        team2TimerEl.textContent = `${team2Time.toFixed(1)}s`;
-        team2ProgressEl.style.width = `${(team2Time / maxTime) * 100}%`;
-        
-        // Warning and danger states
-        if (team2Time <= dangerTime) {
-          team2ProgressEl.classList.add('danger');
-          team2ProgressEl.classList.remove('warning');
-        } else if (team2Time <= warningTime) {
-          team2ProgressEl.classList.add('warning');
-          team2ProgressEl.classList.remove('danger');
-        } else {
-          team2ProgressEl.classList.remove('warning', 'danger');
-        }
-      }
-    }
-
-    function switchTeam() {
-      if (finalScreen.style.display === 'flex') return;
-      
+    function switchTeam(){
+      if(finalScreen.style.display==='flex')return;
       totalSwitches++;
-      
-      // Generate new color and number
       generateRandomColorNumber();
-      
-      // Play switch sound
-      playSound(activeTeam === 1 ? 500 : 400, 0.2);
-      
-      // Switch active team
-      if (activeTeam === 1) {
-        activeTeam = 2;
-        team1El.classList.remove("active");
-        team2El.classList.add("active");
-      } else {
-        activeTeam = 1;
-        team2El.classList.remove("active");
-        team1El.classList.add("active");
-      }
+      playSound(activeTeam===1?500:400,0.2);
+      if(activeTeam===1){activeTeam=2;team1El.classList.remove('active');team2El.classList.add('active');}
+      else{activeTeam=1;team2El.classList.remove('active');team1El.classList.add('active');}
     }
 
     function startGame() {
@@ -569,12 +462,12 @@
       
       finalScreen.style.display = 'none';
       startBtn.style.display = 'none';
+      introScreen.style.display = 'none';
       gameContainer.style.display = 'flex';
       
       team1El.classList.add("active");
       team2El.classList.remove("active");
       
-      // Generate first color and number
       generateRandomColorNumber();
       
       playSound(600, 0.4);
@@ -609,7 +502,13 @@
     }
 
     function resetGame() {
+      // Clear any intro highlight
+      const highlightedItem = colorGrid.querySelector('.color-item.highlighted');
+      if (highlightedItem) highlightedItem.classList.remove('highlighted');
+      highlightedColorIndex = -1;
+      
       startBtn.style.display = 'block';
+      introScreen.style.display = 'block';
       gameContainer.style.display = 'none';
       finalScreen.style.display = 'none';
       colorNumberEl.textContent = "?";
@@ -620,15 +519,23 @@
     startBtn.addEventListener('click', startGame);
     playAgainBtn.addEventListener('click', resetGame);
 
+    // --- Updated Event Listener for Spacebar ---
     window.addEventListener('keydown', e => {
       if (e.code === 'Space') {
         e.preventDefault();
-        if (activeTeam && finalScreen.style.display !== 'flex' && gameContainer.style.display === 'flex') {
+        // If game is active, switch teams
+        if (gameContainer.style.display === 'flex') {
           switchTeam();
+        } 
+        // If intro is active, cycle colors
+        else if (introScreen.style.display !== 'none') {
+          cycleIntroColor();
         }
       }
     });
+    
     createParticles();
+    populateColorIntro();
   </script>
 </body>
 </html>
