@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>💣 Bomb Timer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1a;
+      color: white;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    .bomb {
+      font-size: clamp(120px, 20vw, 300px);
+      margin-bottom: 20px;
+      filter: drop-shadow(0 0 20px #ff4444);
+      animation: pulse 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.05); filter: drop-shadow(0 0 30px #ff6666); }
+    }
+
+    .time {
+      font-size: clamp(48px, 12vw, 120px);
+      font-weight: bold;
+      color: #ff4444;
+      text-shadow: 0 0 20px #ff4444;
+      margin-bottom: 30px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 80px;
+      padding: 10px;
+      font-size: 18px;
+      text-align: center;
+      border: 2px solid #444;
+      background: #2a2a2a;
+      color: white;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .start { background: #ff4444; color: white; }
+    .start:hover { background: #ff6666; }
+    .pause { background: #ffaa44; color: white; }
+    .pause:hover { background: #ffcc66; }
+    .reset { background: #666; color: white; }
+    .reset:hover { background: #888; }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Explosion Effect */
+    .explosion {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .exploded {
+      background: radial-gradient(circle, #ff4444 0%, #ff0000 20%, #990000 50%, transparent 100%);
+      animation: explode 2s ease-out forwards;
+    }
+
+    @keyframes explode {
+      0% {
+        opacity: 0;
+        transform: scale(0.1);
+      }
+      10% {
+        opacity: 1;
+        transform: scale(1.5);
+        background: radial-gradient(circle, #ffffff 0%, #ffff00 10%, #ff4444 30%, #ff0000 60%, transparent 100%);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(3);
+        background: radial-gradient(circle, transparent 0%, transparent 100%);
+      }
+    }
+
+    .shake {
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+      20%, 40%, 60%, 80% { transform: translateX(10px); }
+    }
+
+    .flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .flash.active {
+      animation: flash 0.3s ease-out;
+    }
+
+    @keyframes flash {
+      0% { opacity: 0; }
+      50% { opacity: 0.8; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="flash" id="flash"></div>
+  <div class="explosion" id="explosion"></div>
+  
+  <div class="bomb" id="bomb">💣</div>
+  
+  <div class="time" id="time">00:00</div>
+  
+  <div class="controls">
+    <input type="number" id="mins" placeholder="Min" min="0" max="99" value="0">
+    <input type="number" id="secs" placeholder="Sec" min="0" max="59" value="10">
+    <button class="start" id="startBtn">START</button>
+    <button class="pause" id="pauseBtn" disabled>PAUSE</button>
+    <button class="reset" id="resetBtn" disabled>RESET</button>
+  </div>
+
+  <script>
+    const minsEl = document.getElementById('mins');
+    const secsEl = document.getElementById('secs');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const timeEl = document.getElementById('time');
+    const bombEl = document.getElementById('bomb');
+    const explosionEl = document.getElementById('explosion');
+    const flashEl = document.getElementById('flash');
+
+    let totalMs = 0;
+    let remainingMs = 0;
+    let intervalId = null;
+    let running = false;
+
+    function updateDisplay() {
+      const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      timeEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      
+      // Faster pulsing as time runs out
+      if (running && totalSeconds <= 10 && totalSeconds > 0) {
+        bombEl.style.animationDuration = (totalSeconds / 10) + 's';
+      }
+    }
+
+    function startTimer() {
+      const m = parseInt(minsEl.value) || 0;
+      const s = parseInt(secsEl.value) || 0;
+      
+      if (!running && remainingMs === 0) {
+        totalMs = (m * 60 + s) * 1000;
+        remainingMs = totalMs;
+      }
+      
+      if (remainingMs <= 0) return;
+
+      running = true;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      resetBtn.disabled = false;
+
+      intervalId = setInterval(() => {
+        remainingMs -= 100;
+        updateDisplay();
+        
+        if (remainingMs <= 0) {
+          explode();
+        }
+      }, 100);
+    }
+
+    function pauseTimer() {
+      running = false;
+      clearInterval(intervalId);
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      bombEl.style.animationDuration = '1s';
+    }
+
+    function resetTimer() {
+      running = false;
+      clearInterval(intervalId);
+      remainingMs = 0;
+      updateDisplay();
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resetBtn.disabled = true;
+      bombEl.style.animationDuration = '1s';
+      explosionEl.classList.remove('exploded');
+      document.body.classList.remove('shake');
+    }
+
+    function explode() {
+      running = false;
+      clearInterval(intervalId);
+      
+      // Visual effects
+      flashEl.classList.add('active');
+      document.body.classList.add('shake');
+      explosionEl.classList.add('exploded');
+      
+      // Hide bomb during explosion
+      bombEl.style.opacity = '0';
+      
+      // Reset bomb after explosion
+      setTimeout(() => {
+        bombEl.style.opacity = '1';
+        flashEl.classList.remove('active');
+      }, 2000);
+      
+      // Reset buttons
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      
+      // Play explosion sound
+      playExplosionSound();
+    }
+
+    function playExplosionSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        
+        // Create explosion sound effect
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
+        
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } catch (e) {
+        console.log('Audio not supported');
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        running ? pauseTimer() : startTimer();
+      } else if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        resetTimer();
+      }
+    });
+
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+    updateDisplay();
+  </script>
+</body>
+</html>
