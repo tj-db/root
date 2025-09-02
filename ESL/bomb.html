@@ -143,6 +143,28 @@
       50% { opacity: 0.8; }
       100% { opacity: 0; }
     }
+
+    .sound-controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 14px;
+    }
+
+    .sound-controls label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .sound-controls input[type="checkbox"] {
+      width: auto;
+    }
+
+    .sound-controls input[type="range"] {
+      width: 100px;
+    }
   </style>
 </head>
 <body>
@@ -161,6 +183,17 @@
     <button class="reset" id="resetBtn" disabled>RESET</button>
   </div>
 
+  <div class="sound-controls">
+    <label>
+      <input type="checkbox" id="soundEnabled" checked>
+      Sound Effects
+    </label>
+    <label>
+      Volume:
+      <input type="range" id="volumeSlider" min="0" max="100" value="50">
+    </label>
+  </div>
+
   <script>
     const minsEl = document.getElementById('mins');
     const secsEl = document.getElementById('secs');
@@ -171,6 +204,8 @@
     const bombEl = document.getElementById('bomb');
     const explosionEl = document.getElementById('explosion');
     const flashEl = document.getElementById('flash');
+    const soundEnabledEl = document.getElementById('soundEnabled');
+    const volumeSliderEl = document.getElementById('volumeSlider');
 
     let totalMs = 0;
     let remainingMs = 0;
@@ -186,6 +221,14 @@
       // Faster pulsing as time runs out
       if (running && totalSeconds <= 10 && totalSeconds > 0) {
         bombEl.style.animationDuration = (totalSeconds / 10) + 's';
+        
+        if (totalSeconds <= 3) {
+          if (remainingMs % 200 < 100) {
+            playTickSound();
+          }
+        } else if (remainingMs % 1000 < 100) {
+          playTickSound();
+        }
       }
     }
 
@@ -204,6 +247,8 @@
       startBtn.disabled = true;
       pauseBtn.disabled = false;
       resetBtn.disabled = false;
+
+      playStartSound();
 
       intervalId = setInterval(() => {
         remainingMs -= 100;
@@ -263,26 +308,98 @@
     }
 
     function playExplosionSound() {
+      if (!soundEnabledEl.checked) return;
+      
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      const playExplosion = () => {
+        const now = audioCtx.currentTime;
+        const volume = volumeSliderEl.value / 100;
+        
+        const explosion = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        explosion.type = 'sawtooth';
+        explosion.frequency.setValueAtTime(150, now);
+        explosion.frequency.exponentialRampToValueAtTime(30, now + 0.8);
+        
+        gain.gain.setValueAtTime(volume * 0.7, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        
+        explosion.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        explosion.start(now);
+        explosion.stop(now + 0.8);
+      };
+      
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+          setTimeout(playExplosion, 50);
+        });
+      } else {
+        playExplosion();
+      }
+    }
+
+    function playTickSound() {
+      if (!soundEnabledEl.checked) return;
+      
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        
+        const now = audioCtx.currentTime;
+        const volume = volumeSliderEl.value / 100;
+        
+        const tick = audioCtx.createOscillator();
+        const tickGain = audioCtx.createGain();
+        
+        tick.type = 'sine';
+        tick.frequency.setValueAtTime(800, now);
+        
+        tickGain.gain.setValueAtTime(volume * 0.3, now);
+        tickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        
+        tick.connect(tickGain);
+        tickGain.connect(audioCtx.destination);
+        
+        tick.start(now);
+        tick.stop(now + 0.1);
+        
+      } catch (e) {
+        console.log('Audio not supported');
+      }
+    }
+
+    function playStartSound() {
+      if (!soundEnabledEl.checked) return;
+      
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
+        const volume = volumeSliderEl.value / 100;
         
-        // Create explosion sound effect
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const beep = audioCtx.createOscillator();
+        const beepGain = audioCtx.createGain();
         
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
+        beep.type = 'sine';
+        beep.frequency.setValueAtTime(440, now);
+        beep.frequency.setValueAtTime(880, now + 0.1);
         
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        beepGain.gain.setValueAtTime(volume * 0.2, now);
+        beepGain.gain.setValueAtTime(volume * 0.2, now + 0.1);
+        beepGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
         
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        beep.connect(beepGain);
+        beepGain.connect(audioCtx.destination);
         
-        osc.start(now);
-        osc.stop(now + 0.5);
+        beep.start(now);
+        beep.stop(now + 0.2);
+        
       } catch (e) {
         console.log('Audio not supported');
       }
