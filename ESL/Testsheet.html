@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Score Table</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+th, td {
+  border: 1px solid #aaa;
+  padding: 5px;
+  text-align: center;
+  vertical-align: top;
+}
+input[type="number"], input[type="text"], textarea.comment {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 2px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+textarea.comment {
+  resize: none;
+  overflow: hidden;
+  text-align: left;
+}
+colgroup col:nth-child(1) { width: 80px; }
+colgroup col:nth-child(2), colgroup col:nth-child(3),
+colgroup col:nth-child(4), colgroup col:nth-child(5),
+colgroup col:nth-child(6), colgroup col:nth-child(7),
+colgroup col:nth-child(8), colgroup col:nth-child(9),
+colgroup col:nth-child(10), colgroup col:nth-child(11) { width: 45px; }
+colgroup col:nth-child(12) { width: 50px; }
+colgroup col:nth-child(13) { width: auto; }
+button {
+  margin: 10px 5px 10px 0;
+  padding: 5px 10px;
+}
+#nameModal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+}
+#nameModalContent {
+  background: #fff;
+  padding: 20px;
+  width: 300px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+}
+#nameModalContent textarea {
+  width: 100%;
+  height: 150px;
+  resize: none;
+  margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+
+<h1>Score Table</h1>
+<table id="scoreTable">
+<colgroup>
+  <col>
+  <col> <col> <col> <col>
+  <col> <col> <col>
+  <col> <col> <col>
+  <col>
+  <col>
+</colgroup>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Q1</th>
+  <th>Q2</th>
+  <th>A1</th>
+  <th>A2</th>
+  <th>Pro</th>
+  <th>Flu</th>
+  <th>QA</th>
+  <th>Pro</th>
+  <th>Flu</th>
+  <th>QA</th>
+  <th>Total</th>
+  <th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><input type="text" value="Kyle" oninput="adjustWidth(this)"></td>
+  <td><input type="number" value="5" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="5" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="10" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="10" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="15" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="15" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="10" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="10" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="15" oninput="updateTotal(this)"></td>
+  <td><input type="number" value="5" oninput="updateTotal(this)"></td>
+  <td><span class="total">100</span></td>
+  <td><textarea class="comment" oninput="autoResize(this)">test comment</textarea></td>
+</tr>
+</tbody>
+</table>
+
+<button onclick="addRow()">Add Row</button>
+<button onclick="showNameModal()">Add Names List</button>
+<button onclick="saveImage()">Save Table as Image</button>
+
+<div id="nameModal">
+  <div id="nameModalContent">
+    <textarea id="nameList" placeholder="Enter one name per line"></textarea>
+    <button onclick="addNamesFromModal()">Add Names</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+function addRow(name='') {
+  const table = document.getElementById('scoreTable').getElementsByTagName('tbody')[0];
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><input type="text" value="${name}"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><input type="number" value="0" oninput="updateTotal(this)"></td>
+    <td><span class="total">0</span></td>
+    <td><textarea class="comment" oninput="autoResize(this)"></textarea></td>
+  `;
+  table.appendChild(row);
+}
+
+function showNameModal() {
+  document.getElementById('nameModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('nameModal').style.display = 'none';
+}
+
+function addNamesFromModal() {
+  const names = document.getElementById('nameList').value;
+  if (!names) return;
+  const nameArray = names.split('\n').map(n => n.trim()).filter(n => n.length>0);
+  nameArray.forEach(name => addRow(name));
+  document.getElementById('nameList').value = '';
+  closeModal();
+}
+
+function updateTotal(input) {
+  const row = input.closest('tr');
+  const inputs = row.querySelectorAll('input[type="number"]');
+  let total = 0;
+  inputs.forEach(i => total += parseFloat(i.value) || 0);
+  row.querySelector('.total').textContent = total;
+}
+
+function autoResize(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+function saveImage() {
+  const table = document.getElementById('scoreTable');
+  html2canvas(table).then(canvas => {
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = 'score_table.png';
+    link.click();
+  });
+}
+
+document.querySelectorAll('textarea.comment').forEach(autoResize);
+</script>
+
+</body>
+</html>
