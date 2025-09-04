@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>💣</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+    }
+    .stage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+    .bomb {
+      font-size: clamp(96px, 20vw, 260px);
+      user-select: none;
+      transform-origin: center;
+      transition: transform 90ms ease;
+      filter: drop-shadow(0 0 0 rgba(0,0,0,0.4));
+    }
+    .tick {
+      transform: scale(1.06);
+      filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.25));
+    }
+    @keyframes flash {
+      0%   { background:#000; }
+      12%  { background:#f00; }
+      24%  { background:#ff0; }
+      36%  { background:#000; }
+      48%  { background:#f00; }
+      60%  { background:#ff0; }
+      72%  { background:#000; }
+      84%  { background:#f00; }
+      100% { background:#000; }
+    }
+    .flashing {
+      animation: flash 120ms linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div id="bomb" class="bomb" aria-hidden="true">💣</div>
+  </div>
+
+  <script>
+    (() => {
+      const bombEl = document.getElementById('bomb');
+      const body = document.body;
+
+      let audioCtx = null;
+      let started = false;
+      let tickInterval = null;
+      let explodeTimeout = null;
+
+      function initAudio() {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+
+      function playTick() {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 2000;
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      }
+
+      function playExplosion() {
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+        
+        // Create multiple noise bursts for explosion effect
+        for (let i = 0; i < 3; i++) {
+          const bufferSize = audioCtx.sampleRate * 0.3; // 300ms of noise
+          const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+          const data = buffer.getChannelData(0);
+          
+          // Generate white noise with decreasing amplitude
+          for (let j = 0; j < bufferSize; j++) {
+            const decay = 1 - (j / bufferSize);
+            data[j] = (Math.random() * 2 - 1) * decay * 0.3;
+          }
+          
+          const source = audioCtx.createBufferSource();
+          const gain = audioCtx.createGain();
+          const filter = audioCtx.createBiquadFilter();
+          
+          source.buffer = buffer;
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(800 - i * 200, now + i * 0.1);
+          
+          gain.gain.setValueAtTime(0.8 - i * 0.2, now + i * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.4);
+          
+          source.connect(filter).connect(gain).connect(audioCtx.destination);
+          source.start(now + i * 0.1);
+        }
+
+        // Add a low frequency rumble
+        const rumbleOsc = audioCtx.createOscillator();
+        const rumbleGain = audioCtx.createGain();
+        
+        rumbleOsc.type = 'sawtooth';
+        rumbleOsc.frequency.setValueAtTime(60, now);
+        rumbleOsc.frequency.exponentialRampToValueAtTime(20, now + 1);
+        
+        rumbleGain.gain.setValueAtTime(0.4, now);
+        rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        
+        rumbleOsc.connect(rumbleGain).connect(audioCtx.destination);
+        rumbleOsc.start(now);
+        rumbleOsc.stop(now + 1.2);
+      }
+
+      function tickVisual() {
+        bombEl.classList.add('tick');
+        setTimeout(() => bombEl.classList.remove('tick'), 90);
+      }
+
+      function explode() {
+        clearInterval(tickInterval);
+        tickInterval = null;
+
+        bombEl.style.transform = 'scale(1.35)';
+        bombEl.style.filter = 'drop-shadow(0 0 40px rgba(255,255,0,0.8))';
+
+        body.classList.add('flashing');
+
+        // Play explosion sound
+        playExplosion();
+
+        setTimeout(() => {
+          body.classList.remove('flashing');
+          bombEl.style.transform = '';
+          bombEl.style.filter = '';
+          
+          // Reset everything so it can be started again
+          started = false;
+          if (explodeTimeout) {
+            clearTimeout(explodeTimeout);
+            explodeTimeout = null;
+          }
+        }, 2500);
+      }
+
+      function startTicking() {
+        if (started) return;
+        started = true;
+        initAudio();
+
+        const duration = 20 + Math.random() * 25;
+        explodeTimeout = setTimeout(explode, duration * 1000);
+
+        tickVisual();
+        playTick();
+        tickInterval = setInterval(() => {
+          tickVisual();
+          playTick();
+        }, 1000);
+      }
+
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          startTicking();
+        }
+      }, { passive: false });
+
+      window.addEventListener('pointerdown', () => {
+        startTicking();
+      });
+    })();
+  </script>
+</body>
+</html>
