@@ -68,21 +68,21 @@
 
   <script>
     const questions = [
-      { word: "dog", answer: "🐶", options: ["🐱", "🐶", "🐭"] },
-      { word: "apple", answer: "🍎", options: ["🍇", "🍎", "🍌"] },
-      { word: "car", answer: "🚗", options: ["✈️", "🚗", "🚲"] },
-      { word: "sun", answer: "🌞", options: ["🌙", "⭐", "🌞"] },
-      { word: "cake", answer: "🎂", options: ["🍔", "🎂", "🍕"] },
-      { word: "cat", answer: "🐱", options: ["🐭", "🐱", "🐹"] },
-      { word: "banana", answer: "🍌", options: ["🍎", "🍓", "🍌"] },
-      { word: "fish", answer: "🐟", options: ["🐔", "🐟", "🐸"] },
-      { word: "tree", answer: "🌳", options: ["🌲", "🌳", "🌵"] },
-      { word: "ball", answer: "⚽", options: ["🏀", "⚽", "🎾"] },
-      { word: "book", answer: "📖", options: ["📝", "📖", "✏️"] },
-      { word: "train", answer: "🚆", options: ["🚁", "🚆", "🚙"] },
-      { word: "star", answer: "⭐", options: ["🌙", "⭐", "☀️"] },
-      { word: "pizza", answer: "🍕", options: ["🍔", "🍕", "🌭"] },
-      { word: "flower", answer: "🌸", options: ["🌹", "🌸", "💐"] }
+      { word: "dog", answer: "🐶", options: ["🐱", "🐶", "🐸"] },
+      { word: "apple", answer: "🍎", options: ["🍌", "🍎", "🍔"] },
+      { word: "car", answer: "🚗", options: ["🚲", "🚗", "🚁"] },
+      { word: "sun", answer: "🌞", options: ["🌙", "🌞", "⭐"] },
+      { word: "cake", answer: "🎂", options: ["🍕", "🎂", "🍟"] },
+      { word: "cat", answer: "🐱", options: ["🐭", "🐱", "🐔"] },
+      { word: "banana", answer: "🍌", options: ["🍓", "🍌", "🥕"] },
+      { word: "fish", answer: "🐟", options: ["🐔", "🐟", "🐘"] },
+      { word: "tree", answer: "🌳", options: ["🌸", "🌳", "🌵"] },
+      { word: "ball", answer: "⚽", options: ["🎲", "⚽", "🎸"] },
+      { word: "book", answer: "📖", options: ["✏️", "📖", "🎧"] },
+      { word: "train", answer: "🚆", options: ["🚗", "🚆", "🚤"] },
+      { word: "star", answer: "⭐", options: ["☁️", "⭐", "🌈"] },
+      { word: "pizza", answer: "🍕", options: ["🍔", "🍕", "🍦"] },
+      { word: "flower", answer: "🌸", options: ["🍎", "🌸", "🎂"] }
     ];
 
     let currentQuestion = 0;
@@ -90,7 +90,7 @@
     function loadQuestion() {
       const q = questions[currentQuestion];
       document.getElementById("question").textContent =
-        'Which one is "' + q.word + '" ?';
+        'Which one is the ' + q.word + '?';
       const choicesDiv = document.getElementById("choices");
       choicesDiv.innerHTML = "";
       q.options.forEach(opt => {
