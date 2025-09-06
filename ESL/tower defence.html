@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Tower Defense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #gameArea {
+            width: 600px;
+            height: 600px;
+            border: 2px solid #16213e;
+            position: relative;
+            background: #0f3460;
+            overflow: hidden;
+        }
+        .tower {
+            position: absolute;
+            font-size: 32px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .monster {
+            position: absolute;
+            font-size: 24px;
+            transition: all 0.1s;
+        }
+        .arrow {
+            position: absolute;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+        .score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 18px;
+        }
+        .wave {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div class="tower">🏰</div>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="wave">Wave: <span id="wave">1</span></div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const scoreEl = document.getElementById('score');
+        const waveEl = document.getElementById('wave');
+        
+        let score = 0;
+        let wave = 1;
+        let monsters = [];
+        let arrows = [];
+        let gameRunning = true;
+        
+        const monsterTypes = [
+            {emoji: '👾', hp: 1, speed: 0.8, points: 10},
+            {emoji: '🐉', hp: 3, speed: 0.6, points: 30},
+            {emoji: '👹', hp: 2, speed: 1.0, points: 20},
+            {emoji: '🤖', hp: 4, speed: 0.4, points: 40}
+        ];
+        
+        class Monster {
+            constructor(type, x, y) {
+                this.type = type;
+                this.hp = type.hp;
+                this.maxHp = type.hp;
+                this.x = x;
+                this.y = y;
+                this.speed = type.speed;
+                this.element = document.createElement('div');
+                this.element.className = 'monster';
+                this.element.textContent = type.emoji;
+                this.element.style.left = x + 'px';
+                this.element.style.top = y + 'px';
+                gameArea.appendChild(this.element);
+            }
+            
+            move() {
+                const centerX = 300;
+                const centerY = 300;
+                const dx = centerX - this.x;
+                const dy = centerY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 5) {
+                    this.x += (dx / distance) * this.speed;
+                    this.y += (dy / distance) * this.speed;
+                    this.element.style.left = this.x + 'px';
+                    this.element.style.top = this.y + 'px';
+                } else {
+                    // Monster reached tower - game over
+                    gameRunning = false;
+                    alert('Game Over! Final Score: ' + score);
+                    location.reload();
+                }
+            }
+            
+            takeDamage() {
+                this.hp--;
+                // Visual feedback for damage
+                this.element.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    if (this.element.parentNode) {
+                        this.element.style.transform = 'scale(1)';
+                    }
+                }, 100);
+                
+                if (this.hp <= 0) {
+                    return true; // Monster dies
+                }
+                return false;
+            }
+            
+            destroy() {
+                if (this.element.parentNode) {
+                    gameArea.removeChild(this.element);
+                }
+            }
+        }
+        
+        class Arrow {
+            constructor(targetX, targetY) {
+                this.x = 300;
+                this.y = 300;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.speed = 8;
+                
+                this.element = document.createElement('div');
+                this.element.className = 'arrow';
+                this.element.textContent = '➤';
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+                gameArea.appendChild(this.element);
+                
+                // Rotate arrow towards target
+                const angle = Math.atan2(targetY - this.y, targetX - this.x);
+                this.element.style.transform = `rotate(${angle}rad)`;
+            }
+            
+            move() {
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > this.speed) {
+                    this.x += (dx / distance) * this.speed;
+                    this.y += (dy / distance) * this.speed;
+                    this.element.style.left = this.x + 'px';
+                    this.element.style.top = this.y + 'px';
+                    return false;
+                } else {
+                    return true; // Arrow reached target
+                }
+            }
+            
+            destroy() {
+                if (this.element.parentNode) {
+                    gameArea.removeChild(this.element);
+                }
+            }
+        }
+        
+        function spawnMonster() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            
+            switch(side) {
+                case 0: x = Math.random() * 600; y = 0; break;
+                case 1: x = 600; y = Math.random() * 600; break;
+                case 2: x = Math.random() * 600; y = 600; break;
+                case 3: x = 0; y = Math.random() * 600; break;
+            }
+            
+            const typeIndex = Math.floor(Math.random() * Math.min(monsterTypes.length, Math.floor(wave/2) + 1));
+            const monster = new Monster(monsterTypes[typeIndex], x, y);
+            monsters.push(monster);
+        }
+        
+        function shoot() {
+            if (monsters.length === 0) return;
+            
+            // Find closest monster
+            let closest = monsters[0];
+            let minDistance = Infinity;
+            
+            monsters.forEach(monster => {
+                const dx = monster.x - 300;
+                const dy = monster.y - 300;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closest = monster;
+                }
+            });
+            
+            const arrow = new Arrow(closest.x, closest.y);
+            arrows.push(arrow);
+        }
+        
+        function checkCollisions() {
+            arrows.forEach((arrow, arrowIndex) => {
+                monsters.forEach((monster, monsterIndex) => {
+                    const dx = arrow.x - monster.x;
+                    const dy = arrow.y - monster.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 20) {
+                        // Hit!
+                        arrow.destroy();
+                        arrows.splice(arrowIndex, 1);
+                        
+                        if (monster.takeDamage()) {
+                            score += monster.type.points;
+                            scoreEl.textContent = score;
+                            monster.destroy();
+                            monsters.splice(monsterIndex, 1);
+                        }
+                    }
+                });
+            });
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Move monsters
+            monsters.forEach(monster => monster.move());
+            
+            // Move arrows
+            arrows = arrows.filter(arrow => {
+                if (arrow.move()) {
+                    arrow.destroy();
+                    return false;
+                }
+                return true;
+            });
+            
+            // Check collisions
+            checkCollisions();
+            
+            // Spawn monsters
+            if (Math.random() < 0.02 + (wave * 0.005)) {
+                spawnMonster();
+            }
+            
+            // Next wave
+            if (monsters.length === 0 && Math.random() < 0.01) {
+                wave++;
+                waveEl.textContent = wave;
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Controls
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                shoot();
+            }
+        });
+        
+        // Start game
+        spawnMonster();
+        gameLoop();
+    </script>
+</body>
+</html>
