@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Tower Defense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a2e;
+            color: white;
+            font-family: monospace;
+            overflow: hidden;
+        }
+        #gameArea {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: #0f3460;
+        }
+        .tower {
+            position: absolute;
+            font-size: 48px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .monster {
+            position: absolute;
+            font-size: 32px;
+            transition: all 0.1s;
+        }
+        .arrow {
+            position: absolute;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+        .explosion {
+            position: absolute;
+            font-size: 40px;
+            animation: explode 0.5s ease-out forwards;
+        }
+        .score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+        }
+        .wave {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+        }
+        .lives {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 1000;
+        }
+        @keyframes explode {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div class="tower">🏰</div>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="wave">Wave: <span id="wave">1</span></div>
+        <div class="lives">Lives: <span id="lives-display"></span></div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const scoreEl = document.getElementById('score');
+        const waveEl = document.getElementById('wave');
+        const livesDisplay = document.getElementById('lives-display');
+        
+        let score = 0;
+        let wave = 1;
+        let lives = 5;
+        let monsters = [];
+        let arrows = [];
+        let explosions = [];
+        let gameRunning = true;
+        
+        const monsterTypes = [
+            {emoji: '👾', hp: 1, speed: 0.4, points: 10},
+            {emoji: '🐉', hp: 3, speed: 0.3, points: 30},
+            {emoji: '👹', hp: 2, speed: 0.5, points: 20},
+            {emoji: '🤖', hp: 4, speed: 0.2, points: 40}
+        ];
+        
+        function updateLivesDisplay() {
+            livesDisplay.innerHTML = '❤️'.repeat(lives);
+        }
+        
+        class Monster {
+            constructor(type, x, y) {
+                this.type = type;
+                this.hp = type.hp;
+                this.maxHp = type.hp;
+                this.x = x;
+                this.y = y;
+                this.speed = type.speed;
+                this.element = document.createElement('div');
+                this.element.className = 'monster';
+                this.element.textContent = type.emoji;
+                this.element.style.left = x + 'px';
+                this.element.style.top = y + 'px';
+                gameArea.appendChild(this.element);
+            }
+            
+            move() {
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                const dx = centerX - this.x;
+                const dy = centerY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 5) {
+                    this.x += (dx / distance) * this.speed;
+                    this.y += (dy / distance) * this.speed;
+                    this.element.style.left = this.x + 'px';
+                    this.element.style.top = this.y + 'px';
+                } else {
+                    lives--;
+                    updateLivesDisplay();
+                    this.destroy();
+                    const index = monsters.indexOf(this);
+                    if (index > -1) monsters.splice(index, 1);
+                    
+                    if (lives <= 0) {
+                        gameRunning = false;
+                        showGameOver();
+                    }
+                }
+            }
+            
+            takeDamage() {
+                this.hp--;
+                this.element.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    if (this.element.parentNode) {
+                        this.element.style.transform = 'scale(1)';
+                    }
+                }, 100);
+                
+                if (this.hp <= 0) {
+                    return true;
+                }
+                return false;
+            }
+            
+            destroy() {
+                if (this.element.parentNode) {
+                    gameArea.removeChild(this.element);
+                }
+            }
+        }
+        
+        class Arrow {
+            constructor(targetX, targetY) {
+                this.x = window.innerWidth / 2;
+                this.y = window.innerHeight / 2;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.speed = 12;
+                
+                this.element = document.createElement('div');
+                this.element.className = 'arrow';
+                this.element.textContent = '➤';
+                this.element.style.left = this.x + 'px';
+                this.element.style.top = this.y + 'px';
+                gameArea.appendChild(this.element);
+                
+                const angle = Math.atan2(targetY - this.y, targetX - this.x);
+                this.element.style.transform = `rotate(${angle}rad)`;
+            }
+            
+            move() {
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > this.speed) {
+                    this.x += (dx / distance) * this.speed;
+                    this.y += (dy / distance) * this.speed;
+                    this.element.style.left = this.x + 'px';
+                    this.element.style.top = this.y + 'px';
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+            
+            destroy() {
+                if (this.element.parentNode) {
+                    gameArea.removeChild(this.element);
+                }
+            }
+        }
+        
+        class Explosion {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.element = document.createElement('div');
+                this.element.className = 'explosion';
+                this.element.textContent = '💥';
+                this.element.style.left = (x - 20) + 'px';
+                this.element.style.top = (y - 20) + 'px';
+                gameArea.appendChild(this.element);
+                
+                setTimeout(() => {
+                    this.destroy();
+                }, 500);
+            }
+            
+            destroy() {
+                if (this.element.parentNode) {
+                    gameArea.removeChild(this.element);
+                }
+            }
+        }
+        
+        function spawnMonster() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            
+            switch(side) {
+                case 0: x = Math.random() * window.innerWidth; y = 0; break;
+                case 1: x = window.innerWidth; y = Math.random() * window.innerHeight; break;
+                case 2: x = Math.random() * window.innerWidth; y = window.innerHeight; break;
+                case 3: x = 0; y = Math.random() * window.innerHeight; break;
+            }
+            
+            const typeIndex = Math.floor(Math.random() * Math.min(monsterTypes.length, Math.floor(wave/2) + 1));
+            const monster = new Monster(monsterTypes[typeIndex], x, y);
+            monsters.push(monster);
+        }
+        
+        function shoot() {
+            if (monsters.length === 0) return;
+            
+            let closest = monsters[0];
+            let minDistance = Infinity;
+            
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            monsters.forEach(monster => {
+                const dx = monster.x - centerX;
+                const dy = monster.y - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closest = monster;
+                }
+            });
+            
+            const arrow = new Arrow(closest.x, closest.y);
+            arrows.push(arrow);
+        }
+        
+        function checkCollisions() {
+            arrows.forEach((arrow, arrowIndex) => {
+                monsters.forEach((monster, monsterIndex) => {
+                    const dx = arrow.x - monster.x;
+                    const dy = arrow.y - monster.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 30) {
+                        new Explosion(monster.x, monster.y);
+                        
+                        arrow.destroy();
+                        arrows.splice(arrowIndex, 1);
+                        
+                        if (monster.takeDamage()) {
+                            score += monster.type.points;
+                            scoreEl.textContent = score;
+                            monster.destroy();
+                            monsters.splice(monsterIndex, 1);
+                        }
+                    }
+                });
+            });
+        }
+        
+        function showGameOver() {
+            const gameOverDiv = document.createElement('div');
+            gameOverDiv.className = 'game-over';
+            gameOverDiv.innerHTML = `
+                <div>GAME OVER</div>
+                <div style="font-size: 24px; margin-top: 20px;">Final Score: ${score}</div>
+                <div style="font-size: 18px; margin-top: 10px;">Press R to restart</div>
+            `;
+            gameArea.appendChild(gameOverDiv);
+        }
+        
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            monsters.forEach(monster => monster.move());
+            
+            arrows = arrows.filter(arrow => {
+                if (arrow.move()) {
+                    arrow.destroy();
+                    return false;
+                }
+                return true;
+            });
+            
+            checkCollisions();
+            
+            if (Math.random() < 0.02 + (wave * 0.005)) {
+                spawnMonster();
+            }
+            
+            if (monsters.length === 0 && Math.random() < 0.01) {
+                wave++;
+                waveEl.textContent = wave;
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                shoot();
+            }
+            if (e.code === 'KeyR' && !gameRunning) {
+                location.reload();
+            }
+        });
+        
+        updateLivesDisplay();
+        spawnMonster();
+        gameLoop();
+    </script>
+</body>
+</html>
