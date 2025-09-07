@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Children's Clock</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <style>
         body {
             display: flex;
@@ -15,7 +15,7 @@
             align-items: center;
             min-height: 100vh;
             background-color: #a0e9ff;
-            font-family: 'Fredoka One', cursive, sans-serif;
+            font-family: 'Quicksand', sans-serif;
             margin: 0;
             gap: 20px;
         }
@@ -50,6 +50,7 @@
             border-radius: 10px;
             transform-origin: bottom center;
             transition: transform 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
         }
         
         .hour-hand {
@@ -78,7 +79,8 @@
         }
 
         button {
-            font-family: 'Fredoka One', cursive, sans-serif;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
             font-size: 1.5rem;
             padding: 15px 30px;
             border: none;
@@ -87,7 +89,7 @@
             color: white;
             cursor: pointer;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
         }
 
         button:hover {
@@ -98,6 +100,17 @@
         button:active {
             transform: translateY(1px);
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         
         .number-1 { transform: rotate(30deg); }
@@ -135,7 +148,10 @@
 <body>
 
     <h1 id="time-text">It's 1 o'clock!</h1>
-    <button id="spinButton">Spin the Clock!</button>
+    
+    <div class="button-container">
+        <button id="spinButton">Spin the Clock!</button>
+    </div>
 
     <div class="clock">
         <div class="hand hour-hand"></div>
@@ -163,31 +179,32 @@
         const timeText = document.getElementById('time-text');
 
         let currentHour = 1;
-        let hourRotation = 30;
+        let hourRotation = (currentHour % 12) * 30;
         let minuteRotation = 0;
 
+        hourHand.style.transform = `translateX(-50%) rotate(${hourRotation}deg)`;
+        minuteHand.style.transform = `translateX(-50%) rotate(${minuteRotation}deg)`;
+
+        function forwardHourDelta(from, to) {
+            return ((to - from + 12) % 12);
+        }
+
         spinButton.addEventListener('click', () => {
-            // Immediately change the text to show the clock is spinning
+            spinButton.disabled = true;
             timeText.textContent = 'Spinning...';
-
-            const randomHours = Math.floor(Math.random() * 13) + 12;
-
-            // Calculate the new hour but don't update the global variable yet
-            const newHour = (currentHour + randomHours - 1) % 12 + 1;
-            
-            // Update rotation values to make the hands spin
-            hourRotation += randomHours * 30;
-            minuteRotation += randomHours * 360;
-
+            const nextHour = Math.floor(Math.random() * 12) + 1;
+            const deltaHours = forwardHourDelta(currentHour, nextHour);
+            const extraSpinsHours = (Math.floor(Math.random() * 3) + 2) * 12;
+            const hoursToAdvance = deltaHours + extraSpinsHours;
+            hourRotation += hoursToAdvance * 30;
+            minuteRotation += hoursToAdvance * 360;
             hourHand.style.transform = `translateX(-50%) rotate(${hourRotation}deg)`;
             minuteHand.style.transform = `translateX(-50%) rotate(${minuteRotation}deg)`;
-
-            // Wait for the animation to finish (2500ms = 2.5s)
             setTimeout(() => {
-                // Now update the current hour and display the new time
-                currentHour = newHour;
+                currentHour = nextHour;
                 timeText.textContent = `It's ${currentHour} o'clock!`;
-            }, 2500); 
+                spinButton.disabled = false;
+            }, 2500);
         });
     </script>
 
