@@ -63,6 +63,13 @@
             align-items: center;
             gap: 10px;
         }
+        .speed-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 20px;
+            text-align: right;
+        }
         .game-over {
             position: absolute;
             top: 50%;
@@ -118,12 +125,17 @@
         <div class="tower">🏰</div>
         <div class="score">Score: <span id="score">0</span></div>
         <div class="lives">Lives: <span id="lives-display"></span></div>
+        <div class="speed-control">
+            Speed: <span id="speed-level">5</span><br>
+            <span style="font-size: 14px;">Press 1-9</span>
+        </div>
     </div>
 
     <script>
         const gameArea = document.getElementById('gameArea');
         const scoreEl = document.getElementById('score');
         const livesDisplay = document.getElementById('lives-display');
+        const speedLevelEl = document.getElementById('speed-level');
         
         let score = 0;
         let lives = 5;
@@ -131,6 +143,7 @@
         let arrows = [];
         let explosions = [];
         let gameRunning = true;
+        let speedMultiplier = 1.0;
         
         const monsterTypes = [
             {emoji: '👾', hp: 1, speed: 0.4, points: 10},
@@ -144,6 +157,12 @@
             livesDisplay.innerHTML = '❤️'.repeat(lives);
         }
         
+        function setSpeedLevel(level) {
+            const speedLevels = [0.2, 0.4, 0.6, 0.8, 1.0, 1.3, 1.6, 2.0, 2.5];
+            speedMultiplier = speedLevels[level - 1];
+            speedLevelEl.textContent = level;
+        }
+        
         class Monster {
             constructor(type, x, y) {
                 this.type = type;
@@ -151,7 +170,7 @@
                 this.maxHp = type.hp;
                 this.x = x;
                 this.y = y;
-                this.speed = type.speed;
+                this.baseSpeed = type.speed;
                 this.element = document.createElement('div');
                 this.element.className = 'monster';
                 this.element.textContent = type.emoji;
@@ -168,8 +187,9 @@
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
                 if (distance > 5) {
-                    this.x += (dx / distance) * this.speed;
-                    this.y += (dy / distance) * this.speed;
+                    const currentSpeed = this.baseSpeed * speedMultiplier;
+                    this.x += (dx / distance) * currentSpeed;
+                    this.y += (dy / distance) * currentSpeed;
                     this.element.style.left = this.x + 'px';
                     this.element.style.top = this.y + 'px';
                 } else {
@@ -425,8 +445,14 @@
             if (e.code === 'KeyR' && !gameRunning) {
                 location.reload();
             }
+            
+            const keyNumber = parseInt(e.key);
+            if (keyNumber >= 1 && keyNumber <= 9) {
+                setSpeedLevel(keyNumber);
+            }
         });
         
+        setSpeedLevel(5);
         updateLivesDisplay();
         for (let i = 0; i < 5; i++) {
             setTimeout(() => spawnMonster(), i * 500);
