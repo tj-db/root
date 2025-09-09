@@ -41,16 +41,16 @@
             font-size: 40px;
             animation: explode 0.5s ease-out forwards;
         }
+        .bomb-explosion {
+            position: absolute;
+            font-size: 60px;
+            animation: bombExplode 1s ease-out forwards;
+            z-index: 100;
+        }
         .score {
             position: absolute;
             top: 20px;
             left: 20px;
-            font-size: 24px;
-        }
-        .wave {
-            position: absolute;
-            top: 20px;
-            right: 20px;
             font-size: 24px;
         }
         .lives {
@@ -89,24 +89,43 @@
                 opacity: 0;
             }
         }
+        @keyframes bombExplode {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+            25% {
+                transform: scale(2);
+                opacity: 0.9;
+            }
+            50% {
+                transform: scale(4);
+                opacity: 0.7;
+            }
+            75% {
+                transform: scale(6);
+                opacity: 0.4;
+            }
+            100% {
+                transform: scale(8);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="gameArea">
         <div class="tower">🏰</div>
         <div class="score">Score: <span id="score">0</span></div>
-        <div class="wave">Wave: <span id="wave">1</span></div>
         <div class="lives">Lives: <span id="lives-display"></span></div>
     </div>
 
     <script>
         const gameArea = document.getElementById('gameArea');
         const scoreEl = document.getElementById('score');
-        const waveEl = document.getElementById('wave');
         const livesDisplay = document.getElementById('lives-display');
         
         let score = 0;
-        let wave = 1;
         let lives = 5;
         let monsters = [];
         let arrows = [];
@@ -117,7 +136,8 @@
             {emoji: '👾', hp: 1, speed: 0.4, points: 10},
             {emoji: '🐉', hp: 3, speed: 0.3, points: 30},
             {emoji: '👹', hp: 2, speed: 0.5, points: 20},
-            {emoji: '🤖', hp: 4, speed: 0.2, points: 40}
+            {emoji: '🤖', hp: 4, speed: 0.2, points: 40},
+            {emoji: '💣', hp: 2, speed: 0.3, points: 100, isBomb: true}
         ];
         
         function updateLivesDisplay() {
@@ -253,6 +273,29 @@
             }
         }
         
+        class BombExplosion {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.element = document.createElement('div');
+                this.element.className = 'bomb-explosion';
+                this.element.textContent = '💥';
+                this.element.style.left = (x - 50) + 'px';
+                this.element.style.top = (y - 50) + 'px';
+                gameArea.appendChild(this.element);
+                
+                setTimeout(() => {
+                    this.destroy();
+                }, 1000);
+            }
+            
+            destroy() {
+                if (this.element.parentNode) {
+                    gameArea.removeChild(this.element);
+                }
+            }
+        }
+        
         function spawnMonster() {
             const side = Math.floor(Math.random() * 4);
             let x, y;
@@ -264,7 +307,13 @@
                 case 3: x = 0; y = Math.random() * window.innerHeight; break;
             }
             
-            const typeIndex = Math.floor(Math.random() * Math.min(monsterTypes.length, Math.floor(wave/2) + 1));
+            let typeIndex;
+            if (Math.random() < 0.1) {
+                typeIndex = 4;
+            } else {
+                typeIndex = Math.floor(Math.random() * 4);
+            }
+            
             const monster = new Monster(monsterTypes[typeIndex], x, y);
             monsters.push(monster);
         }
@@ -292,6 +341,16 @@
             arrows.push(arrow);
         }
         
+        function destroyAllMonsters() {
+            monsters.forEach(monster => {
+                score += monster.type.points;
+                new Explosion(monster.x, monster.y);
+                monster.destroy();
+            });
+            monsters = [];
+            scoreEl.textContent = score;
+        }
+        
         function checkCollisions() {
             arrows.forEach((arrow, arrowIndex) => {
                 monsters.forEach((monster, monsterIndex) => {
@@ -300,16 +359,25 @@
                     const distance = Math.sqrt(dx * dx + dy * dy);
                     
                     if (distance < 30) {
-                        new Explosion(monster.x, monster.y);
-                        
                         arrow.destroy();
                         arrows.splice(arrowIndex, 1);
                         
                         if (monster.takeDamage()) {
                             score += monster.type.points;
                             scoreEl.textContent = score;
-                            monster.destroy();
-                            monsters.splice(monsterIndex, 1);
+                            
+                            if (monster.type.isBomb) {
+                                new BombExplosion(monster.x, monster.y);
+                                monster.destroy();
+                                monsters.splice(monsterIndex, 1);
+                                setTimeout(() => {
+                                    destroyAllMonsters();
+                                }, 200);
+                            } else {
+                                new Explosion(monster.x, monster.y);
+                                monster.destroy();
+                                monsters.splice(monsterIndex, 1);
+                            }
                         }
                     }
                 });
@@ -342,13 +410,8 @@
             
             checkCollisions();
             
-            if (Math.random() < 0.02 + (wave * 0.005)) {
+            if (Math.random() < 0.025) {
                 spawnMonster();
-            }
-            
-            if (monsters.length === 0 && Math.random() < 0.01) {
-                wave++;
-                waveEl.textContent = wave;
             }
             
             requestAnimationFrame(gameLoop);
@@ -365,7 +428,9 @@
         });
         
         updateLivesDisplay();
-        spawnMonster();
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => spawnMonster(), i * 500);
+        }
         gameLoop();
     </script>
 </body>
