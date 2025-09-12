@@ -59,13 +59,11 @@
   </style>
 </head>
 <body>
-
   <h1>Which One? 🤔</h1>
   <div id="question">Loading...</div>
   <div class="choices" id="choices"></div>
   <div id="feedback"></div>
   <button onclick="newQuestion()">Next ➡️</button>
-
   <script>
     const questions = [
       { word: "dog", answer: "🐶", options: ["🐱", "🐶", "🐸"] },
@@ -84,16 +82,29 @@
       { word: "pizza", answer: "🍕", options: ["🍔", "🍕", "🍦"] },
       { word: "flower", answer: "🌸", options: ["🍎", "🌸", "🎂"] }
     ];
-
     let currentQuestion = 0;
+
+    // Function to shuffle an array
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
 
     function loadQuestion() {
       const q = questions[currentQuestion];
       document.getElementById("question").textContent =
         'Which one is the ' + q.word + '?';
+      
+      // Shuffle the options so the correct answer isn't always in the middle
+      const shuffledOptions = shuffleArray(q.options);
+      
       const choicesDiv = document.getElementById("choices");
       choicesDiv.innerHTML = "";
-      q.options.forEach(opt => {
+      shuffledOptions.forEach(opt => {
         const div = document.createElement("div");
         div.textContent = opt;
         div.className = "choice";
@@ -102,7 +113,7 @@
       });
       document.getElementById("feedback").textContent = "";
     }
-
+    
     function checkAnswer(choice) {
       const q = questions[currentQuestion];
       if (choice === q.answer) {
@@ -113,7 +124,7 @@
         document.getElementById("feedback").style.color = "red";
       }
     }
-
+    
     function newQuestion() {
       currentQuestion++;
       if (currentQuestion >= questions.length) {
@@ -121,10 +132,9 @@
       }
       loadQuestion();
     }
-
+    
     // Start game
     loadQuestion();
   </script>
-
 </body>
 </html>
