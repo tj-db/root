@@ -181,6 +181,7 @@
         let currentHour = 1;
         let hourRotation = (currentHour % 12) * 30;
         let minuteRotation = 0;
+        let availableHours = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; // Start with all except current hour
 
         hourHand.style.transform = `translateX(-50%) rotate(${hourRotation}deg)`;
         minuteHand.style.transform = `translateX(-50%) rotate(${minuteRotation}deg)`;
@@ -189,10 +190,31 @@
             return ((to - from + 12) % 12);
         }
 
+        function resetAvailableHours() {
+            availableHours = [];
+            for (let i = 1; i <= 12; i++) {
+                if (i !== currentHour) {
+                    availableHours.push(i);
+                }
+            }
+        }
+
         spinButton.addEventListener('click', () => {
             spinButton.disabled = true;
             timeText.textContent = 'Spinning...';
-            const nextHour = Math.floor(Math.random() * 12) + 1;
+            
+            // If no hours available, reset the pool (excluding current hour)
+            if (availableHours.length === 0) {
+                resetAvailableHours();
+            }
+            
+            // Pick a random hour from available hours
+            const randomIndex = Math.floor(Math.random() * availableHours.length);
+            const nextHour = availableHours[randomIndex];
+            
+            // Remove the selected hour from available hours
+            availableHours.splice(randomIndex, 1);
+            
             const deltaHours = forwardHourDelta(currentHour, nextHour);
             const extraSpinsHours = (Math.floor(Math.random() * 3) + 2) * 12;
             const hoursToAdvance = deltaHours + extraSpinsHours;
