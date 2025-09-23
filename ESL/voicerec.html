@@ -1,429 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Recognition Team Game</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: white;
-        }
-        .game-container {
-            display: flex;
-            flex: 1;
-            padding: 20px;
-            gap: 20px;
-        }
-        .team-panel {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-        .team-panel.active {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: #ffd700;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-        }
-        .team-title {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .timer {
-            font-size: 4em;
-            font-weight: bold;
-            font-family: 'Courier New', monospace;
-            color: #ffd700;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
-            margin-bottom: 20px;
-        }
-        .timer.warning {
-            color: #ff6b6b;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        .sentence-container {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            padding: 30px;
-            margin: 20px 0;
-            text-align: center;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-        }
-        .sentence {
-            font-size: 1.8em;
-            line-height: 1.4;
-            color: #ffffff;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-        }
-        .controls {
-            text-align: center;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.2);
-        }
-        .start-button {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.3em;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .start-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-        .start-button:disabled {
-            background: #666;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .status {
-            margin: 20px 0;
-            font-size: 1.2em;
-            padding: 10px 20px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, 0.2);
-        }
-        .mic-indicator {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #ff4444;
-            display: inline-block;
-            margin-left: 10px;
-            transition: all 0.3s ease;
-        }
-        .mic-indicator.active {
-            background: #44ff44;
-            animation: blink 1.5s infinite;
-        }
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
-        }
-        .game-over {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            z-index: 1000;
-        }
-        .game-over-content {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            border: 2px solid #ffd700;
-        }
-        .winner-text {
-            font-size: 3em;
-            color: #ffd700;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        .instructions {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 1.1em;
-            text-align: center;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blue vs Yellow Voice Game</title>
+  <style>
+    html {
+      font-size: 20px;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .timer {
+      position: absolute;
+      top: 1rem;
+      font-size: 2.5rem;
+      font-weight: bold;
+    }
+    #blueTimer {
+      left: 2rem;
+      color: #3399ff;
+    }
+    #yellowTimer {
+      right: 2rem;
+      color: #ffdd33;
+    }
+    .sentence {
+      font-size: 3rem;
+      margin: 2rem;
+      max-width: 80%;
+    }
+    .blue {
+      color: #3399ff;
+    }
+    .yellow {
+      color: #ffdd33;
+    }
+    .status {
+      margin-top: 1.5rem;
+      font-size: 1.6rem;
+    }
+    .game-over {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 3rem;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <div class="instructions">
-        Press SPACEBAR to start the game and enable microphone
-    </div>
-    <div class="game-container">
-        <div class="team-panel" id="team1">
-            <div class="team-title">Team 1</div>
-            <div class="timer" id="timer1">1:00</div>
-        </div>
-        <div class="team-panel" id="team2">
-            <div class="team-title">Team 2</div>
-            <div class="timer" id="timer2">1:00</div>
-        </div>
-    </div>
-    <div class="sentence-container">
-        <div class="sentence" id="sentence">Press SPACEBAR to start the game!</div>
-    </div>
-    <div class="controls">
-        <div class="status" id="status">
-            Waiting to start...
-            <span class="mic-indicator" id="micIndicator"></span>
-        </div>
-    </div>
-    <script>
-        class VoiceRecognitionGame {
-            constructor() {
-                this.gameActive = false;
-                this.currentTeam = 1;
-                this.team1Time = 60;
-                this.team2Time = 60;
-                this.timer = null;
-                this.recognition = null;
-                this.isListening = false;
-                this.sentences = [
-                    "The quick brown fox jumps over the lazy dog",
-                    "She sells seashells by the seashore",
-                    "Peter Piper picked a peck of pickled peppers",
-                    "How much wood would a woodchuck chuck if a woodchuck could chuck wood",
-                    "Red lorry yellow lorry red lorry yellow lorry",
-                    "Six sick slick slim sycamore saplings",
-                    "The sixth sick sheik's sixth sheep's sick",
-                    "Toy boat toy boat toy boat",
-                    "Unique New York unique New York",
-                    "Which wristwatches are Swiss wristwatches",
-                    "Fuzzy Wuzzy was a bear Fuzzy Wuzzy had no hair",
-                    "I scream you scream we all scream for ice cream",
-                    "Betty bought some butter but the butter was bitter",
-                    "A proper copper coffee pot properly popped",
-                    "Round the rough and rugged rock the ragged rascal rudely ran"
-                ];
-                this.currentSentenceIndex = 0;
-                this.initializeElements();
-                this.setupEventListeners();
-                this.initializeSpeechRecognition();
-            }
-            initializeElements() {
-                this.team1Panel = document.getElementById('team1');
-                this.team2Panel = document.getElementById('team2');
-                this.timer1 = document.getElementById('timer1');
-                this.timer2 = document.getElementById('timer2');
-                this.sentenceElement = document.getElementById('sentence');
-                this.statusElement = document.getElementById('status');
-                this.micIndicator = document.getElementById('micIndicator');
-            }
-            setupEventListeners() {
-                document.addEventListener('keydown', (e) => {
-                    if (e.code === 'Space') {
-                        e.preventDefault();
-                        this.toggleGame();
-                    }
-                });
-            }
-            initializeSpeechRecognition() {
-                if ('webkitSpeechRecognition' in window) {
-                    this.recognition = new webkitSpeechRecognition();
-                } else if ('SpeechRecognition' in window) {
-                    this.recognition = new SpeechRecognition();
-                } else {
-                    this.statusElement.textContent = 'Speech recognition not supported in this browser';
-                    return;
-                }
-                this.recognition.continuous = true;
-                this.recognition.interimResults = true;
-                this.recognition.lang = 'en-US';
-                this.recognition.onstart = () => {
-                    this.isListening = true;
-                    this.micIndicator.classList.add('active');
-                };
-                this.recognition.onend = () => {
-                    this.isListening = false;
-                    this.micIndicator.classList.remove('active');
-                    if (this.gameActive) {
-                        setTimeout(() => this.recognition.start(), 100);
-                    }
-                };
-                this.recognition.onresult = (event) => {
-                    let finalTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        if (event.results[i].isFinal) {
-                            finalTranscript += event.results[i][0].transcript;
-                        }
-                    }
-                    if (finalTranscript) {
-                        this.checkSentence(finalTranscript.trim());
-                    }
-                };
-            }
-            toggleGame() {
-                if (!this.gameActive) {
-                    this.startGame();
-                } else {
-                    this.stopGame();
-                }
-            }
-            startGame() {
-                this.gameActive = true;
-                this.currentTeam = 1;
-                this.team1Time = 60;
-                this.team2Time = 60;
-                this.currentSentenceIndex = 0;
-                this.updateDisplay();
-                this.displayNewSentence();
-                this.startTimer();
-                if (this.recognition) {
-                    this.recognition.start();
-                }
-                this.statusElement.textContent = 'Game started! Team 1, read the sentence above.';
-                this.setActiveTeam(1);
-            }
-            stopGame() {
-                this.gameActive = false;
-                clearInterval(this.timer);
-                if (this.recognition) {
-                    this.recognition.stop();
-                }
-                this.statusElement.textContent = 'Game stopped. Press SPACEBAR to start again.';
-                this.sentenceElement.textContent = 'Press SPACEBAR to start the game!';
-                this.team1Panel.classList.remove('active');
-                this.team2Panel.classList.remove('active');
-            }
-            startTimer() {
-                this.timer = setInterval(() => {
-                    if (this.currentTeam === 1) {
-                        this.team1Time--;
-                        if (this.team1Time <= 0) {
-                            this.endGame(2);
-                            return;
-                        }
-                    } else {
-                        this.team2Time--;
-                        if (this.team2Time <= 0) {
-                            this.endGame(1);
-                            return;
-                        }
-                    }
-                    this.updateDisplay();
-                }, 1000);
-            }
-            updateDisplay() {
-                this.timer1.textContent = this.formatTime(this.team1Time);
-                this.timer2.textContent = this.formatTime(this.team2Time);
-                if (this.team1Time <= 10) {
-                    this.timer1.classList.add('warning');
-                } else {
-                    this.timer1.classList.remove('warning');
-                }
-                if (this.team2Time <= 10) {
-                    this.timer2.classList.add('warning');
-                } else {
-                    this.timer2.classList.remove('warning');
-                }
-            }
-            formatTime(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
-            }
-            displayNewSentence() {
-                const sentence = this.sentences[this.currentSentenceIndex % this.sentences.length];
-                this.sentenceElement.textContent = sentence;
-                this.currentSentenceIndex++;
-            }
-            checkSentence(spokenText) {
-                const targetSentence = this.sentenceElement.textContent.toLowerCase();
-                const spoken = spokenText.toLowerCase();
-                const targetWords = targetSentence.split(' ');
-                const spokenWords = spoken.split(' ');
-                let matches = 0;
-                targetWords.forEach(word => {
-                    if (spokenWords.some(spokenWord => 
-                        spokenWord.includes(word) || word.includes(spokenWord)
-                    )) {
-                        matches++;
-                    }
-                });
-                if (matches / targetWords.length >= 0.7) {
-                    this.switchTeam();
-                }
-            }
-            switchTeam() {
-                this.currentTeam = this.currentTeam === 1 ? 2 : 1;
-                this.setActiveTeam(this.currentTeam);
-                this.displayNewSentence();
-                this.statusElement.textContent = `Good! Team ${this.currentTeam}, read the sentence above.`;
-            }
-            setActiveTeam(team) {
-                if (team === 1) {
-                    this.team1Panel.classList.add('active');
-                    this.team2Panel.classList.remove('active');
-                } else {
-                    this.team2Panel.classList.add('active');
-                    this.team1Panel.classList.remove('active');
-                }
-            }
-            endGame(winningTeam) {
-                this.gameActive = false;
-                clearInterval(this.timer);
-                if (this.recognition) {
-                    this.recognition.stop();
-                }
-                const gameOver = document.createElement('div');
-                gameOver.className = 'game-over';
-                gameOver.innerHTML = `
-                    <div class="game-over-content">
-                        <div class="winner-text">Team ${winningTeam} Wins!</div>
-                        <p style="font-size: 1.2em; margin-bottom: 20px;">Press SPACEBAR to play again</p>
-                    </div>
-                `;
-                document.body.appendChild(gameOver);
-                const removeOverlay = (e) => {
-                    if (e.code === 'Space') {
-                        e.preventDefault();
-                        document.body.removeChild(gameOver);
-                        document.removeEventListener('keydown', removeOverlay);
-                        this.resetGame();
-                    }
-                };
-                document.addEventListener('keydown', removeOverlay);
-            }
-            resetGame() {
-                this.team1Time = 60;
-                this.team2Time = 60;
-                this.currentTeam = 1;
-                this.currentSentenceIndex = 0;
-                this.updateDisplay();
-                this.sentenceElement.textContent = 'Press SPACEBAR to start the game!';
-                this.statusElement.textContent = 'Waiting to start...';
-                this.team1Panel.classList.remove('active');
-                this.team2Panel.classList.remove('active');
-            }
-        }
-        window.addEventListener('DOMContentLoaded', () => {
-            new VoiceRecognitionGame();
+  <div id="blueTimer" class="timer">1:00</div>
+  <div id="yellowTimer" class="timer">1:00</div>
+  <div id="sentence" class="sentence">Press SPACEBAR to start.</div>
+  <div id="status" class="status">Waiting...</div>
+
+  <script>
+    class BlueYellowGame {
+      constructor() {
+        this.blueTime = 60;
+        this.yellowTime = 60;
+        this.currentTeam = "blue";
+        this.gameActive = false;
+        this.sentences = [
+          "The happy dog is running.",
+          "A big cat is sleeping.",
+          "The red bird is flying.",
+          "A small boy is jumping.",
+          "The funny girl is dancing.",
+          "A yellow car is moving.",
+          "The green frog is hopping.",
+          "A blue fish is swimming.",
+          "The hot sun is shining.",
+          "A cold wind is blowing."
+        ];
+        this.index = 0;
+        this.timer = null;
+        this.recognition = null;
+        this.blueTimer = document.getElementById("blueTimer");
+        this.yellowTimer = document.getElementById("yellowTimer");
+        this.sentenceBox = document.getElementById("sentence");
+        this.status = document.getElementById("status");
+        this.initEvents();
+        this.initSpeech();
+      }
+
+      initEvents() {
+        document.addEventListener("keydown", e => {
+          if (e.code === "Space") {
+            e.preventDefault();
+            if (!this.gameActive) this.start();
+          }
         });
-    </script>
+      }
+
+      initSpeech() {
+        if ('webkitSpeechRecognition' in window) {
+          this.recognition = new webkitSpeechRecognition();
+        } else if ('SpeechRecognition' in window) {
+          this.recognition = new SpeechRecognition();
+        }
+        if (this.recognition) {
+          this.recognition.continuous = true;
+          this.recognition.interimResults = true;
+          this.recognition.lang = "en-US";
+          this.recognition.onresult = e => {
+            let final = "";
+            for (let i = e.resultIndex; i < e.results.length; i++) {
+              if (e.results[i].isFinal) final += e.results[i][0].transcript;
+            }
+            if (final) {
+              console.log("Detected speech:", final);
+              this.check(final.trim());
+            }
+          };
+          this.recognition.onend = () => {
+            if (this.gameActive) setTimeout(() => this.recognition.start(), 100);
+          };
+        }
+      }
+
+      start() {
+        this.blueTime = 60;
+        this.yellowTime = 60;
+        this.currentTeam = "blue";
+        this.index = 0;
+        this.gameActive = true;
+        this.updateTimers();
+        this.showSentence();
+        this.status.textContent = "Game started! Blue team, go!";
+        this.timer = setInterval(() => this.tick(), 1000);
+        if (this.recognition) this.recognition.start();
+      }
+
+      tick() {
+        if (this.currentTeam === "blue") {
+          this.blueTime--;
+          if (this.blueTime <= 0) return this.end("Yellow");
+        } else {
+          this.yellowTime--;
+          if (this.yellowTime <= 0) return this.end("Blue");
+        }
+        this.updateTimers();
+      }
+
+      updateTimers() {
+        this.blueTimer.textContent = this.format(this.blueTime);
+        this.yellowTimer.textContent = this.format(this.yellowTime);
+      }
+
+      format(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${m}:${s.toString().padStart(2, "0")}`;
+      }
+
+      showSentence() {
+        const s = this.sentences[this.index % this.sentences.length];
+        this.sentenceBox.textContent = s;
+        this.sentenceBox.className = "sentence " + this.currentTeam;
+        this.index++;
+      }
+
+      check(spoken) {
+        const normalize = str =>
+          str.toLowerCase().replace(/[.,!?]/g, "").replace(/\s+/g, " ").trim();
+
+        const target = normalize(this.sentenceBox.textContent);
+        const spokenNorm = normalize(spoken);
+
+        console.log("Target:", target);
+        console.log("Spoken:", spokenNorm);
+
+        const targetWords = target.split(" ");
+        const spokenWords = spokenNorm.split(" ");
+
+        let matchIndex = 0;
+        for (let word of spokenWords) {
+          if (word === targetWords[matchIndex]) {
+            matchIndex++;
+            if (matchIndex === targetWords.length) {
+              this.switchTeam();
+              break;
+            }
+          }
+        }
+      }
+
+      switchTeam() {
+        this.currentTeam = this.currentTeam === "blue" ? "yellow" : "blue";
+        this.showSentence();
+        this.status.textContent = `${this.currentTeam === "blue" ? "Blue" : "Yellow"} team, go!`;
+      }
+
+      end(winner) {
+        this.gameActive = false;
+        clearInterval(this.timer);
+        if (this.recognition) this.recognition.stop();
+        const overlay = document.createElement("div");
+        overlay.className = "game-over";
+        overlay.textContent = `${winner} team wins! Press SPACEBAR to restart.`;
+        document.body.appendChild(overlay);
+        const handler = e => {
+          if (e.code === "Space") {
+            e.preventDefault();
+            overlay.remove();
+            document.removeEventListener("keydown", handler);
+            this.start();
+          }
+        };
+        document.addEventListener("keydown", handler);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => new BlueYellowGame());
+  </script>
 </body>
 </html>
