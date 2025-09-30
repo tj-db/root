@@ -4,45 +4,108 @@
   <meta charset="UTF-8">
   <title>ESL Quiz Game</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
-      padding: 50px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       transition: background-color 0.3s;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
     h2 {
-      margin-bottom: 20px;
+      margin-bottom: 30px;
+      color: #333;
+      font-size: 28px;
+      font-weight: 600;
     }
     .options {
-      margin: 20px 0;
+      margin: 30px 0;
     }
     button {
       display: block;
-      margin: 10px auto;
-      padding: 12px 20px;
-      font-size: 42px;
+      margin: 15px auto;
+      padding: 18px 24px;
+      font-size: 28px;
       cursor: pointer;
-      width: 70%;
-      border-radius: 22px;
-      border: 1px solid #444;
+      width: 100%;
+      max-width: 600px;
+      border-radius: 12px;
+      border: 2px solid #e0e0e0;
+      background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+      transition: all 0.2s ease;
+      color: #333;
+      font-weight: 500;
+      text-align: center;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-color: #667eea;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-color: #667eea;
+      }
+    }
+    button:active {
+      transform: translateY(0);
     }
     .emoji {
       font-size: 88px;
       margin-top: 20px;
       display: none;
+      animation: bounce 0.5s ease;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
     }
     .flash-red {
-      background-color: #ffcccc !important;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+    }
+    .flash-red .container {
+      animation: shake 0.3s ease;
     }
     .flash-green {
-      background-color: #ccffcc !important;
+      background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%) !important;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
     }
   </style>
 </head>
 <body>
-  <h2 id="question-text"></h2>
-  <div class="options" id="options"></div>
-  <div class="emoji" id="emoji"></div>
+  <div class="container">
+    <h2 id="question-text"></h2>
+    <div class="options" id="options"></div>
+    <div class="emoji" id="emoji"></div>
+  </div>
 
   <script>
     const quizData = [
@@ -97,17 +160,17 @@
             "What your desk is made of?",
             "Your desk made from what?",
             "What is made your desk of?",
-            "What’s your desk made of?"
+            "What's your desk made of?"
           ],
           correct: 3
         },
         answers: {
-          text: "What’s your desk made of?",
+          text: "What's your desk made of?",
           options: [
             "It made of wood and metel.",
             "Is made from wood and metal.",
-            "It’s make of wood and metal.",
-            "It’s made of wood and metal."
+            "It's make of wood and metal.",
+            "It's made of wood and metal."
           ],
           correct: 3
         }
@@ -151,6 +214,9 @@
 
     function checkAnswer(isCorrect) {
       const emojiDiv = document.getElementById("emoji");
+      // Remove focus from all buttons
+      document.activeElement.blur();
+      
       if (isCorrect) {
         emojiDiv.textContent = "😊😊😊";
         emojiDiv.style.display = "block";
