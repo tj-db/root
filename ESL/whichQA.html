@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ESL Quiz Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      transition: background-color 0.3s;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .options {
+      margin: 20px 0;
+    }
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 12px 20px;
+      font-size: 42px;
+      cursor: pointer;
+      width: 70%;
+      border-radius: 22px;
+      border: 1px solid #444;
+    }
+    .emoji {
+      font-size: 88px;
+      margin-top: 20px;
+      display: none;
+    }
+    .flash-red {
+      background-color: #ffcccc !important;
+    }
+    .flash-green {
+      background-color: #ccffcc !important;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="question-text"></h2>
+  <div class="options" id="options"></div>
+  <div class="emoji" id="emoji"></div>
+
+  <script>
+    const quizData = [
+      {
+        questionForms: {
+          text: "Which one is right?",
+          options: [
+            "What kinds of movie do you like?",
+            "Which kind of movie do you like?",
+            "What movie kinds do you like?",
+            "What kind of movies do you like?"
+          ],
+          correct: 3
+        },
+        answers: {
+          text: "What kind of movies do you like?",
+          options: [
+            "I like action moveis.",
+            "I like funny movie.",
+            "I am enjoy scary movies.",
+            "I like adventure movies."
+          ],
+          correct: 3
+        }
+      },
+      {
+        questionForms: {
+          text: "Which one is right?",
+          options: [
+            "What you use a knife for?",
+            "What do you use knife for?",
+            "What are knife used for?",
+            "What do you use a knife for?"
+          ],
+          correct: 3
+        },
+        answers: {
+          text: "What do you use a knife for?",
+          options: [
+            "I use knife to cut fruit with.",
+            "I using a knife for cut fruit.",
+            "I use knife to cutting fruit.",
+            "I use a knife to cut fruit with."
+          ],
+          correct: 3
+        }
+      },
+      {
+        questionForms: {
+          text: "Which one is right?",
+          options: [
+            "What your desk is made of?",
+            "Your desk made from what?",
+            "What is made your desk of?",
+            "What’s your desk made of?"
+          ],
+          correct: 3
+        },
+        answers: {
+          text: "What’s your desk made of?",
+          options: [
+            "It made of wood and metel.",
+            "Is made from wood and metal.",
+            "It’s make of wood and metal.",
+            "It’s made of wood and metal."
+          ],
+          correct: 3
+        }
+      }
+    ];
+
+    let currentQuestion = 0;
+    let stage = "questionForms";
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function loadStage() {
+      const q = quizData[currentQuestion][stage];
+      document.getElementById("question-text").textContent = q.text;
+
+      const choices = q.options.map((opt, i) => ({
+        text: opt,
+        isCorrect: i === q.correct
+      }));
+
+      shuffleArray(choices);
+
+      const optionsDiv = document.getElementById("options");
+      optionsDiv.innerHTML = "";
+      choices.forEach(choice => {
+        const btn = document.createElement("button");
+        btn.textContent = choice.text;
+        btn.onclick = () => checkAnswer(choice.isCorrect);
+        optionsDiv.appendChild(btn);
+      });
+
+      document.getElementById("emoji").style.display = "none";
+      document.body.classList.remove("flash-red", "flash-green");
+    }
+
+    function checkAnswer(isCorrect) {
+      const emojiDiv = document.getElementById("emoji");
+      if (isCorrect) {
+        emojiDiv.textContent = "😊😊😊";
+        emojiDiv.style.display = "block";
+        document.body.classList.add("flash-green");
+        setTimeout(() => {
+          if (stage === "questionForms") {
+            stage = "answers";
+            loadStage();
+          } else {
+            currentQuestion++;
+            stage = "questionForms";
+            if (currentQuestion < quizData.length) {
+              loadStage();
+            } else {
+              document.getElementById("question-text").textContent = "🎉 You finished the quiz!";
+              document.getElementById("options").innerHTML = "";
+              emojiDiv.style.display = "none";
+            }
+          }
+        }, 1000);
+      } else {
+        emojiDiv.textContent = "😢";
+        emojiDiv.style.display = "block";
+        document.body.classList.add("flash-red");
+        setTimeout(() => {
+          document.body.classList.remove("flash-red");
+        }, 500);
+      }
+    }
+
+    loadStage();
+  </script>
+
+</body>
+</html>
