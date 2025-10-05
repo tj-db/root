@@ -18,12 +18,29 @@
     .timer-container {
       display: flex;
       gap: 40px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0);
       backdrop-filter: blur(10px);
       border-radius: 22px;
       padding: 50px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+    }
+    .paused-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 22px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 88px;
+      font-weight: bold;
+      color: white;
+      letter-spacing: 4px;
+      z-index: 10;
+      display: none;
+    }
+    .paused-overlay.active {
+      display: flex;
     }
     .player {
       width: 555px;
@@ -100,6 +117,7 @@
 </head>
 <body>
   <div class="timer-container" id="timerContainer">
+    <div class="paused-overlay" id="pausedOverlay">PAUSED</div>
     <div class="player inactive" id="player1" data-player="1">
       <div class="player-name">Team 1</div>
       <div class="time-display" id="time1">111</div>
@@ -112,148 +130,159 @@
   <script>
     class ChessTimer {
       constructor(initialTime) {
-        this.initialTime = initialTime;
-        this.player1Time = initialTime;
-        this.player2Time = initialTime;
-        this.activePlayer = null;
-        this.gameRunning = false;
-        this.gameEnded = false;
-        this.interval = null;
-        this.player1El = document.getElementById('player1');
-        this.player2El = document.getElementById('player2');
-        this.time1El = document.getElementById('time1');
-        this.time2El = document.getElementById('time2');
-
-        this.inputBuffer = "";
-        this.inputTimeout = null;
-
-        this.bindEvents();
-        this.updateDisplay();
+        this.initialTime = initialTime
+        this.player1Time = initialTime
+        this.player2Time = initialTime
+        this.activePlayer = null
+        this.gameRunning = false
+        this.gameEnded = false
+        this.interval = null
+        this.player1El = document.getElementById('player1')
+        this.player2El = document.getElementById('player2')
+        this.time1El = document.getElementById('time1')
+        this.time2El = document.getElementById('time2')
+        this.overlayEl = document.getElementById('pausedOverlay')
+        this.inputBuffer = ""
+        this.inputTimeout = null
+        this.bindEvents()
+        this.updateDisplay()
       }
 
       bindEvents() {
         document.addEventListener('keydown', (e) => {
           if (e.code === 'Space') {
-            e.preventDefault();
-            this.switchPlayer();
+            e.preventDefault()
+            this.switchPlayer()
           }
-
+          if (e.code === 'Enter') {
+            e.preventDefault()
+            this.togglePause()
+          }
           if (e.key >= "0" && e.key <= "9") {
-            this.handleNumberInput(e.key);
+            this.handleNumberInput(e.key)
           }
-        });
-
-        this.player1El.addEventListener('click', () => { if (!this.gameEnded) this.switchPlayer(); });
-        this.player2El.addEventListener('click', () => { if (!this.gameEnded) this.switchPlayer(); });
+        })
+        this.player1El.addEventListener('click', () => { if (!this.gameEnded) this.switchPlayer() })
+        this.player2El.addEventListener('click', () => { if (!this.gameEnded) this.switchPlayer() })
       }
 
       handleNumberInput(digit) {
-        this.inputBuffer += digit;
-
-        if (this.inputTimeout) clearTimeout(this.inputTimeout);
-
+        this.inputBuffer += digit
+        if (this.inputTimeout) clearTimeout(this.inputTimeout)
         this.inputTimeout = setTimeout(() => {
-          const newTime = parseInt(this.inputBuffer, 10);
+          const newTime = parseInt(this.inputBuffer, 10)
           if (!isNaN(newTime) && newTime > 0) {
-            this.resetClock(newTime);
+            this.resetClock(newTime)
           }
-          this.inputBuffer = "";
-        }, 3000);
+          this.inputBuffer = ""
+        }, 3000)
       }
 
       resetClock(seconds) {
-        this.initialTime = seconds;
-        this.player1Time = seconds;
-        this.player2Time = seconds;
-        this.activePlayer = null;
-        this.gameRunning = false;
-        this.gameEnded = false;
-        if (this.interval) clearInterval(this.interval);
-        this.player1El.classList.remove("time-up", "warning", "critical", "active", "inactive");
-        this.player2El.classList.remove("time-up", "warning", "critical", "active", "inactive");
-        this.player1El.classList.add("inactive");
-        this.player2El.classList.add("inactive");
-        this.updateDisplay();
+        this.initialTime = seconds
+        this.player1Time = seconds
+        this.player2Time = seconds
+        this.activePlayer = null
+        this.gameRunning = false
+        this.gameEnded = false
+        if (this.interval) clearInterval(this.interval)
+        this.player1El.className = "player inactive"
+        this.player2El.className = "player inactive"
+        this.overlayEl.classList.remove("active")
+        this.updateDisplay()
       }
 
       switchPlayer() {
-        if (this.gameEnded) return;
+        if (this.gameEnded) return
         if (!this.gameRunning) {
-          this.activePlayer = this.activePlayer || 1;
-          this.gameRunning = true;
-          this.startTimer();
+          this.activePlayer = this.activePlayer || 1
+          this.gameRunning = true
+          this.startTimer()
         } else {
-          this.activePlayer = this.activePlayer === 1 ? 2 : 1;
+          this.activePlayer = this.activePlayer === 1 ? 2 : 1
         }
-        this.updateDisplay();
+        this.updateDisplay()
       }
 
       startTimer() {
-        if (this.interval) clearInterval(this.interval);
+        if (this.interval) clearInterval(this.interval)
         this.interval = setInterval(() => {
           if (this.activePlayer === 1) {
-            this.player1Time--;
-            if (this.player1Time <= 0) { this.endGame(2); return; }
+            this.player1Time--
+            if (this.player1Time <= 0) { this.endGame(2); return }
           } else {
-            this.player2Time--;
-            if (this.player2Time <= 0) { this.endGame(1); return; }
+            this.player2Time--
+            if (this.player2Time <= 0) { this.endGame(1); return }
           }
-          this.updateDisplay();
-          this.updateWarningStates();
-        }, 1000);
+          this.updateDisplay()
+          this.updateWarningStates()
+        }, 1000)
+      }
+
+      togglePause() {
+        if (!this.gameRunning || this.gameEnded) return
+        if (this.interval) {
+          clearInterval(this.interval)
+          this.interval = null
+          this.overlayEl.classList.add("active")
+        } else {
+          this.startTimer()
+          this.overlayEl.classList.remove("active")
+        }
       }
 
       updateWarningStates() {
-        const currentTime = this.activePlayer === 1 ? this.player1Time : this.player2Time;
-        const activeEl = this.activePlayer === 1 ? this.player1El : this.player2El;
-        const warningTime = Math.max(10, this.initialTime * 0.1);
-        const criticalTime = Math.max(5, this.initialTime * 0.05);
-        activeEl.classList.remove('warning', 'critical');
+        const currentTime = this.activePlayer === 1 ? this.player1Time : this.player2Time
+        const activeEl = this.activePlayer === 1 ? this.player1El : this.player2El
+        const warningTime = Math.max(10, this.initialTime * 0.1)
+        const criticalTime = Math.max(5, this.initialTime * 0.05)
+        activeEl.classList.remove('warning', 'critical')
         if (currentTime <= criticalTime) {
-          activeEl.classList.add('critical');
+          activeEl.classList.add('critical')
         } else if (currentTime <= warningTime) {
-          activeEl.classList.add('warning');
+          activeEl.classList.add('warning')
         }
       }
 
       endGame(winner) {
-        this.gameEnded = true;
-        this.gameRunning = false;
-        if (this.interval) clearInterval(this.interval);
+        this.gameEnded = true
+        this.gameRunning = false
+        if (this.interval) clearInterval(this.interval)
         if (this.player1Time <= 0) {
-          this.player1El.classList.add('time-up');
+          this.player1El.classList.add('time-up')
         } else {
-          this.player2El.classList.add('time-up');
+          this.player2El.classList.add('time-up')
         }
+        this.overlayEl.classList.remove("active")
       }
 
       updateDisplay() {
-        this.time1El.textContent = this.formatTime(this.player1Time);
-        this.time2El.textContent = this.formatTime(this.player2Time);
+        this.time1El.textContent = this.formatTime(this.player1Time)
+        this.time2El.textContent = this.formatTime(this.player2Time)
         if (this.activePlayer === 1) {
-          this.player1El.classList.remove('inactive');
-          this.player1El.classList.add('active');
-          this.player2El.classList.remove('active');
-          this.player2El.classList.add('inactive');
+          this.player1El.classList.remove('inactive')
+          this.player1El.classList.add('active')
+          this.player2El.classList.remove('active')
+          this.player2El.classList.add('inactive')
         } else if (this.activePlayer === 2) {
-          this.player2El.classList.remove('inactive');
-          this.player2El.classList.add('active');
-          this.player1El.classList.remove('active');
-          this.player1El.classList.add('inactive');
+          this.player2El.classList.remove('inactive')
+          this.player2El.classList.add('active')
+          this.player1El.classList.remove('active')
+          this.player1El.classList.add('inactive')
         }
       }
 
       formatTime(seconds) {
         if (seconds >= 60) {
-          const mins = Math.floor(seconds / 60);
-          const secs = seconds % 60;
-          return `${mins}:${secs.toString().padStart(2, '0')}`;
+          const mins = Math.floor(seconds / 60)
+          const secs = seconds % 60
+          return `${mins}:${secs.toString().padStart(2, '0')}`
         }
-        return seconds.toString();
+        return seconds.toString()
       }
     }
 
-    new ChessTimer(71);
+    new ChessTimer(71)
   </script>
 </body>
 </html>
