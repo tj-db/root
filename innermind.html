@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+
+<!-- Legal Footnote: This content is subject to copyright and should not be reproduced without permission. -->
+<!-- Written and created by Thomas John-Michael de Beer, feel free to contact me via tjdebeer@gmail.com  -->
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>innermind.health</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+<style>
+:root{--bg:#f6f8fb;--panel:#fff;--muted:#334155;--accent:#2563eb;--accent-hover:#1d4ed8;--glass:transparent;--shadow:0 8px 30px rgba(16,24,40,0.06);--shadow-lg:0 20px 60px rgba(16,24,40,0.12);--radius:14px;--border:#e2e8f0;--success:#10b981;--danger:#ef4444}
+[data-theme="dark"]{--bg:#071026;--panel:#0f1724;--muted:#cbd5e1;--accent:#60a5fa;--accent-hover:#3b82f6;--glass:transparent;--shadow:0 14px 40px rgba(2,6,23,0.6);--shadow-lg:0 20px 60px rgba(2,6,23,0.8);--border:#1e293b;--success:#34d399;--danger:#f87171}
+*{box-sizing:border-box;user-select:none}textarea,input,.entry .content{user-select:text}*:focus{outline:none!important}button:focus,a:focus,.switch:focus{outline:none!important}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:var(--muted);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;transition:background .3s ease}
+header{position:fixed;top:16px;right:20px;left:20px;display:flex;justify-content:space-between;align-items:center;pointer-events:auto;z-index:50}
+.logo{font-weight:700;font-size:2rem;color:var(--accent);letter-spacing:-.5px}
+.header-actions{display:flex;gap:12px;align-items:center}
+.icon-btn{width:52px;height:52px;border:0;background:var(--glass);border-radius:12px;display:grid;place-items:center;color:var(--muted);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,background .2s ease;backdrop-filter:blur(8px)}
+.icon-btn:hover{background:transparent;transform:translateY(-2px)}.icon-btn:active{transform:translateY(1px)}
+.material-icons{font-size:22px;color:var(--accent)}
+.toggle-wrap{display:flex;align-items:center;gap:8px}
+.switch{--w:48px;--h:28px;--pad:3px;width:var(--w);height:var(--h);background:linear-gradient(180deg,#e6eefc,#f8fbff);border-radius:999px;position:relative;box-shadow:0 4px 14px rgba(16,24,40,0.08);cursor:pointer;display:inline-flex;align-items:center;padding:var(--pad);box-sizing:border-box;transition:all .3s ease}
+[data-theme="dark"] .switch{background:linear-gradient(180deg,#071428,#071a2c);box-shadow:0 6px 18px rgba(0,0,0,.6)}
+.knob{width:calc(var(--h) - var(--pad)*2);height:calc(var(--h) - var(--pad)*2);border-radius:999px;background:#fff;transition:transform .18s ease,box-shadow .18s ease;box-shadow:0 6px 14px rgba(37,99,235,.12)}
+[data-theme="dark"] .knob{background:#022034;box-shadow:none}
+.switch[data-on="true"]{background:linear-gradient(90deg,var(--accent),#7dd3fc)}
+.switch[data-on="true"] .knob{transform:translateX(calc(var(--w) - var(--h)));box-shadow:0 8px 22px rgba(37,99,235,.22)}
+main{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:80px 20px 40px}
+.center-row{display:flex;gap:36px;align-items:center;justify-content:center;flex-wrap:wrap}
+.center-row .action{background:transparent;border:0;cursor:pointer;padding:0;display:grid;place-items:center;position:relative;transition:all .3s ease}
+.center-row .action .material-icons{font-size:48px;color:var(--accent)}
+.center-row .action:hover{transform:translateY(-8px) scale(1.1)}.center-row .action:hover .material-icons{filter:drop-shadow(0 8px 16px rgba(37,99,235,.3))}.center-row .action:active{transform:translateY(-4px) scale(1.05)}
+.center-row .action .notification-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:15px;line-height:20px;font-weight:800;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(239,68,68,.4);transform:translateY(-3px)}
+[data-theme="dark"] .center-row .action .notification-badge{background:var(--success);box-shadow:0 2px 8px rgba(52,211,153,.4)}
+.module{display:none;margin-top:18px;width:min(720px,92%);animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.pill{display:flex;align-items:center;background:var(--panel);border-radius:24px;padding:16px 20px;box-shadow:var(--shadow);gap:12px;border:2px solid var(--border);transition:border .2s ease}
+.pill:focus-within{border-color:var(--accent)}
+textarea#entryText{width:100%;min-height:60px;max-height:360px;border:0;outline:none;background:transparent;color:var(--muted);font-size:16px;padding:0;resize:none;font-weight:400;line-height:1.6;font-family:inherit}
+textarea#entryText::placeholder{color:var(--muted);opacity:.5}
+.pill .mic-btn{width:46px;height:46px;border-radius:999px;background:transparent;display:grid;place-items:center;cursor:pointer;transition:all .2s ease;border:0;flex-shrink:0}
+.pill .mic-btn:hover .material-icons{color:var(--accent-hover)}.pill .mic-btn:hover{transform:scale(1.15)}.pill .mic-btn.recording{background:var(--danger);animation:pulse 1.5s infinite}.pill .mic-btn.recording .material-icons{color:#fff}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.pill .save-btn{width:46px;height:46px;background:transparent;display:grid;place-items:center;color:#fff;border:0;cursor:pointer;transition:all .2s ease;flex-shrink:0}
+.pill .save-btn:hover{transform:scale(1.15)}.pill .save-btn:hover .material-icons{color:var(--accent-hover)}.pill .save-btn:disabled{opacity:.5;cursor:not-allowed}
+.entries{display:none;margin-top:22px;width:min(720px,92%);max-height:calc(100vh - 250px);overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:8px}
+.entries::-webkit-scrollbar{width:8px}.entries::-webkit-scrollbar-track{background:transparent}.entries::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}.entries::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+.entry{background:var(--panel);border-radius:12px;padding:16px;box-shadow:var(--shadow);color:var(--muted);display:flex;flex-direction:column;gap:10px;border:1px solid var(--border);transition:all .2s ease;animation:slideIn .3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}.entry:hover{box-shadow:var(--shadow-lg);border-color:var(--accent)}
+.entry .meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);gap:12px}
+.entry .title{font-weight:600;font-size:15px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry .date{font-size:12px;color:var(--muted);opacity:.7;white-space:nowrap}
+.entry .content{white-space:pre-wrap;text-align:left;color:var(--muted);line-height:1.7;font-size:14px;max-height:120px;overflow:hidden;position:relative}
+.entry .content.expanded{max-height:none}.entry .content::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--panel));pointer-events:none}.entry .content.expanded::after{display:none}
+.entry .actions{display:flex;gap:8px;flex-wrap:wrap}
+.entry .btn{padding:6px 14px;background:transparent;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--accent);font-size:13px;font-weight:500;transition:all .2s ease;font-family:inherit}
+.entry .btn:hover{background:var(--glass);border-color:var(--accent);transform:translateY(-1px)}.entry .btn.danger{color:var(--danger);border-color:var(--border)}.entry .btn.danger:hover{background:rgba(239,68,68,.1);border-color:var(--danger)}
+.sr-only{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+.stats{background:var(--panel);border-radius:12px;padding:16px;box-shadow:var(--shadow);display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px;margin-bottom:16px;border:1px solid var(--border)}
+.stat{text-align:center}.stat .value{font-size:28px;font-weight:700;color:var(--accent);display:block}.stat .label{font-size:12px;color:var(--muted);opacity:.7;margin-top:4px}
+.search-input{border:0;outline:none;background:transparent;color:var(--muted);font-size:15px;width:100%;padding:6px 8px;font-family:inherit}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.45);z-index:60;backdrop-filter:blur(4px);animation:fadeIn .2s ease}
+.modal-content{width:min(460px,90%);background:var(--panel);border-radius:16px;padding:24px;box-shadow:var(--shadow-lg);border:1px solid var(--border);animation:slideUp .3s ease;max-height:90vh;overflow-y:auto}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-weight:700;font-size:20px;color:var(--muted)}.modal-close{background:transparent;border:0;cursor:pointer;padding:4px;border-radius:8px;transition:background .2s ease}.modal-close:hover{background:var(--glass)}
+.modal-body{display:flex;flex-direction:column;gap:16px}.form-group{display:flex;flex-direction:column;gap:8px}.form-label{font-size:14px;font-weight:500;color:var(--muted)}
+.form-input{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--muted);font-size:14px;font-family:inherit;transition:all .2s ease}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--glass)}.form-textarea{min-height:120px;resize:vertical}
+.btn-primary{padding:10px 20px;background:var(--accent);color:#fff;border:0;border-radius:10px;font-weight:600;cursor:pointer;transition:all .2s ease;font-size:14px;font-family:inherit}
+.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.3)}.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-secondary{padding:10px 20px;background:transparent;color:var(--accent);border:1px solid var(--border);border-radius:10px;font-weight:600;cursor:pointer;transition:all .2s ease;font-size:14px;font-family:inherit}
+.btn-secondary:hover{background:var(--glass);border-color:var(--accent)}.btn-secondary.danger{color:var(--danger)}.btn-secondary.danger:hover{background:rgba(239,68,68,.1);border-color:var(--danger)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--panel);padding:14px 20px;border-radius:10px;box-shadow:var(--shadow-lg);border:1px solid var(--border);display:none;align-items:center;gap:10px;z-index:70;animation:slideInRight .3s ease}
+@keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}.toast.show{display:flex}.toast .material-icons{color:var(--success)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);opacity:.7}.empty-state .material-icons{font-size:64px;opacity:.3;margin-bottom:12px}.empty-state p{font-size:16px;font-weight:500}
+@media(max-width:520px){.center-row{gap:20px}.center-row .action .material-icons{font-size:40px}textarea#entryText{min-height:50px}.logo{font-size:1.2rem}.header-actions{gap:8px}.icon-btn{width:44px;height:44px}}
+</style>
+
+
+</head>
+<body data-theme="light">
+  <header>
+    <div class="logo">innermind.health</div>
+    <div class="header-actions">
+      <button id="settingsBtn" class="icon-btn" title="Settings" aria-label="Settings">
+        <span class="material-icons" aria-hidden>settings</span>
+      </button>
+      <div class="toggle-wrap" title="Toggle theme">
+        <div id="themeSwitch" class="switch" role="switch" aria-checked="false" data-on="false" tabindex="0">
+          <div class="knob"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%">
+      <div class="center-row" role="toolbar" aria-label="Main actions">
+        <button id="btnNew" class="action" title="New entry" aria-label="New entry">
+          <span class="material-icons" aria-hidden>edit_note</span>
+        </button>
+        <button id="btnSearch" class="action" title="Search" aria-label="Search entries">
+          <span class="material-icons" aria-hidden>search</span>
+        </button>
+        <button id="btnJournal" class="action" title="Journal" aria-label="Journal entries">
+          <span class="material-icons" aria-hidden>menu_book</span>
+          <span id="journalBadge" class="notification-badge" style="display:none">0</span>
+        </button>
+      </div>
+      <div id="moduleNew" class="module">
+        <div class="pill" role="region" aria-label="New entry input">
+          <textarea id="entryText" placeholder="Please share . . ." aria-label="Entry text" rows="1"></textarea>
+          <button class="mic-btn" id="mic" title="Voice to text" aria-label="Microphone">
+            <span class="material-icons">mic</span>
+          </button>
+          <button id="save" class="save-btn" title="Save entry" aria-label="Save entry">
+            <span class="material-icons" aria-hidden>save</span>
+          </button>
+        </div>
+      </div>
+      <div id="moduleSearch" class="module">
+        <div class="pill" role="search" aria-label="Search entries">
+          <input id="searchText" class="search-input" placeholder="Search your thoughts..." />
+          <button id="clearSearch" title="Clear search" style="background:transparent;border:0;cursor:pointer;padding:8px;border-radius:8px;transition:background 0.2s ease">
+            <span class="material-icons" style="color:var(--accent)">clear</span>
+          </button>
+        </div>
+      </div>
+      <div id="statsContainer" style="width:min(720px,92%);display:none"></div>
+      <div id="entries" class="entries" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Settings</div>
+        <button id="closeSettings" class="modal-close"><span class="material-icons">close</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Theme</label>
+          <div style="display:flex;gap:12px">
+            <label style="flex:1;cursor:pointer">
+              <input type="radio" name="theme" value="light" style="margin-right:8px">
+              Light
+            </label>
+            <label style="flex:1;cursor:pointer">
+              <input type="radio" name="theme" value="dark" style="margin-right:8px">
+              Dark
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Auto-save</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="autoSaveCheck">
+            <span style="font-size:14px">Save automatically while typing</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data Management</label>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <button id="exportBtn" class="btn-secondary" style="flex:1">
+              <span class="material-icons" style="font-size:16px;vertical-align:middle;margin-right:4px">download</span>
+              Export
+            </button>
+            <button id="clearBtn" class="btn-secondary danger" style="flex:1">
+              <span class="material-icons" style="font-size:16px;vertical-align:middle;margin-right:4px">delete_forever</span>
+              Clear All
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Edit Entry</div>
+        <button id="closeEdit" class="modal-close"><span class="material-icons">close</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Entry Text</label>
+          <textarea id="editText" class="form-input form-textarea"></textarea>
+        </div>
+        <button id="saveEdit" class="btn-primary" style="width:100%">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">
+    <span class="material-icons">check_circle</span>
+    <span id="toastMessage">Entry saved!</span>
+  </div>
+
+  <script>
+    const body = document.body;
+    const btnNew = document.getElementById('btnNew');
+    const btnSearch = document.getElementById('btnSearch');
+    const btnJournal = document.getElementById('btnJournal');
+    const journalBadge = document.getElementById('journalBadge');
+    const exportBtn = document.getElementById('exportBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const moduleNew = document.getElementById('moduleNew');
+    const moduleSearch = document.getElementById('moduleSearch');
+    const moduleEntries = document.getElementById('entries');
+    const statsContainer = document.getElementById('statsContainer');
+    const entryText = document.getElementById('entryText');
+    const mic = document.getElementById('mic');
+    const save = document.getElementById('save');
+    const searchText = document.getElementById('searchText');
+    const clearSearch = document.getElementById('clearSearch');
+    const themeSwitch = document.getElementById('themeSwitch');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettings = document.getElementById('closeSettings');
+    const editModal = document.getElementById('editModal');
+    const closeEdit = document.getElementById('closeEdit');
+    const editText = document.getElementById('editText');
+    const saveEdit = document.getElementById('saveEdit');
+    const autoSaveCheck = document.getElementById('autoSaveCheck');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+
+    const KEY = 'innermind.entries.v2';
+    const THEME = 'innermind.theme.v1';
+    const SETTINGS = 'innermind.settings.v1';
+    let entries = [];
+    let currentEditId = null;
+    let settings = { autoSave: false };
+
+    const uid = () => 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+
+    function showToast(msg) {
+      toastMessage.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function updateNotificationBadge() {
+      const count = entries.length;
+      if (count > 0) {
+        journalBadge.textContent = count;
+        journalBadge.style.display = 'block';
+      } else {
+        journalBadge.style.display = 'none';
+      }
+    }
+
+    function load() {
+      try { entries = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e){ entries = []; }
+      try { settings = JSON.parse(localStorage.getItem(SETTINGS)) || { autoSave: false }; } catch(e){ settings = { autoSave: false }; }
+      
+      const savedTheme = localStorage.getItem(THEME) || 'light';
+      applyTheme(savedTheme, false);
+      
+      autoSaveCheck.checked = settings.autoSave;
+      
+      document.querySelectorAll('input[name="theme"]').forEach(radio => {
+        radio.checked = radio.value === savedTheme;
+      });
+
+      updateNotificationBadge();
+    }
+
+    function persist() { 
+      localStorage.setItem(KEY, JSON.stringify(entries));
+      updateNotificationBadge();
+    }
+
+    function persistSettings() {
+      localStorage.setItem(SETTINGS, JSON.stringify(settings));
+    }
+
+    function renderStats() {
+      statsContainer.style.display = 'none';
+    }
+
+    function renderEntries(filter = '') {
+      moduleEntries.style.display = 'flex';
+      moduleEntries.innerHTML = '';
+      
+      const list = entries.slice().reverse().filter(e => {
+        if (!filter) return true;
+        const hay = e.conversation.map(c => c.text).join(' ').toLowerCase();
+        const entryDate = new Date(e.createdAt);
+        const title = entryDate.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }).toLowerCase();
+        return hay.includes(filter.toLowerCase()) || title.includes(filter.toLowerCase());
+      });
+
+      if (list.length === 0) {
+        moduleEntries.innerHTML = `
+          <div class="empty-state">
+            <div class="material-icons">mood</div>
+            <p>${filter ? 'No matching entries found' : 'No entries yet, please share your thoughts.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.forEach(entry => {
+        const el = document.createElement('div');
+        el.className = 'entry';
+        
+        const entryDate = new Date(entry.createdAt);
+        const title = entryDate.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+        const fullText = entry.conversation.map(c => c.text).join('\n\n');
+        
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `
+          <div class="title">${title}</div>
+        `;
+
+        const content = document.createElement('div');
+        content.className = 'content';
+        content.textContent = fullText;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const expand = document.createElement('button');
+        expand.className = 'btn';
+        expand.textContent = 'Read More';
+        expand.onclick = () => {
+          content.classList.toggle('expanded');
+          expand.textContent = content.classList.contains('expanded') ? 'Show Less' : 'Read More';
+        };
+
+        const edit = document.createElement('button');
+        edit.className = 'btn';
+        edit.textContent = 'Edit';
+        edit.onclick = () => openEditModal(entry.id);
+
+        const del = document.createElement('button');
+        del.className = 'btn danger';
+        del.textContent = 'Delete';
+        del.onclick = () => { 
+          if(confirm('Delete this entry?')) { 
+            entries = entries.filter(x => x.id !== entry.id); 
+            persist(); 
+            renderEntries(searchText.value);
+            renderStats();
+            showToast('Entry deleted');
+          } 
+        };
+
+        actions.appendChild(expand);
+        actions.appendChild(edit);
+        actions.appendChild(del);
+
+        el.appendChild(meta);
+        el.appendChild(content);
+        el.appendChild(actions);
+        moduleEntries.appendChild(el);
+      });
+    }
+
+    function openEditModal(id) {
+      const entry = entries.find(x => x.id === id);
+      if (!entry) return;
+      
+      currentEditId = id;
+      editText.value = entry.conversation.map(c => c.text).join('\n\n');
+      editModal.style.display = 'flex';
+    }
+
+    entryText.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 360) + 'px';
+    });
+
+    btnNew.addEventListener('click', () => {
+      moduleNew.style.display = 'block';
+      moduleSearch.style.display = 'none';
+      moduleEntries.style.display = 'none';
+      statsContainer.style.display = 'none';
+      entryText.focus();
+    });
+
+    save.addEventListener('click', () => {
+      const txt = entryText.value.trim();
+      if (!txt) return;
+      
+      const now = Date.now();
+      const e = { 
+        id: uid(), 
+        createdAt: now, 
+        updatedAt: now, 
+        conversation: [{ role: 'user', text: txt }]
+      };
+      entries.push(e);
+      persist();
+      entryText.value = '';
+      entryText.style.height = 'auto';
+      showToast('Entry saved successfully!');
+      renderEntries();
+      renderStats();
+      moduleNew.style.display = 'none';
+    });
+
+    btnSearch.addEventListener('click', () => {
+      moduleSearch.style.display = 'block';
+      moduleNew.style.display = 'none';
+      moduleEntries.style.display = 'none';
+      statsContainer.style.display = 'none';
+      searchText.focus();
+    });
+
+    searchText.addEventListener('input', (e) => {
+      renderEntries(e.target.value);
+      renderStats();
+    });
+
+    clearSearch.addEventListener('click', () => { 
+      searchText.value = ''; 
+      renderEntries();
+      renderStats();
+    });
+
+    btnJournal.addEventListener('click', () => {
+      moduleNew.style.display = 'none';
+      moduleSearch.style.display = 'none';
+      renderEntries();
+      renderStats();
+    });
+
+    saveEdit.addEventListener('click', () => {
+      const entry = entries.find(x => x.id === currentEditId);
+      if (!entry) return;
+      
+      const text = editText.value.trim();
+      if (!text) return;
+      
+      entry.conversation = [{ role: 'user', text }];
+      entry.updatedAt = Date.now();
+      
+      persist();
+      editModal.style.display = 'none';
+      renderEntries(searchText.value);
+      showToast('Entry updated!');
+    });
+
+    closeEdit.addEventListener('click', () => {
+      editModal.style.display = 'none';
+    });
+
+    exportBtn.addEventListener('click', () => {
+      const data = JSON.stringify(entries, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `innermind-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Entries exported!');
+      settingsModal.style.display = 'none';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to delete ALL entries? This cannot be undone!')) {
+        entries = [];
+        persist();
+        renderEntries();
+        renderStats();
+        showToast('All entries cleared');
+        settingsModal.style.display = 'none';
+      }
+    });
+
+    let recognition = null;
+    let recognizing = false;
+
+    function setupRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return null;
+      const r = new SR();
+      r.lang = navigator.language || 'en-US';
+      r.continuous = false;
+      r.interimResults = true;
+      r.onstart = () => { 
+        recognizing = true; 
+        mic.classList.add('recording');
+      };
+      r.onend = () => { 
+        recognizing = false; 
+        mic.classList.remove('recording');
+      };
+      r.onerror = (e) => { 
+        recognizing = false; 
+        mic.classList.remove('recording');
+        if (e.error !== 'no-speech' && e.error !== 'aborted') {
+          showToast('Voice recognition error: ' + e.error);
+        }
+      };
+      r.onresult = (ev) => {
+        let transcript = '';
+        for (let i = 0; i < ev.results.length; i++) {
+          transcript += ev.results[i][0].transcript;
+        }
+        entryText.value = transcript;
+        entryText.style.height = 'auto';
+        entryText.style.height = Math.min(entryText.scrollHeight, 360) + 'px';
+      };
+      return r;
+    }
+
+    mic.addEventListener('click', () => {
+      if (!recognition) recognition = setupRecognition();
+      if (!recognition) { 
+        showToast('Voice recognition not supported in this browser'); 
+        return; 
+      }
+      if (!recognizing) {
+        try {
+          recognition.start();
+        } catch(e) {
+          showToast('Could not start voice recognition');
+        }
+      } else {
+        recognition.stop();
+      }
+    });
+
+    function applyTheme(name, saveToStorage = true) {
+      body.setAttribute('data-theme', name);
+      themeSwitch.setAttribute('data-on', name === 'dark' ? 'true' : 'false');
+      themeSwitch.setAttribute('aria-checked', name === 'dark' ? 'true' : 'false');
+      if (saveToStorage) {
+        localStorage.setItem(THEME, name);
+      }
+      document.querySelectorAll('input[name="theme"]').forEach(radio => {
+        radio.checked = radio.value === name;
+      });
+    }
+
+    themeSwitch.addEventListener('click', () => {
+      const isDark = themeSwitch.getAttribute('data-on') === 'true';
+      applyTheme(isDark ? 'light' : 'dark');
+    });
+
+    document.querySelectorAll('input[name="theme"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          applyTheme(e.target.value);
+        }
+      });
+    });
+
+    autoSaveCheck.addEventListener('change', (e) => {
+      settings.autoSave = e.target.checked;
+      persistSettings();
+      showToast(settings.autoSave ? 'Auto-save enabled' : 'Auto-save disabled');
+    });
+
+    settingsBtn.addEventListener('click', () => { 
+      settingsModal.style.display = 'flex'; 
+    });
+
+    closeSettings.addEventListener('click', () => { 
+      settingsModal.style.display = 'none'; 
+    });
+
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.style.display = 'none';
+      }
+    });
+
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) {
+        editModal.style.display = 'none';
+      }
+    });
+
+    let autoSaveTimeout;
+    entryText.addEventListener('input', () => {
+      if (!settings.autoSave) return;
+      clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+        const txt = entryText.value.trim();
+        if (txt.length > 10) {
+          save.click();
+        }
+      }, 3000);
+    });
+
+    load();
+  </script>
+</body>
+</html>
