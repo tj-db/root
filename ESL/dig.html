@@ -46,13 +46,10 @@
     const fountainCount = 3;
     const fountains = [];
     const bubbleLifetime = 1400;
-    const detectNear = 160;
-    const detectOnTop = 64;
+    const detectOnTop = 48;
+    const detectNear = 260;
     let bubbleTimer = null;
-
-    // New: holes array stores { x, y, flagged: boolean }
     const holes = [];
-
     const commandQueue = [];
     let processingQueue = false;
     const stepDelay = 140;
@@ -91,7 +88,7 @@
       clearBubbles();
       commandQueue.length = 0;
       processingQueue = false;
-      holes.length = 0; // clear holes on reset
+      holes.length = 0;
       draw();
     }
 
@@ -99,18 +96,11 @@
       ctx.clearRect(0,0,W,H);
       ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--ground') || '#1f7a1f';
       ctx.fillRect(0,0,W,H);
-
-      // Draw fountains (visible ones)
       for(const f of fountains){
         if(f.visible) drawFountain(f.x,f.y,true);
       }
-
-      // Draw holes (holes without flags)
       drawHoles();
-
-      // Draw flagged holes (holes with flags)
       drawFlaggedHoles();
-
       drawPlayer();
     }
 
@@ -139,7 +129,6 @@
       ctx.save();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      // size chosen to match canvas scale and feel
       ctx.font = `36px system-ui, -apple-system, "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", sans-serif`;
       for(const h of holes){
         if(!h.flagged){
@@ -156,7 +145,6 @@
       ctx.font = `36px system-ui, -apple-system, "Segoe UI Emoji", "Noto Color Emoji", "Apple Color Emoji", sans-serif`;
       for(const h of holes){
         if(h.flagged){
-          // Combine hole and flag visually; using a small vertical offset so the flag sits slightly above the hole
           ctx.fillText('🕳️', h.x, h.y + 10);
           ctx.fillText('🚩', h.x + 10, h.y - 6);
         }
@@ -286,8 +274,6 @@
       }
 
       const t = closestDist;
-
-      // Determine result and bubble text/scale
       let bubbleText = '';
       let bubbleScale = 1;
       let shouldFlag = false;
@@ -296,12 +282,12 @@
         fountains[closestIdx].visible = true;
         bubbleText = '🎉 well done!';
         bubbleScale = 1.3;
-        shouldFlag = true; // top is definitely worth flagging
-      } else if(t <= detectOnTop + 20){
+        shouldFlag = true;
+      } else if(t <= detectOnTop + 40){
         bubbleText = '💧 very very wet';
         bubbleScale = 2.0;
         shouldFlag = true;
-      } else if(t <= detectOnTop + 40){
+      } else if(t <= detectOnTop + 80){
         bubbleText = '💧 very wet';
         bubbleScale = 1.8;
         shouldFlag = true;
@@ -321,10 +307,7 @@
       }
 
       showBubble(bubbleText, player.x, player.y - 48, bubbleScale);
-
-      // Leave a hole always; if shouldFlag is true, mark flagged
       holes.push({ x: player.x, y: player.y, flagged: !!shouldFlag });
-
       draw();
     }
 
@@ -376,7 +359,6 @@
       }
     });
 
-    // Reset button
     document.getElementById('resetBtn').addEventListener('click', resetGame);
 
     setCanvasSize();
