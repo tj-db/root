@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2-Player Minesweeper</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,19 +15,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 0;
-            margin: 0;
-            position: relative;
             overflow: hidden;
+            position: relative;
         }
 
         body::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             background: 
                 radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.2) 0%, transparent 50%),
                 radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.2) 0%, transparent 50%);
@@ -41,11 +32,8 @@
         .container {
             position: relative;
             z-index: 1;
-            max-width: 100%;
-            max-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             padding: 20px;
         }
@@ -55,9 +43,21 @@
             justify-content: center;
             align-items: center;
             margin-bottom: 15px;
-            padding: 0;
         }
 
+        .player-info {
+            display: none;
+        }
+
+        .game-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* Toggle button now sits to the left of the board */
         .mode-toggle {
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
@@ -66,11 +66,8 @@
             border-radius: 14px;
             font-size: 28px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            min-width: 75px;
-            box-shadow: 
-                0 4px 14px rgba(59, 130, 246, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
             position: relative;
             overflow: hidden;
         }
@@ -78,32 +75,18 @@
         .mode-toggle::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             transition: left 0.5s;
         }
 
-        .mode-toggle:hover::before {
-            left: 100%;
-        }
-
+        .mode-toggle:hover::before { left: 100%; }
         .mode-toggle:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 
-                0 6px 20px rgba(59, 130, 246, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            box-shadow: 0 6px 20px rgba(59,130,246,0.5);
         }
-
-        .mode-toggle:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        .player-info {
-            display: none;
-        }
+        .mode-toggle:active { transform: scale(0.96); }
 
         .board {
             display: grid;
@@ -111,13 +94,9 @@
             background: linear-gradient(135deg, #64748b 0%, #475569 100%);
             padding: 4px;
             border-radius: 12px;
-            margin: 0 auto;
             width: fit-content;
             max-width: 100%;
-            max-height: calc(100vh - 180px);
-            box-shadow: 
-                0 10px 30px rgba(0,0,0,0.3),
-                inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
         }
 
         .cell {
@@ -130,96 +109,33 @@
             font-size: clamp(14px, 2vw, 18px);
             font-weight: 800;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-            box-shadow: 
-                0 2px 4px rgba(0,0,0,0.1),
-                inset 0 1px 0 rgba(255,255,255,0.5);
+            transition: all 0.2s ease;
             position: relative;
-        }
-
-        .cell::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, transparent 60%);
-            border-radius: 4px;
-            opacity: 1;
-            transition: opacity 0.2s;
-        }
-
-        .cell.revealed::before {
-            opacity: 0;
-        }
-
-        .cell:hover:not(.revealed):not(.flagged) {
-            background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
-            transform: translateY(-2px);
-            box-shadow: 
-                0 4px 8px rgba(0,0,0,0.2),
-                inset 0 1px 0 rgba(255,255,255,0.5);
-        }
-
-        .cell:active:not(.revealed):not(.flagged) {
-            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);
         }
 
         .cell.revealed {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            cursor: default;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
-            animation: revealPop 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes revealPop {
-            0% { transform: scale(0.8); opacity: 0; }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); opacity: 1; }
         }
 
         .cell.mine {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
-            box-shadow: 
-                0 4px 12px rgba(239, 68, 68, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            animation: explode 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes explode {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
-            100% { transform: scale(1); }
         }
 
         .cell.flagged.blue-flag {
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
-            box-shadow: 
-                0 4px 12px rgba(59, 130, 246, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            animation: flagWave 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .cell.flagged.red-flag {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
-            box-shadow: 
-                0 4px 12px rgba(239, 68, 68, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            animation: flagWave 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes flagWave {
-            0% { transform: rotate(0deg) scale(0.8); }
-            50% { transform: rotate(10deg) scale(1.1); }
-            100% { transform: rotate(0deg) scale(1); }
         }
 
         .cell.player1-reveal {
@@ -232,14 +148,14 @@
             border: 2px solid #ef4444;
         }
 
-        .cell-1 { color: #3b82f6; text-shadow: 0 1px 2px rgba(59, 130, 246, 0.3); }
-        .cell-2 { color: #10b981; text-shadow: 0 1px 2px rgba(16, 185, 129, 0.3); }
-        .cell-3 { color: #ef4444; text-shadow: 0 1px 2px rgba(239, 68, 68, 0.3); }
-        .cell-4 { color: #6366f1; text-shadow: 0 1px 2px rgba(99, 102, 241, 0.3); }
-        .cell-5 { color: #dc2626; text-shadow: 0 1px 2px rgba(220, 38, 38, 0.3); }
-        .cell-6 { color: #0891b2; text-shadow: 0 1px 2px rgba(8, 145, 178, 0.3); }
-        .cell-7 { color: #1f2937; text-shadow: 0 1px 2px rgba(31, 41, 55, 0.3); }
-        .cell-8 { color: #6b7280; text-shadow: 0 1px 2px rgba(107, 114, 128, 0.3); }
+        .cell-1 { color: #3b82f6; }
+        .cell-2 { color: #10b981; }
+        .cell-3 { color: #ef4444; }
+        .cell-4 { color: #6366f1; }
+        .cell-5 { color: #dc2626; }
+        .cell-6 { color: #0891b2; }
+        .cell-7 { color: #1f2937; }
+        .cell-8 { color: #6b7280; }
 
         .game-over {
             text-align: center;
@@ -247,30 +163,14 @@
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             border-radius: 16px;
             margin-top: 25px;
-            box-shadow: 
-                0 8px 25px rgba(251, 191, 36, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3);
             border: 2px solid #fbbf24;
-            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .game-over h2 {
             background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 12px;
             font-size: 1.8em;
             font-weight: 800;
         }
@@ -280,6 +180,12 @@
             font-weight: 600;
             color: #78350f;
         }
+
+        @media (max-width: 600px) {
+            .game-area {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -288,15 +194,17 @@
             <div class="player-info blue active" id="player1Info">
                 <div class="player-name">Blue Team</div>
             </div>
-            <button class="mode-toggle" id="modeToggle" onclick="toggleMode()">👁️</button>
             <div class="player-info red" id="player2Info">
                 <div class="player-name">Red Team</div>
             </div>
         </div>
 
-        <div id="board" class="board"></div>
+        <div class="game-area">
+            <button class="mode-toggle" id="modeToggle" onclick="toggleMode()">👁️</button>
+            <div id="board" class="board"></div>
+        </div>
 
-        <div id="gameOver" class="game-over" style="display: none;">
+        <div id="gameOver" class="game-over" style="display:none;">
             <h2 id="gameOverMessage"></h2>
             <p id="finalScores"></p>
         </div>
@@ -304,12 +212,9 @@
 
     <script>
         let board = [];
-        let rows = 12;
-        let cols = 12;
-        let mines = 30;
+        let rows = 12, cols = 12, mines = 30;
         let currentPlayer = 1;
-        let player1Score = 0;
-        let player2Score = 0;
+        let player1Score = 0, player2Score = 0;
         let gameOver = false;
         let mode = 'reveal';
 
@@ -325,24 +230,19 @@
             player1Score = 0;
             player2Score = 0;
             gameOver = false;
-            
+
             document.getElementById('gameOver').style.display = 'none';
-            updatePlayerTurn();
-            
+
             for (let i = 0; i < rows; i++) {
                 board[i] = [];
                 for (let j = 0; j < cols; j++) {
                     board[i][j] = {
-                        mine: false,
-                        revealed: false,
-                        flagged: false,
-                        flaggedBy: 0,
-                        adjacentMines: 0,
-                        revealedBy: 0
+                        mine: false, revealed: false, flagged: false, flaggedBy: 0,
+                        adjacentMines: 0, revealedBy: 0
                     };
                 }
             }
-            
+
             let minesPlaced = 0;
             while (minesPlaced < mines) {
                 const r = Math.floor(Math.random() * rows);
@@ -352,15 +252,14 @@
                     minesPlaced++;
                 }
             }
-            
+
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {
-                    if (!board[i][j].mine) {
+                    if (!board[i][j].mine)
                         board[i][j].adjacentMines = countAdjacentMines(i, j);
-                    }
                 }
             }
-            
+
             renderBoard();
         }
 
@@ -368,11 +267,8 @@
             let count = 0;
             for (let i = -1; i <= 1; i++) {
                 for (let j = -1; j <= 1; j++) {
-                    const r = row + i;
-                    const c = col + j;
-                    if (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c].mine) {
-                        count++;
-                    }
+                    const r = row + i, c = col + j;
+                    if (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c].mine) count++;
                 }
             }
             return count;
@@ -382,53 +278,35 @@
             const boardEl = document.getElementById('board');
             boardEl.innerHTML = '';
             boardEl.style.gridTemplateColumns = `repeat(${cols}, min(42px, calc((100vw - 80px) / 12)))`;
-            
+
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {
                     const cell = document.createElement('button');
                     cell.className = 'cell';
-                    cell.dataset.row = i;
-                    cell.dataset.col = j;
-                    
-                    if (board[i][j].revealed) {
+                    const data = board[i][j];
+
+                    if (data.revealed) {
                         cell.classList.add('revealed');
-                        if (board[i][j].revealedBy === 1) cell.classList.add('player1-reveal');
-                        if (board[i][j].revealedBy === 2) cell.classList.add('player2-reveal');
-                        
-                        if (board[i][j].mine) {
-                            cell.classList.add('mine');
-                            cell.textContent = '💣';
-                        } else if (board[i][j].adjacentMines > 0) {
-                            cell.textContent = board[i][j].adjacentMines;
-                            cell.classList.add(`cell-${board[i][j].adjacentMines}`);
+                        if (data.revealedBy === 1) cell.classList.add('player1-reveal');
+                        if (data.revealedBy === 2) cell.classList.add('player2-reveal');
+                        if (data.mine) cell.textContent = '💣';
+                        else if (data.adjacentMines > 0) {
+                            cell.textContent = data.adjacentMines;
+                            cell.classList.add(`cell-${data.adjacentMines}`);
                         }
-                    } else if (board[i][j].flagged) {
+                    } else if (data.flagged) {
                         cell.classList.add('flagged');
-                        if (board[i][j].flaggedBy === 1) {
-                            cell.classList.add('blue-flag');
-                        } else {
-                            cell.classList.add('red-flag');
-                        }
                         cell.textContent = '🚩';
+                        if (data.flaggedBy === 1) cell.classList.add('blue-flag');
+                        else cell.classList.add('red-flag');
                     }
-                    
+
                     cell.addEventListener('click', (e) => {
                         e.preventDefault();
-                        if (mode === 'flag') {
-                            toggleFlag(i, j);
-                        } else {
-                            revealCell(i, j);
-                        }
+                        if (mode === 'flag') toggleFlag(i, j);
+                        else revealCell(i, j);
                     });
-                    
-                    cell.addEventListener('dblclick', (e) => {
-                        e.preventDefault();
-                    });
-                    
-                    cell.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                    });
-                    
+
                     boardEl.appendChild(cell);
                 }
             }
@@ -436,31 +314,22 @@
 
         function revealCell(row, col) {
             if (gameOver || board[row][col].revealed || board[row][col].flagged) return;
-            
-            board[row][col].revealed = true;
-            board[row][col].revealedBy = currentPlayer;
-            
-            if (board[row][col].mine) {
-                if (currentPlayer === 1) {
-                    player1Score -= 5;
-                } else {
-                    player2Score -= 5;
-                }
+            const cell = board[row][col];
+            cell.revealed = true;
+            cell.revealedBy = currentPlayer;
+
+            if (cell.mine) {
+                if (currentPlayer === 1) player1Score -= 5;
+                else player2Score -= 5;
                 renderBoard();
                 endGame();
                 return;
             }
-            
-            if (currentPlayer === 1) {
-                player1Score++;
-            } else {
-                player2Score++;
-            }
-            
-            if (board[row][col].adjacentMines === 0) {
-                revealAdjacentCells(row, col);
-            }
-            
+
+            if (currentPlayer === 1) player1Score++;
+            else player2Score++;
+
+            if (cell.adjacentMines === 0) revealAdjacentCells(row, col);
             renderBoard();
             switchPlayer();
         }
@@ -468,20 +337,15 @@
         function revealAdjacentCells(row, col) {
             for (let i = -1; i <= 1; i++) {
                 for (let j = -1; j <= 1; j++) {
-                    const r = row + i;
-                    const c = col + j;
-                    if (r >= 0 && r < rows && c >= 0 && c < cols && !board[r][c].revealed && !board[r][c].mine && !board[r][c].flagged) {
-                        board[r][c].revealed = true;
-                        board[r][c].revealedBy = currentPlayer;
-                        
-                        if (currentPlayer === 1) {
-                            player1Score++;
-                        } else {
-                            player2Score++;
-                        }
-                        
-                        if (board[r][c].adjacentMines === 0) {
-                            revealAdjacentCells(r, c);
+                    const r = row + i, c = col + j;
+                    if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                        const cell = board[r][c];
+                        if (!cell.revealed && !cell.flagged && !cell.mine) {
+                            cell.revealed = true;
+                            cell.revealedBy = currentPlayer;
+                            if (currentPlayer === 1) player1Score++;
+                            else player2Score++;
+                            if (cell.adjacentMines === 0) revealAdjacentCells(r, c);
                         }
                     }
                 }
@@ -490,56 +354,33 @@
 
         function toggleFlag(row, col) {
             if (gameOver || board[row][col].revealed) return;
-            
-            if (!board[row][col].flagged) {
-                board[row][col].flagged = true;
-                board[row][col].flaggedBy = currentPlayer;
-            } else if (board[row][col].flaggedBy === currentPlayer) {
-                board[row][col].flagged = false;
-                board[row][col].flaggedBy = 0;
-            } else {
-                return;
+            const cell = board[row][col];
+            if (!cell.flagged) {
+                cell.flagged = true;
+                cell.flaggedBy = currentPlayer;
+            } else if (cell.flaggedBy === currentPlayer) {
+                cell.flagged = false;
+                cell.flaggedBy = 0;
             }
-            
             renderBoard();
             switchPlayer();
         }
 
         function switchPlayer() {
             currentPlayer = currentPlayer === 1 ? 2 : 1;
-            updatePlayerTurn();
-        }
-
-        function updatePlayerTurn() {
-            const p1 = document.getElementById('player1Info');
-            const p2 = document.getElementById('player2Info');
-            
-            if (currentPlayer === 1) {
-                p1.classList.add('active');
-                p2.classList.remove('active');
-            } else {
-                p2.classList.add('active');
-                p1.classList.remove('active');
-            }
         }
 
         function endGame() {
             gameOver = true;
-            const gameOverEl = document.getElementById('gameOver');
-            const messageEl = document.getElementById('gameOverMessage');
-            const scoresEl = document.getElementById('finalScores');
-            
-            messageEl.textContent = '💣 Game Over! 💣';
-            
-            if (player1Score > player2Score) {
-                scoresEl.textContent = `Blue Team Wins! | Blue: ${player1Score} | Red: ${player2Score}`;
-            } else if (player2Score > player1Score) {
-                scoresEl.textContent = `Red Team Wins! | Blue: ${player1Score} | Red: ${player2Score}`;
-            } else {
-                scoresEl.textContent = `It's a Tie! | Blue: ${player1Score} | Red: ${player2Score}`;
-            }
-            
-            gameOverEl.style.display = 'block';
+            const msg = document.getElementById('gameOverMessage');
+            const scores = document.getElementById('finalScores');
+            msg.textContent = '💣 Game Over! 💣';
+            if (player1Score > player2Score)
+                scores.textContent = `Blue Wins! Blue: ${player1Score} | Red: ${player2Score}`;
+            else if (player2Score > player1Score)
+                scores.textContent = `Red Wins! Blue: ${player1Score} | Red: ${player2Score}`;
+            else scores.textContent = `It's a Tie! Blue: ${player1Score} | Red: ${player2Score}`;
+            document.getElementById('gameOver').style.display = 'block';
         }
 
         initGame();
