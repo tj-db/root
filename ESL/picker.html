@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Playground Picker</title>
+  <style>
+    :root{
+      --bg:#f0f8ff;
+      --accent:#ff6b81;
+      --accent2:#4ec5ff;
+      --text:#06202a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+    body{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(1200px 600px at 10% 10%, #e6f9ff 0%, transparent 20%),
+        linear-gradient(180deg,#fff 0%,var(--bg) 100%);
+      color:var(--text);
+      padding:0;
+      min-height:100vh;
+    }
+    .card{
+      width:100%;
+      max-width:720px;
+      text-align:center;
+      padding:28px;
+      margin:24px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.92);
+      box-shadow:0 8px 30px rgba(2,6,23,0.08);
+    }
+    h1{margin:0;font-size:20px;letter-spacing:-0.3px}
+    p.hint{margin:10px 0 0;color:#475569;font-size:14px}
+    kbd{
+      background:#111827;color:#fff;padding:6px 10px;border-radius:6px;font-weight:700;
+      box-shadow:0 4px 10px rgba(2,6,23,0.08);margin-left:6px;
+    }
+    .big-word{
+      position:fixed;
+      left:0;
+      top:0;
+      width:100vw;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:1000;
+      pointer-events:none;
+      opacity:0;
+      text-transform:uppercase;
+      font-weight:900;
+      color:#fff;
+      font-size:clamp(48px,18vw,180px);
+      letter-spacing:2px;
+      background:linear-gradient(135deg,var(--accent2),var(--accent));
+      box-shadow:0 30px 80px rgba(2,6,23,0.18), 0 6px 18px rgba(0,0,0,0.12);
+      transform-origin:center;
+      padding:6vh 6vw;
+      text-align:center;
+    }
+    .big-word .label{
+      padding:0 6vw;
+      text-shadow:0 6px 30px rgba(2,6,23,0.25);
+    }
+    @keyframes pop {
+      0% { transform:scale(0.6) rotate(-6deg); opacity:0; filter:blur(6px); }
+      60% { transform:scale(1.08) rotate(4deg); opacity:1; filter:blur(0); }
+      100% { transform:scale(1) rotate(0deg); opacity:1; filter:blur(0); }
+    }
+    @keyframes vanish {
+      from { opacity:1; transform:scale(1); }
+      to   { opacity:0; transform:scale(0.96); }
+    }
+    .pop { animation: pop 700ms cubic-bezier(.2,.9,.2,1) forwards; }
+    .fade-out { animation: vanish 400ms ease-in forwards; animation-delay:900ms; }
+    .confetti{
+      position:fixed;
+      width:10px;
+      height:14px;
+      z-index:1100;
+      pointer-events:none;
+      opacity:0.95;
+      border-radius:3px;
+      transform-origin:center;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      to { transform: translateY(110vh) rotate(720deg); opacity:0; }
+    }
+    .footer{margin-top:14px;color:#64748b;font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="title">
+    <h1 id="title">Playground Picker</h1>
+    <p class="hint">Press <kbd>Space</kbd> to choose one of the words: <strong>see-saw</strong>, <strong>jungle gym</strong>, <strong>swing</strong>, <strong>slide</strong>.</p>
+    <p class="footer">Press space again to pick another. Click anywhere to pick as well.</p>
+  </main>
+
+  <div id="big" class="big-word" aria-live="polite" aria-atomic="true" hidden><div class="label"></div></div>
+
+  <script>
+    (function(){
+      const words = ['see-saw','jungle gym','swing','slide'];
+      let deck = shuffle(words.slice());
+      const big = document.getElementById('big');
+      const label = big.querySelector('.label');
+
+      window.addEventListener('keydown', function(e){
+        if(e.code === 'Space'){
+          const active = document.activeElement;
+          if(active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+          e.preventDefault();
+          pick();
+        }
+      });
+
+      document.addEventListener('click', function(){ pick(); });
+
+      function pick(){
+        if(deck.length === 0) deck = shuffle(words.slice());
+        const choice = deck.pop();
+        showBig(choice);
+      }
+
+      function showBig(text){
+        big.hidden = false;
+        big.classList.remove('pop','fade-out');
+        void big.offsetWidth;
+        label.textContent = text;
+        big.classList.add('pop');
+        createConfetti();
+        clearTimeout(big._hideTimer);
+        big._hideTimer = setTimeout(function(){
+          big.classList.add('fade-out');
+          setTimeout(function(){ big.hidden = true; big.classList.remove('fade-out'); }, 700);
+        }, 1400);
+      }
+
+      function createConfetti(){
+        const colors = ['#ff6b81','#ffd166','#4ec5ff','#7ee787','#c084fc'];
+        const count = 24;
+        for(let i=0;i<count;i++){
+          const el = document.createElement('div');
+          el.className = 'confetti';
+          const size = 6 + Math.random()*18;
+          el.style.width = size + 'px';
+          el.style.height = (size*1.2) + 'px';
+          el.style.left = (5 + Math.random()*90) + 'vw';
+          el.style.top = (-10 - Math.random()*20) + 'vh';
+          el.style.background = colors[Math.floor(Math.random()*colors.length)];
+          el.style.transform = 'rotate(' + (Math.random()*360) + 'deg)';
+          el.style.borderRadius = (Math.random()*40) + '%';
+          const dur = 900 + Math.random()*1400;
+          el.style.animationDuration = dur + 'ms';
+          el.style.animationDelay = (Math.random()*120) + 'ms';
+          document.body.appendChild(el);
+          setTimeout(function(){ el.remove(); }, dur + 400);
+        }
+      }
+
+      function shuffle(array){
+        for(let i = array.length - 1; i > 0; i--){
+          const j = Math.floor(Math.random() * (i + 1));
+          const t = array[i];
+          array[i] = array[j];
+          array[j] = t;
+        }
+        return array;
+      }
+    })();
+  </script>
+</body>
+</html>
