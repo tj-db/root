@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>List Display</title>
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    color: white;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+  }
+  #input-area, #start-btn {
+    font-size: 1.2rem;
+    padding: 10px;
+    margin: 5px;
+  }
+  #input-area {
+    width: 90%;
+    height: 140px;
+    resize: vertical;
+  }
+  #word {
+    font-size: 10vw;
+    text-align: center;
+    display: none;
+    word-break: break-word;
+    padding: 0 10px;
+  }
+</style>
+</head>
+<body>
+
+<textarea id="input-area" placeholder="Enter one word per line"></textarea>
+<button id="start-btn">Start</button>
+<div id="word"></div>
+
+<script>
+  const inputArea = document.getElementById('input-area');
+  const startBtn = document.getElementById('start-btn');
+  const wordDisplay = document.getElementById('word');
+
+  let words = [];
+  let index = 0;
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  startBtn.addEventListener('click', () => {
+    // Split only on new lines, trim each line, and remove empty lines
+    words = inputArea.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (words.length === 0) return alert('Please enter at least one word.');
+    // Randomize order
+    shuffleArray(words);
+    index = 0;
+    inputArea.style.display = 'none';
+    startBtn.style.display = 'none';
+    wordDisplay.style.display = 'block';
+    wordDisplay.textContent = words[index];
+  });
+
+  document.addEventListener('keydown', () => {
+    if (words.length === 0) return;
+    index = (index + 1) % words.length;
+    wordDisplay.textContent = words[index];
+  });
+</script>
+
+</body>
+</html>
