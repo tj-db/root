@@ -3,61 +3,155 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LLL1 Red Book</title>
-<style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#c0392b 0%,#8e44ad 100%);min-height:100vh;padding:28px 16px;-webkit-font-smoothing:antialiased}
-  .container{max-width:980px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.28);overflow:hidden;display:flex;flex-direction:column;min-height:72vh}
-  header{background:#b91c1c;color:#fff;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-  header h1{font-size:1.15rem;display:flex;align-items:center;gap:10px}
-  .search-bar{padding:14px 18px;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;align-items:center}
-  input[type="search"]{flex:1;padding:10px 12px;border-radius:22px;border:2px solid #e5e7eb;font-size:1rem;outline:none}
-  input[type="search"]:focus{border-color:#b91c1c;box-shadow:0 6px 18px rgba(185,28,28,.08)}
-  .content{display:flex;gap:18px;padding:18px;flex:1;min-height:48vh}
+  <title>GLORIA</title>
 
-  .list{flex:1;overflow:auto;padding:8px 8px 40px;border-radius:12px;border:1px solid #eef2f6;background:#fff}
+  <!-- Google Font: Rubik (rounded, good bold weights) -->
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-  .list-item{
-    display:block;
-    padding:6px 0;
-    border-bottom:1px solid #f3f4f6;
-  }
+  <style>
+    :root {
+      --accent-color: #b91c1c;
+      --accent-contrast: #ffffff;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(135deg,#c0392b 0%,#8e44ad 100%);
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+      padding:28px 16px;
+    }
+    .panel{
+      max-width:980px;
+      margin:0 auto;
+      background:#0000;
+      border-radius:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.28);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:72vh;
+      gap:0;
+    }
+    .panel-top{background:var(--accent-color)}
+    .tabs{
+      display:flex;
+      gap:10px;
+      padding:12px 18px 8px 18px;
+      background:var(--accent-color);
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
 
-  .list-item:last-child{border-bottom:0}
+    .tab{
+      padding:10px 16px;
+      border-radius:999px;
+      border:none;
+      font-family: 'Rubik', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      opacity:.98;
+      color:var(--accent-contrast);
+      box-shadow:
+        inset 0 3px 6px rgba(0,0,0,0.28),
+        inset 0 -1px 3px rgba(255,255,255,0.06);
+      letter-spacing: 2px;
+      font-size: 0.95rem;
+    }
+    .tab:active{transform:scale(.99)}
+    .tab[aria-selected="true"], .tab.active{
+      box-shadow: none;
+      transform:translateY(1px);
+    }
 
-  .meta{
-    display:block;
-    width:100%;
-  }
+    .tab:focus{
+      outline: none;
+      box-shadow: none;
+    }
 
-  .link-badge{
-    display:block;
-    width:100%;
-    padding:12px 14px;
-    border-radius:10px;
-    background:#f3f4f6;
-    color:#111827;
-    font-weight:600;
-    text-decoration:none;
-    text-align:center;
-    box-sizing:border-box;
-  }
-  .link-badge:hover{background:#e9eef2}
-
-  .meta > span:not(.visually-hidden){display:none}
-  .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
-
-  .no-results{padding:20px;text-align:center;color:#6b7280}
-
-  @media (max-width:900px){.content{flex-direction:column}}
-
-</style>
+    .tab:focus-visible{
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.12);
+    }
+    .tab[data-folder="YELLOW BOOK"]{
+      color:#ffffff !important;
+    }
+    .accent-bar{
+      height:6px;
+      background:var(--accent-color);
+    }
+    .search-bar{
+      padding:14px 18px;
+      background:var(--accent-color);
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    input[type="search"]{
+      flex:1;
+      padding:10px 12px;
+      border-radius:22px;
+      border:2px solid rgba(255,255,255,.6);
+      background:#ffffff;
+      color:#111827;
+      font-size:1rem;
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:#6b7280}
+    input[type="search"]:focus{
+      border-color:#ffffff;
+      box-shadow:0 6px 18px rgba(0,0,0,.08);
+    }
+    .content{
+      display:flex;
+      gap:18px;
+      padding:18px;
+      flex:1;
+      min-height:48vh;
+      background:var(--accent-color);
+    }
+    .list{
+      flex:1;
+      overflow:auto;
+      padding:8px 8px 40px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.35);
+      background:#ffffff;
+    }
+    .list-item{display:block;padding:6px 0;border-bottom:1px solid #f3f4f6}
+    .list-item:last-child{border-bottom:0}
+    .meta{display:block;width:100%}
+    .link-badge{
+      display:block;
+      width:100%;
+      padding:12px 14px;
+      border-radius:10px;
+      background:#f3f4f6;
+      color:#111827;
+      font-weight:600;
+      text-decoration:none;
+      text-align:center;
+    }
+    .link-badge:hover{background:#e9eef2}
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+    .no-results{padding:20px;text-align:center;color:#111827}
+    @media (max-width:900px){.content{flex-direction:column}}
+  </style>
 </head>
 <body>
-  <div class="container" role="application" aria-labelledby="title">
-    <header>
-      <h1 id="title">RED BOOK</h1>
-    </header>
+  <div class="panel" role="application">
+    <div class="panel-top">
+      <div class="tabs" role="tablist" aria-label="Books">
+        <button class="tab" data-folder="RED BOOK" data-color="#b91c1c" aria-selected="true">RED BOOK</button>
+        <button class="tab" data-folder="YELLOW BOOK" data-color="#f59e0b" aria-selected="false">YELLOW BOOK</button>
+        <button class="tab" data-folder="KB" data-color="#334155" aria-selected="false">KB</button>
+        <button class="tab" data-folder="GE1" data-color="#0d9488" aria-selected="false">GE1</button>
+        <button class="tab" data-folder="GE2" data-color="#4f46e5" aria-selected="false">GE2</button>
+      </div>
+      <div class="accent-bar" aria-hidden="true"></div>
+    </div>
 
     <div class="search-bar" role="search" aria-label="Search files">
       <input id="searchInput" type="search" placeholder="Search . . ." aria-label="Search files" />
@@ -69,8 +163,10 @@
   </div>
 
   <script>
-    const files = [
-      {name:"LLL1-L53.pptx",url:"https://docs.google.com/presentation/d/10MqJx-oY8ajPhal7cWRU0iqeoSga_Zw3/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+
+    const filesByFolder = {
+      "RED BOOK": [
+     {name:"LLL1-L53.pptx",url:"https://docs.google.com/presentation/d/10MqJx-oY8ajPhal7cWRU0iqeoSga_Zw3/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L25.pptx",url:"https://docs.google.com/presentation/d/1_TWeAlZ9y5MRIQ0Eei2t--gWroEry7lN/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L21.pptx",url:"https://docs.google.com/presentation/d/1HpNHULmcg9bGgcUl_IWzPGjJ7DPSqX9S/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L17.pptx",url:"https://docs.google.com/presentation/d/1eceZ_yWHDMGQNaBed3Q9jdyjJiR8Gg1K/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
@@ -100,8 +196,6 @@
       {name:"LLL1-L27.pptx",url:"https://docs.google.com/presentation/d/1pnXXZmHX-hZqremuIVBrR-9KTcYxIzDl/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L23.pptx",url:"https://docs.google.com/presentation/d/1mx7LO8sLktCaN0YggYpSjnSJxZz94zGe/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L19.pptx",url:"https://docs.google.com/presentation/d/1DEcAgOqsax_RBgPhq9Zc_-VGqqXZBLno/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
-      {name:"RB_25_Self_intro.pptx",url:"https://docs.google.com/presentation/d/1z6aTXdqI1vY6YAiCAzbcJhqAymo6lOP1/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
-      {name:"RB_50_Self_intro.pptx",url:"https://docs.google.com/presentation/d/1FkZbwqjDVjX0ixQSfGVc-4OIRNUnDexz/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L97.pptx",url:"https://docs.google.com/presentation/d/18bsLpX2x7ll4LFPjQYQgtYxKev0ETAN1/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L95.pptx",url:"https://docs.google.com/presentation/d/1pWTLI2MHUTefmp7lNRjAS0JmH6cCulf2/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L69.pptx",url:"https://docs.google.com/presentation/d/1nT7taZ9aZ8jOorq5IgbvpiFvV_ANJ88m/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
@@ -132,8 +226,52 @@
       {name:"LLL1-L109.pptx",url:"https://docs.google.com/presentation/d/1q_NNnKHF5KeSzWOaMjXM3yiwpzl0Fbtv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L85.pptx",url:"https://docs.google.com/presentation/d/1s2pvc9PO4q91yb4nNtP35zhgyLLEC5xT/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
       {name:"LLL1-L81.pptx",url:"https://docs.google.com/presentation/d/1xdTDUgS3JNv1O1WieiaBZEjefYJ5i9Hm/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
-    ];
 
+      ],
+      "YELLOW BOOK": [
+        {name:"LLL1-L21.pptx",url:"https://docs.google.com/presentation/d/1HpNHULmcg9bGgcUl_IWzPGjJ7DPSqX9S/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+        {name:"LLL1-L17.pptx",url:"https://docs.google.com/presentation/d/1eceZ_yWHDMGQNaBed3Q9jdyjJiR8Gg1K/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+      ],
+      "KB": [
+        {name:"LLL1-L15.pptx",url:"https://docs.google.com/presentation/d/1DjHCfT76pAVbjSmVo4rXKm8OLsRage5J/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+        {name:"LLL1-L13.pptx",url:"https://docs.google.com/presentation/d/1DSHJ5heBBMIt71sq-5l8UIn5tl62Sq8C/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+      ],
+      "GE1": [
+        {name:"LLL1-L11.pptx",url:"https://docs.google.com/presentation/d/1nihv6yptlcDP0D-DE8szaz07cNWbvlN-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+        {name:"LLL1-L9.pptx",url:"https://docs.google.com/presentation/d/1Pww1plBp-bhiUfkWD_FhqHc9VnH8OWiz/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+      ],
+      "GE2": [
+        {name:"LLL1-L7.pptx",url:"https://docs.google.com/presentation/d/15_03VnqTVESEuO7DAneGuYBo3FByUqub/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+        {name:"LLL1-L5.pptx",url:"https://docs.google.com/presentation/d/104JN2h5qJzaw1WHbyQkCApwHr2ydCqJr/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+      ]
+    };
+
+    function setAccent(color){
+      document.documentElement.style.setProperty('--accent-color', color);
+      const contrast = contrastColor(color);
+      document.documentElement.style.setProperty('--accent-contrast', contrast);
+      document.querySelectorAll('.list').forEach(el=>{
+        el.style.borderColor = (contrast === '#ffffff') ? 'rgba(255,255,255,.25)' : 'rgba(0,0,0,.06)';
+      });
+    }
+    function contrastColor(hex){
+      const c = hex.replace('#','');
+      const r = parseInt(c.length===3?c[0]+c[0]:c.slice(0,2),16);
+      const g = parseInt(c.length===3?c[1]+c[1]:c.slice(2,4),16);
+      const b = parseInt(c.length===3?c[2]+c[2]:c.slice(4,6),16);
+      const yiq = (r*299 + g*587 + b*114) / 1000;
+      return yiq >= 150 ? '#111827' : '#ffffff';
+    }
+    function colorizeTabs(){
+      document.querySelectorAll('.tab').forEach(tab=>{
+        const color = tab.dataset.color || '#b91c1c';
+        const text = contrastColor(color);
+        tab.style.backgroundColor = color;
+        tab.style.color = text;
+      });
+      const yellow = document.querySelector('.tab[data-folder="YELLOW BOOK"]');
+      if (yellow) yellow.style.color = '#ffffff';
+    }
     function extractLessonNumber(name){
       const m = name.match(/-L(\d{1,3})/i);
       if (m) return Number(m[1]);
@@ -142,33 +280,25 @@
       const m3 = name.match(/(\d{1,3})/);
       return m3 ? Number(m3[1]) : Infinity;
     }
-
-    files.sort((a,b)=>{
-      const na = extractLessonNumber(a.name);
-      const nb = extractLessonNumber(b.name);
-      return na - nb;
-    });
-
     const fileList = document.getElementById('fileList');
     const input = document.getElementById('searchInput');
-
+    let currentFolder = "RED BOOK";
     function renderList(items){
+      const sorted = items.slice().sort((a,b)=>extractLessonNumber(a.name)-extractLessonNumber(b.name));
       fileList.innerHTML = '';
-      if (!items.length){
+      if (!sorted.length){
         const no = document.createElement('div');
         no.className = 'no-results';
         no.textContent = 'No files match your search';
         fileList.appendChild(no);
         return;
       }
-      items.forEach(function(f){
+      sorted.forEach(function(f){
         const row = document.createElement('div');
         row.className = 'list-item';
         row.setAttribute('role','listitem');
-
         const meta = document.createElement('div');
         meta.className = 'meta';
-
         const lessonNum = extractLessonNumber(f.name);
         const link = document.createElement('a');
         link.className = 'link-badge';
@@ -177,45 +307,58 @@
         link.target = '_blank';
         link.rel = 'noopener';
         link.setAttribute('aria-label', f.name);
-
         const sr = document.createElement('span');
         sr.className = 'visually-hidden';
         sr.textContent = f.name;
         link.appendChild(sr);
-
         meta.appendChild(link);
         row.appendChild(meta);
         fileList.appendChild(row);
       });
     }
-
     function normalize(text){
       return text ? text.toString().trim().toLowerCase() : '';
     }
-
     function search(query){
       const q = normalize(query);
-      if (!q) return files.slice();
-
+      const source = filesByFolder[currentFolder] || [];
+      if (!q) return source.slice();
       const numMatch = q.match(/^l?(\d{1,3})$/i);
       if (numMatch){
         const target = Number(numMatch[1]);
-        const byExactLesson = files.filter(f => extractLessonNumber(f.name) === target);
-        return byExactLesson.sort((a,b)=>extractLessonNumber(a.name)-extractLessonNumber(b.name));
+        const byExactLesson = source.filter(f => extractLessonNumber(f.name) === target);
+        return byExactLesson;
       }
-
-      const exact = files.filter(f => normalize(f.name) === q || normalize(f.name) === q + '.pptx');
-      if (exact.length) return exact.sort((a,b)=>extractLessonNumber(a.name)-extractLessonNumber(b.name));
-
-      const byName = files.filter(f => normalize(f.name).includes(q));
-      return byName.sort((a,b)=>extractLessonNumber(a.name)-extractLessonNumber(b.name));
+      const exact = source.filter(f => {
+        const name = normalize(f.name);
+        return name === q || name === q + '.pptx';
+      });
+      if (exact.length) return exact;
+      return source.filter(f => normalize(f.name).includes(q));
     }
-
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => {
+          t.setAttribute('aria-selected','false');
+          t.classList.remove('active');
+        });
+        tab.setAttribute('aria-selected','true');
+        tab.classList.add('active');
+        currentFolder = tab.dataset.folder;
+        const color = tab.dataset.color || '#b91c1c';
+        setAccent(color);
+        input.value = '';
+        renderList(filesByFolder[currentFolder] || []);
+      });
+    });
+    colorizeTabs();
+    const initTab = document.querySelector('.tab[aria-selected="true"]') || document.querySelector('.tab');
+    setAccent(initTab.dataset.color || '#b91c1c');
+    renderList(filesByFolder[currentFolder]);
     input.addEventListener('input', function(){
       const results = search(input.value);
       renderList(results);
     });
-
     input.addEventListener('keydown', function(e){
       if (e.key === 'Enter'){
         const results = search(input.value);
@@ -224,8 +367,6 @@
         }
       }
     });
-
-    renderList(files.slice());
   </script>
 </body>
 </html>
