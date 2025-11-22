@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Red Book</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #c0392b 0%, #8e44ad 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    header {
+      background: #b91c1c;
+      color: white;
+      padding: 24px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 1.6rem; }
+    .links {
+      display: flex;
+      gap: 10px;
+    }
+    header a {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    header a:hover { background: rgba(255,255,255,0.3); }
+    .search-bar {
+      padding: 16px 20px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .search-bar input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-bar input:focus {
+      border-color: #b91c1c;
+    }
+    .search-bar input::placeholder {
+      color: #9ca3af;
+    }
+    .frame-container {
+      position: relative;
+      height: 600px;
+      overflow: hidden;
+    }
+    .drive-frame {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .search-overlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .search-overlay.active {
+      display: block;
+    }
+    .search-hint {
+      text-align: center;
+      color: #6b7280;
+      padding: 40px 20px;
+    }
+    .search-hint span {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📕 Red Book</h1>
+      <div class="links">
+        <a href="https://drive.google.com/drive/folders/1XUu0t4VqTL-7Yl92O95BLcSX5o2_NtfY" target="_blank">L61-119 ↗</a>
+        <a href="https://drive.google.com/drive/folders/1PMrmEDoT7CEnNwMuQlO6cM594aYN5iDg" target="_blank">L1-60 ↗</a>
+      </div>
+    </header>
+    <div class="search-bar">
+      <input 
+        type="text" 
+        id="searchInput" 
+        placeholder="🔍 Search for a lesson (e.g. L25, L100)..."
+        oninput="handleSearch(this.value)"
+      >
+    </div>
+    <div class="frame-container">
+      <iframe 
+        class="drive-frame"
+        id="driveFrame"
+        src="https://drive.google.com/embeddedfolderview?id=1PMrmEDoT7CEnNwMuQlO6cM594aYN5iDg#list"
+      ></iframe>
+      <div class="search-overlay" id="searchOverlay">
+        <div class="search-hint">
+          <span>🔍</span>
+          <p>Type a lesson number to search</p>
+          <p style="margin-top:8px;font-size:0.9rem;">e.g. "L25" or "100"</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const folders = {
+      'L1-60': '1PMrmEDoT7CEnNwMuQlO6cM594aYN5iDg',
+      'L61-119': '1XUu0t4VqTL-7Yl92O95BLcSX5o2_NtfY'
+    };
+    
+    function handleSearch(query) {
+      const overlay = document.getElementById('searchOverlay');
+      const frame = document.getElementById('driveFrame');
+      
+      query = query.trim().toUpperCase().replace('L', '');
+      
+      if (!query) {
+        overlay.classList.remove('active');
+        frame.src = `https://drive.google.com/embeddedfolderview?id=${folders['L1-60']}#list`;
+        return;
+      }
+      
+      const num = parseInt(query);
+      
+      if (isNaN(num)) {
+        overlay.classList.add('active');
+        overlay.innerHTML = `
+          <div class="search-hint">
+            <span>❓</span>
+            <p>Please enter a valid lesson number</p>
+          </div>
+        `;
+        return;
+      }
+      
+      overlay.classList.remove('active');
+      
+      if (num >= 1 && num <= 60) {
+        frame.src = `https://drive.google.com/embeddedfolderview?id=${folders['L1-60']}#list`;
+      } else if (num >= 61 && num <= 119) {
+        frame.src = `https://drive.google.com/embeddedfolderview?id=${folders['L61-119']}#list`;
+      } else {
+        overlay.classList.add('active');
+        overlay.innerHTML = `
+          <div class="search-hint">
+            <span>📭</span>
+            <p>Lesson ${num} not found</p>
+            <p style="margin-top:8px;font-size:0.9rem;">Available: L1-119</p>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
