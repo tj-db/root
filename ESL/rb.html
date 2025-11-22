@@ -15,11 +15,12 @@
     input[type="search"]:focus{border-color:#b91c1c;box-shadow:0 6px 18px rgba(185,28,28,.08)}
     .content{display:flex;gap:18px;padding:18px;flex:1;min-height:48vh}
     .list{flex:1;overflow:auto;padding:8px;border-radius:10px;border:1px solid #eef2f6;background:#fff}
-    .list-item{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;border-bottom:1px solid #f3f4f6}
+    .list-item{display:flex;align-items:center;justify-content:flex-start;padding:10px;border-radius:8px;border-bottom:1px solid #f3f4f6}
     .list-item:last-child{border-bottom:0}
     .meta{display:flex;gap:12px;align-items:center}
-    .name{font-size:0.95rem;color:#111827;text-decoration:none}
-    .badge{font-size:0.78rem;color:#6b7280;background:#f3f4f6;padding:6px 8px;border-radius:8px}
+    .link-badge{display:inline-block;padding:8px 12px;border-radius:8px;background:#f3f4f6;color:#111827;font-weight:600;text-decoration:none}
+    .link-badge:hover{background:#e9eef2}
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
     .no-results{padding:20px;text-align:center;color:#6b7280}
     @media (max-width:900px){.content{flex-direction:column}}
   </style>
@@ -31,8 +32,8 @@
     </header>
 
     <div class="search-bar">
-      <input id="searchInput" type="search" placeholder="Search files by name (exact or partial). Press Enter to open first match" aria-label="Search files" />
-      <button id="clearBtn" class="btn secondary" type="button" style="background:#eef2f7;color:#111;border:1px solid #e5e7eb;padding:8px 10px;border-radius:8px;cursor:pointer">Clear</button>
+      <input id="searchInput" type="search" placeholder="Search files by name or lesson (e.g. L25 or 25). Press Enter to open first match" aria-label="Search files" />
+      <button id="clearBtn" type="button" style="background:#eef2f7;color:#111;border:1px solid #e5e7eb;padding:8px 10px;border-radius:8px;cursor:pointer">Clear</button>
     </div>
 
     <div class="content">
@@ -106,6 +107,21 @@
       {name:"LLL1-L81.pptx",url:"https://docs.google.com/presentation/d/1xdTDUgS3JNv1O1WieiaBZEjefYJ5i9Hm/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
     ];
 
+    function extractLessonNumber(name){
+      const m = name.match(/-L(\d{1,3})/i);
+      if (m) return Number(m[1]);
+      const m2 = name.match(/L(\d{1,3})(?=\.|$)/i);
+      if (m2) return Number(m2[1]);
+      const m3 = name.match(/(\d{1,3})/);
+      return m3 ? Number(m3[1]) : Infinity;
+    }
+
+    files.sort((a,b)=>{
+      const na = extractLessonNumber(a.name);
+      const nb = extractLessonNumber(b.name);
+      return na - nb;
+    });
+
     const fileList = document.getElementById('fileList');
     const input = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearBtn');
@@ -124,27 +140,22 @@
         row.className = 'list-item';
         const meta = document.createElement('div');
         meta.className = 'meta';
+        const lessonNum = extractLessonNumber(f.name);
         const link = document.createElement('a');
-        link.className = 'name';
-        link.textContent = f.name;
+        link.className = 'link-badge';
+        link.textContent = Number.isFinite(lessonNum) && lessonNum !== Infinity ? 'L' + lessonNum : f.name;
         link.href = f.url;
         link.target = '_blank';
         link.rel = 'noopener';
-        const badge = document.createElement('div');
-        badge.className = 'badge';
-        badge.textContent = getLessonBadge(f.name);
+        link.setAttribute('aria-label', f.name);
+        const sr = document.createElement('span');
+        sr.className = 'visually-hidden';
+        sr.textContent = f.name;
+        link.appendChild(sr);
         meta.appendChild(link);
-        meta.appendChild(badge);
         row.appendChild(meta);
         fileList.appendChild(row);
       });
-    }
-
-    function getLessonBadge(name){
-      const m = name.match(/-L(\d{1,3})/i);
-      if (m) return 'L' + parseInt(m[1],10);
-      const m2 = name.match(/L(\d{1,3})(?=\.|$)/i);
-      return m2 ? 'L' + parseInt(m2[1],10) : '';
     }
 
     function normalize(text){
@@ -155,8 +166,11 @@
       const q = normalize(query);
       if (!q) return files.slice();
       const exact = files.filter(f => normalize(f.name) === q || normalize(f.name) === q + '.pptx');
-      if (exact.length) return exact;
-      return files.filter(f => normalize(f.name).includes(q));
+      if (exact.length) return exact.sort((a,b)=>extractLessonNumber(a.name)-extractLessonNumber(b.name));
+      const byName = files.filter(f => normalize(f.name).includes(q));
+      const byNumber = files.filter(f => String(extractLessonNumber(f.name)) === q.replace(/^l/,''));
+      const combined = Array.from(new Set([...byNumber, ...byName]));
+      return combined.sort((a,b)=>extractLessonNumber(a.name)-extractLessonNumber(b.name));
     }
 
     input.addEventListener('input', function(){
