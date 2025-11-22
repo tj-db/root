@@ -1,184 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Red Book</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Red Book — File Index</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #c0392b 0%, #8e44ad 100%);
-      min-height: 100vh;
-      padding: 40px 20px;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-    header {
-      background: #b91c1c;
-      color: white;
-      padding: 24px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header h1 { font-size: 1.6rem; }
-    .links {
-      display: flex;
-      gap: 10px;
-    }
-    header a {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      text-decoration: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      transition: background 0.2s;
-    }
-    header a:hover { background: rgba(255,255,255,0.3); }
-    .search-bar {
-      padding: 16px 20px;
-      background: #f9fafb;
-      border-bottom: 1px solid #e5e7eb;
-    }
-    .search-bar input {
-      width: 100%;
-      padding: 12px 16px;
-      font-size: 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .search-bar input:focus {
-      border-color: #b91c1c;
-    }
-    .search-bar input::placeholder {
-      color: #9ca3af;
-    }
-    .frame-container {
-      position: relative;
-      height: 600px;
-      overflow: hidden;
-    }
-    .drive-frame {
-      width: 100%;
-      height: 600px;
-      border: none;
-    }
-    .search-overlay {
-      display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: white;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    .search-overlay.active {
-      display: block;
-    }
-    .search-hint {
-      text-align: center;
-      color: #6b7280;
-      padding: 40px 20px;
-    }
-    .search-hint span {
-      font-size: 2rem;
-      display: block;
-      margin-bottom: 12px;
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(135deg,#c0392b 0%,#8e44ad 100%);min-height:100vh;padding:28px 16px;-webkit-font-smoothing:antialiased}
+    .container{max-width:980px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.28);overflow:hidden;display:flex;flex-direction:column;min-height:72vh}
+    header{background:#b91c1c;color:#fff;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    header h1{font-size:1.15rem;display:flex;align-items:center;gap:10px}
+    .search-bar{padding:14px 18px;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;gap:8px;align-items:center}
+    input[type="search"]{flex:1;padding:10px 12px;border-radius:10px;border:2px solid #e5e7eb;font-size:1rem;outline:none}
+    input[type="search"]:focus{border-color:#b91c1c;box-shadow:0 6px 18px rgba(185,28,28,.08)}
+    .content{display:flex;gap:18px;padding:18px;flex:1;min-height:48vh}
+    .list{flex:1;overflow:auto;padding:8px;border-radius:10px;border:1px solid #eef2f6;background:#fff}
+    .list-item{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:8px;border-bottom:1px solid #f3f4f6}
+    .list-item:last-child{border-bottom:0}
+    .meta{display:flex;gap:12px;align-items:center}
+    .name{font-size:0.95rem;color:#111827;text-decoration:none}
+    .badge{font-size:0.78rem;color:#6b7280;background:#f3f4f6;padding:6px 8px;border-radius:8px}
+    .no-results{padding:20px;text-align:center;color:#6b7280}
+    @media (max-width:900px){.content{flex-direction:column}}
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" role="application" aria-labelledby="title">
     <header>
-      <h1>📕 Red Book</h1>
-      <div class="links">
-        <a href="https://drive.google.com/drive/folders/1XUu0t4VqTL-7Yl92O95BLcSX5o2_NtfY" target="_blank">L61-119 ↗</a>
-        <a href="https://drive.google.com/drive/folders/1PMrmEDoT7CEnNwMuQlO6cM594aYN5iDg" target="_blank">L1-60 ↗</a>
-      </div>
+      <h1 id="title">📕 Red Book — File Index</h1>
     </header>
+
     <div class="search-bar">
-      <input 
-        type="text" 
-        id="searchInput" 
-        placeholder="🔍 Search for a lesson (e.g. L25, L100)..."
-        oninput="handleSearch(this.value)"
-      >
+      <input id="searchInput" type="search" placeholder="Search files by name (exact or partial). Press Enter to open first match" aria-label="Search files" />
+      <button id="clearBtn" class="btn secondary" type="button" style="background:#eef2f7;color:#111;border:1px solid #e5e7eb;padding:8px 10px;border-radius:8px;cursor:pointer">Clear</button>
     </div>
-    <div class="frame-container">
-      <iframe 
-        class="drive-frame"
-        id="driveFrame"
-        src="https://drive.google.com/embeddedfolderview?id=1PMrmEDoT7CEnNwMuQlO6cM594aYN5iDg#list"
-      ></iframe>
-      <div class="search-overlay" id="searchOverlay">
-        <div class="search-hint">
-          <span>🔍</span>
-          <p>Type a lesson number to search</p>
-          <p style="margin-top:8px;font-size:0.9rem;">e.g. "L25" or "100"</p>
-        </div>
-      </div>
+
+    <div class="content">
+      <div class="list" id="fileList" role="list" aria-label="Files list"></div>
     </div>
   </div>
+
   <script>
-    const folders = {
-      'L1-60': '1PMrmEDoT7CEnNwMuQlO6cM594aYN5iDg',
-      'L61-119': '1XUu0t4VqTL-7Yl92O95BLcSX5o2_NtfY'
-    };
-    
-    function handleSearch(query) {
-      const overlay = document.getElementById('searchOverlay');
-      const frame = document.getElementById('driveFrame');
-      
-      query = query.trim().toUpperCase().replace('L', '');
-      
-      if (!query) {
-        overlay.classList.remove('active');
-        frame.src = `https://drive.google.com/embeddedfolderview?id=${folders['L1-60']}#list`;
+    const files = [
+      {name:"LLL1-L53.pptx",url:"https://docs.google.com/presentation/d/10MqJx-oY8ajPhal7cWRU0iqeoSga_Zw3/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L25.pptx",url:"https://docs.google.com/presentation/d/1_TWeAlZ9y5MRIQ0Eei2t--gWroEry7lN/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L21.pptx",url:"https://docs.google.com/presentation/d/1HpNHULmcg9bGgcUl_IWzPGjJ7DPSqX9S/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L17.pptx",url:"https://docs.google.com/presentation/d/1eceZ_yWHDMGQNaBed3Q9jdyjJiR8Gg1K/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L15.pptx",url:"https://docs.google.com/presentation/d/1DjHCfT76pAVbjSmVo4rXKm8OLsRage5J/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L13.pptx",url:"https://docs.google.com/presentation/d/1DSHJ5heBBMIt71sq-5l8UIn5tl62Sq8C/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L11.pptx",url:"https://docs.google.com/presentation/d/1nihv6yptlcDP0D-DE8szaz07cNWbvlN-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L9.pptx",url:"https://docs.google.com/presentation/d/1Pww1plBp-bhiUfkWD_FhqHc9VnH8OWiz/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L7.pptx",url:"https://docs.google.com/presentation/d/15_03VnqTVESEuO7DAneGuYBo3FByUqub/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L5.pptx",url:"https://docs.google.com/presentation/d/104JN2h5qJzaw1WHbyQkCApwHr2ydCqJr/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L3.pptx",url:"https://docs.google.com/presentation/d/1UNpBF-kGm1Pu5KDoyRlugS0KMJKwn9ne/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L1.pptx",url:"https://docs.google.com/presentation/d/1tp5TOIUJPorIwoNy3rn8LdKnPpa7_afK/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L59.pptx",url:"https://docs.google.com/presentation/d/1d8H47yKK0FJzEp_uGgWtWu1iEU7MFlBX/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L57.pptx",url:"https://docs.google.com/presentation/d/1NiBceYpcnxyCR2aojyDZQnsxJA8XOqMD/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L55.pptx",url:"https://docs.google.com/presentation/d/1J0nv1RRg4Af7tjuYisXJWWqW1cLOnMA0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L51.pptx",url:"https://docs.google.com/presentation/d/1kt8qLDl6KvtC_ipTr11RTaWXQIXlA8x_/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L49.pptx",url:"https://docs.google.com/presentation/d/10KXNM834YA3jH7tDIKmPfY837UuSUPR5/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L47.pptx",url:"https://docs.google.com/presentation/d/1OUulJA-tT951HrLmtp5rFHvaUb5I2_Xa/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L45.pptx",url:"https://docs.google.com/presentation/d/1kgxTfpub9nppXCkgJRue_G0eBDhN4IwI/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L43.pptx",url:"https://docs.google.com/presentation/d/1bsx7Nh46MwQxc784aANeKM7wSjokGk4Q/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L41.pptx",url:"https://docs.google.com/presentation/d/1k30gmN12qkYTEtfXQhF5bxyVzF3IGxvA/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L39.pptx",url:"https://docs.google.com/presentation/d/1yXOuhY7KNBUGsZ8FSuS2Mkz61QbqAkGD/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L37.pptx",url:"https://docs.google.com/presentation/d/1lQBrku087OexdEEUrSRf0cS7GKuz_wO0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L35.pptx",url:"https://docs.google.com/presentation/d/1fas8oup_zu0G-6mM_jdPvrl67FBwCxmi/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L33.pptx",url:"https://docs.google.com/presentation/d/1Vv8A5cIQwH60w2ak88ehIQVNde90zqU-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L31.pptx",url:"https://docs.google.com/presentation/d/1dnveunFNr-j6YFvK-PGtC10QiaqYXOsC/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L29.pptx",url:"https://docs.google.com/presentation/d/13NgemRhQkCclqhuEE4wZ-scqOFNy0c2J/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L27.pptx",url:"https://docs.google.com/presentation/d/1pnXXZmHX-hZqremuIVBrR-9KTcYxIzDl/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L23.pptx",url:"https://docs.google.com/presentation/d/1mx7LO8sLktCaN0YggYpSjnSJxZz94zGe/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L19.pptx",url:"https://docs.google.com/presentation/d/1DEcAgOqsax_RBgPhq9Zc_-VGqqXZBLno/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"RB_25_Self_intro.pptx",url:"https://docs.google.com/presentation/d/1z6aTXdqI1vY6YAiCAzbcJhqAymo6lOP1/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"RB_50_Self_intro.pptx",url:"https://docs.google.com/presentation/d/1FkZbwqjDVjX0ixQSfGVc-4OIRNUnDexz/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L97.pptx",url:"https://docs.google.com/presentation/d/18bsLpX2x7ll4LFPjQYQgtYxKev0ETAN1/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L95.pptx",url:"https://docs.google.com/presentation/d/1pWTLI2MHUTefmp7lNRjAS0JmH6cCulf2/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L69.pptx",url:"https://docs.google.com/presentation/d/1nT7taZ9aZ8jOorq5IgbvpiFvV_ANJ88m/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L75.pptx",url:"https://docs.google.com/presentation/d/1uSVDF012wpOrSh5vPtCtWpezrGxSchlw/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L83.pptx",url:"https://docs.google.com/presentation/d/1nZ1PDYZ2yx4IDbQOoaoBs8AJuh8WIDgD/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L67.pptx",url:"https://docs.google.com/presentation/d/1-XlOCf5QSon1lD7Yobe4gaj9x8padVyf/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L93.pptx",url:"https://docs.google.com/presentation/d/1nzb0QRR4Yu9r1Bljy9WLi1cGWl5uwm-S/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L103.pptx",url:"https://docs.google.com/presentation/d/1eAHPSLXL2G7L0rNubY4LL_3EhMQrZfAZ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L87.pptx",url:"https://docs.google.com/presentation/d/1-RZz7sd2JLB7gdkv2AWgCIHDpoAfE9yq/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L63.pptx",url:"https://docs.google.com/presentation/d/10vluKdyoDixv4ByLrAuKSOGJ5zglyXDX/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L77.pptx",url:"https://docs.google.com/presentation/d/13JC-SxpOjz2E0_5HHEHIzR_ihdpABqGk/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L79.pptx",url:"https://docs.google.com/presentation/d/17T6GHRfQ_VbuGFqdtEJDWDOpfM9bWmfw/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L91.pptx",url:"https://docs.google.com/presentation/d/17uReaK2p2vynouSf9yDX-gQw003Y5Q4w/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L99.pptx",url:"https://docs.google.com/presentation/d/1AGucTEc1HNjWE_sS6EkR8o_QbWldHVDG/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L73.pptx",url:"https://docs.google.com/presentation/d/1BkV8t4NUYsNFLu3UcGxa1rDu2-PlWrPv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L119.pptx",url:"https://docs.google.com/presentation/d/1NT8oSmxUzOkrWnya5lDBGFJ1Rh2IjQIb/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L101.pptx",url:"https://docs.google.com/presentation/d/1Obq-usJ-7IQYzR841F1Dp-KwyCa0lufz/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L117.pptx",url:"https://docs.google.com/presentation/d/1Ox4YYxoaVcNDb73FtrWALKzBNUO5olgv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L61.pptx",url:"https://docs.google.com/presentation/d/1RIpyG3f7PQxbkfmSvJVI_TileyxOKSNa/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L115.pptx",url:"https://docs.google.com/presentation/d/1S4vnZZRBEvvaterXAbSRta6ecxud1lx0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L65.pptx",url:"https://docs.google.com/presentation/d/1T4ZiI-0Wj4AL3qMUPFrRZfqMN-7wvubj/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L111.pptx",url:"https://docs.google.com/presentation/d/1Vf0Ar1_gaCWL-peHO4aDvjOp3RRugPsg/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L105.pptx",url:"https://docs.google.com/presentation/d/1aDDIa9X47hIJYVYMbgNnhAKFs5dTmzqi/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L107.pptx",url:"https://docs.google.com/presentation/d/1hI_fPjp4X2zpWijJFrZF11SULA4rhbin/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L89.pptx",url:"https://docs.google.com/presentation/d/1jMGE5DMTtEFRArLnNGuFWS57EIraJeTV/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L71.pptx",url:"https://docs.google.com/presentation/d/1mXS1F2gbkLu3XhO5x74eopUu_0xo5bYV/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L113.pptx",url:"https://docs.google.com/presentation/d/1nfFkMh-51m-M5EBHXN7zFOiSX3i-k5nW/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L109.pptx",url:"https://docs.google.com/presentation/d/1q_NNnKHF5KeSzWOaMjXM3yiwpzl0Fbtv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L85.pptx",url:"https://docs.google.com/presentation/d/1s2pvc9PO4q91yb4nNtP35zhgyLLEC5xT/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L81.pptx",url:"https://docs.google.com/presentation/d/1xdTDUgS3JNv1O1WieiaBZEjefYJ5i9Hm/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+    ];
+
+    const fileList = document.getElementById('fileList');
+    const input = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+
+    function renderList(items){
+      fileList.innerHTML = '';
+      if (!items.length){
+        const no = document.createElement('div');
+        no.className = 'no-results';
+        no.textContent = 'No files match your search';
+        fileList.appendChild(no);
         return;
       }
-      
-      const num = parseInt(query);
-      
-      if (isNaN(num)) {
-        overlay.classList.add('active');
-        overlay.innerHTML = `
-          <div class="search-hint">
-            <span>❓</span>
-            <p>Please enter a valid lesson number</p>
-          </div>
-        `;
-        return;
-      }
-      
-      overlay.classList.remove('active');
-      
-      if (num >= 1 && num <= 60) {
-        frame.src = `https://drive.google.com/embeddedfolderview?id=${folders['L1-60']}#list`;
-      } else if (num >= 61 && num <= 119) {
-        frame.src = `https://drive.google.com/embeddedfolderview?id=${folders['L61-119']}#list`;
-      } else {
-        overlay.classList.add('active');
-        overlay.innerHTML = `
-          <div class="search-hint">
-            <span>📭</span>
-            <p>Lesson ${num} not found</p>
-            <p style="margin-top:8px;font-size:0.9rem;">Available: L1-119</p>
-          </div>
-        `;
-      }
+      items.forEach(function(f){
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const link = document.createElement('a');
+        link.className = 'name';
+        link.textContent = f.name;
+        link.href = f.url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = getLessonBadge(f.name);
+        meta.appendChild(link);
+        meta.appendChild(badge);
+        row.appendChild(meta);
+        fileList.appendChild(row);
+      });
     }
+
+    function getLessonBadge(name){
+      const m = name.match(/-L(\d{1,3})/i);
+      if (m) return 'L' + parseInt(m[1],10);
+      const m2 = name.match(/L(\d{1,3})(?=\.|$)/i);
+      return m2 ? 'L' + parseInt(m2[1],10) : '';
+    }
+
+    function normalize(text){
+      return text ? text.toString().trim().toLowerCase() : '';
+    }
+
+    function search(query){
+      const q = normalize(query);
+      if (!q) return files.slice();
+      const exact = files.filter(f => normalize(f.name) === q || normalize(f.name) === q + '.pptx');
+      if (exact.length) return exact;
+      return files.filter(f => normalize(f.name).includes(q));
+    }
+
+    input.addEventListener('input', function(){
+      const results = search(input.value);
+      renderList(results);
+    });
+
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Enter'){
+        const results = search(input.value);
+        if (results.length){
+          window.open(results[0].url, '_blank', 'noopener');
+        }
+      }
+    });
+
+    clearBtn.addEventListener('click', function(){
+      input.value = '';
+      input.focus();
+      renderList(files.slice());
+    });
+
+    renderList(files.slice());
   </script>
 </body>
 </html>
