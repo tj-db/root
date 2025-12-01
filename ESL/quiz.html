@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Timer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .timer-container {
+      display: flex;
+      gap: 40px;
+      background: rgba(255, 255, 255, 0);
+      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      padding: 50px;
+      position: relative;
+    }
+    .paused-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 22px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 88px;
+      font-weight: bold;
+      color: white;
+      letter-spacing: 4px;
+      z-index: 10;
+      display: none;
+    }
+    .paused-overlay.active {
+      display: flex;
+    }
+    .player {
+      width: 555px;
+      height: 355px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-radius: 22px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+margin-bottom: 222px;
+    }
+    .player::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+      border-radius: 20px;
+      transition: all 0.3s ease;
+    }
+    .player.inactive {
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.6);
+      transform: scale(0.95);
+    }
+    .player.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .player.active::before {
+      background: linear-gradient(45deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    }
+    .player.time-up {
+      background: rgba(255, 82, 82, 0.2);
+      color: #ff5252;
+      animation: pulse 1s infinite;
+    }
+    .player.warning {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+    }
+    .player.critical {
+      background: rgba(255, 152, 0, 0.2);
+      color: #ff9800;
+      animation: flash 1s infinite;
+    }
+    @keyframes flash {
+      0%, 50% { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+      51%, 100% { background: rgba(255, 152, 0, 0.4); color: #fff; }
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1.05); }
+      50% { transform: scale(1.1); }
+    }
+    .player-name {
+      font-size: 33px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .time-display {
+      font-size: 111px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    .question-section {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      width: 90%;
+      max-width: 800px;
+    }
+    .question-display {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 30px 40px;
+      border-radius: 16px;
+
+      margin-top: 20px;
+
+      margin-bottom: 20px;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .question-text {
+      font-size: 44px;
+      color: white;
+      font-weight: 500;
+      line-height: 1.6;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="timer-container" id="timerContainer">
+    <div class="paused-overlay" id="pausedOverlay">PAUSED</div>
+    <div class="player inactive" id="player1" data-player="1">
+      <div class="player-name">Team 1</div>
+      <div class="time-display" id="time1">111</div>
+    </div>
+    <div class="player inactive" id="player2" data-player="2">
+      <div class="player-name">Team 2</div>
+      <div class="time-display" id="time2">111</div>
+    </div>
+  </div>
+  
+  <div class="question-section">
+    <div class="question-display" id="questionDisplay">
+      <p class="question-text">Press Space to start</p>
+    </div>
+  </div>
+
+  <script>
+    class ChessTimer {
+      constructor(initialTime) {
+        this.initialTime = initialTime
+        this.player1Time = initialTime
+        this.player2Time = initialTime
+        this.activePlayer = null
+        this.gameRunning = false
+        this.gameEnded = false
+        this.interval = null
+        this.player1El = document.getElementById('player1')
+        this.player2El = document.getElementById('player2')
+        this.time1El = document.getElementById('time1')
+        this.time2El = document.getElementById('time2')
+        this.overlayEl = document.getElementById('pausedOverlay')
+        this.questionDisplayEl = document.getElementById('questionDisplay')
+        this.inputBuffer = ""
+        this.inputTimeout = null
+        this.currentQuestionIndex = -1
+       
+        this.questions = [
+          "What is the capital of France?",
+          "Who wrote Romeo and Juliet?",
+          "What is the largest planet in our solar system?",
+          "In what year did World War II end?",
+          "What is the chemical symbol for gold?",
+          "Who painted the Mona Lisa?",
+          "What is the smallest prime number?",
+          "Which country gifted the Statue of Liberty to the United States?"
+        ]
+        
+        this.bindEvents()
+        this.updateDisplay()
+      }
+
+      bindEvents() {
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') {
+            e.preventDefault()
+            this.switchPlayer()
+            this.showNextQuestion()
+          }
+          if (e.code === 'Enter') {
+            e.preventDefault()
+            this.togglePause()
+          }
+          if (e.key >= "0" && e.key <= "9") {
+            this.handleNumberInput(e.key)
+          }
+        })
+        
+        this.player1El.addEventListener('click', () => { 
+          if (!this.gameEnded) {
+            this.switchPlayer()
+            this.showNextQuestion()
+          }
+        })
+        
+        this.player2El.addEventListener('click', () => { 
+          if (!this.gameEnded) {
+            this.switchPlayer()
+            this.showNextQuestion()
+          }
+        })
+      }
+
+      showNextQuestion() {
+        this.currentQuestionIndex = (this.currentQuestionIndex + 1) % this.questions.length
+        const question = this.questions[this.currentQuestionIndex]
+        this.questionDisplayEl.innerHTML = `<p class="question-text">${question}</p>`
+      }
+
+      handleNumberInput(digit) {
+        this.inputBuffer += digit
+        if (this.inputTimeout) clearTimeout(this.inputTimeout)
+        this.inputTimeout = setTimeout(() => {
+          const newTime = parseInt(this.inputBuffer, 10)
+          if (!isNaN(newTime) && newTime > 0) {
+            this.resetClock(newTime)
+          }
+          this.inputBuffer = ""
+        }, 3000)
+      }
+
+      resetClock(seconds) {
+        this.initialTime = seconds
+        this.player1Time = seconds
+        this.player2Time = seconds
+        this.activePlayer = null
+        this.gameRunning = false
+        this.gameEnded = false
+        if (this.interval) clearInterval(this.interval)
+        this.player1El.className = "player inactive"
+        this.player2El.className = "player inactive"
+        this.overlayEl.classList.remove("active")
+        this.updateDisplay()
+      }
+
+      switchPlayer() {
+        if (this.gameEnded) return
+        if (!this.gameRunning) {
+          this.activePlayer = this.activePlayer || 1
+          this.gameRunning = true
+          this.startTimer()
+        } else {
+          this.activePlayer = this.activePlayer === 1 ? 2 : 1
+        }
+        this.updateDisplay()
+      }
+
+      startTimer() {
+        if (this.interval) clearInterval(this.interval)
+        this.interval = setInterval(() => {
+          if (this.activePlayer === 1) {
+            this.player1Time--
+            if (this.player1Time <= 0) { 
+              this.endGame(2)
+              return 
+            }
+          } else {
+            this.player2Time--
+            if (this.player2Time <= 0) { 
+              this.endGame(1)
+              return 
+            }
+          }
+          this.updateDisplay()
+          this.updateWarningStates()
+        }, 1000)
+      }
+
+      togglePause() {
+        if (!this.gameRunning || this.gameEnded) return
+        if (this.interval) {
+          clearInterval(this.interval)
+          this.interval = null
+          this.overlayEl.classList.add("active")
+        } else {
+          this.startTimer()
+          this.overlayEl.classList.remove("active")
+        }
+      }
+
+      updateWarningStates() {
+        const currentTime = this.activePlayer === 1 ? this.player1Time : this.player2Time
+        const activeEl = this.activePlayer === 1 ? this.player1El : this.player2El
+        const warningTime = Math.max(10, this.initialTime * 0.1)
+        const criticalTime = Math.max(5, this.initialTime * 0.05)
+        activeEl.classList.remove('warning', 'critical')
+        if (currentTime <= criticalTime) {
+          activeEl.classList.add('critical')
+        } else if (currentTime <= warningTime) {
+          activeEl.classList.add('warning')
+        }
+      }
+
+      endGame(winner) {
+        this.gameEnded = true
+        this.gameRunning = false
+        if (this.interval) clearInterval(this.interval)
+        if (this.player1Time <= 0) {
+          this.player1El.classList.add('time-up')
+        } else {
+          this.player2El.classList.add('time-up')
+        }
+        this.overlayEl.classList.remove("active")
+      }
+
+      updateDisplay() {
+        this.time1El.textContent = this.formatTime(this.player1Time)
+        this.time2El.textContent = this.formatTime(this.player2Time)
+        if (this.activePlayer === 1) {
+          this.player1El.classList.remove('inactive')
+          this.player1El.classList.add('active')
+          this.player2El.classList.remove('active')
+          this.player2El.classList.add('inactive')
+        } else if (this.activePlayer === 2) {
+          this.player2El.classList.remove('inactive')
+          this.player2El.classList.add('active')
+          this.player1El.classList.remove('active')
+          this.player1El.classList.add('inactive')
+        }
+      }
+
+      formatTime(seconds) {
+        if (seconds >= 60) {
+          const mins = Math.floor(seconds / 60)
+          const secs = seconds % 60
+          return `${mins}:${secs.toString().padStart(2, '0')}`
+        }
+        return seconds.toString()
+      }
+    }
+
+    new ChessTimer(71)
+  </script>
+</body>
+</html>
