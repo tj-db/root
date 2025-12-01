@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lobby</title>
+
+<!-- PEERJS -->
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #333;
+    }
+    .container {
+        width: 100%;
+        max-width: 500px;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    button {
+        padding: 12px 22px;
+        margin: 10px 0;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        background: black;
+        color: white;
+        transition: 0.2s;
+    }
+    button:hover { opacity: 0.8; }
+    #messages {
+        margin-top: 20px;
+        height: 150px;
+        overflow-y: auto;
+        padding: 10px;
+        background: #fafafa;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        text-align: left;
+        font-size: 14px;
+    }
+    #msgBox {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+    iframe { display: none; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+    <!-- HELLO BUTTON -->
+    <button onclick="pingMe()">Hello</button>
+
+    <div id="messages"></div>
+    <input id="msgBox" type="text" placeholder="Type…" onkeydown="if(event.key==='Enter') sendMessage();" />
+    <button onclick="startVoice()">Start Voice Chat</button>
+
+    <!-- Hidden form for silent Google Form submission -->
+    <iframe name="hidden_iframe"></iframe>
+    <form id="gform" action="https://docs.google.com/forms/d/e/1FAIpQLSeHsdx6bHX0UbBCJo9mD6toA-4X8EGVrI3FdTfpUgWK6-eB4g/formResponse" method="POST" target="hidden_iframe">
+        <input type="hidden" name="entry.663696359" value="Ping from lobby">
+    </form>
+
+</div>
+
+<script>
+/* ---------------------------
+   SILENT GOOGLE FORM PING
+--------------------------- */
+function pingMe() {
+    document.getElementById("gform").submit();
+}
+
+/* ---------------------------
+          PEERJS LOBBY
+--------------------------- */
+
+let peer = new Peer();   // random ID
+let connections = [];
+let localStream = null;
+
+peer.on('open', id => {
+    console.log("My ID:", id);
+
+    // Auto-connect loop
+    setInterval(() => {
+        peer.listAllPeers(peers => {
+            peers.forEach(p => {
+                if (p !== id) {
+                    connectToPeer(p);
+                }
+            });
+        });
+    }, 2000);
+});
+
+peer.on('connection', conn => {
+    setupConnection(conn);
+});
+
+peer.on('call', call => {
+    if (localStream) {
+        call.answer(localStream);
+        call.on('stream', remoteStream => playAudio(remoteStream));
+    }
+});
+
+/* ---------------------------
+          TEXT CHAT
+--------------------------- */
+
+function setupConnection(conn) {
+    if (connections.includes(conn)) return;
+    connections.push(conn);
+    conn.on('data', data => addMessage("Them: " + data));
+}
+
+function connectToPeer(id) {
+    if (connections.find(c => c.peer === id)) return;
+    let conn = peer.connect(id);
+    conn.on('open', () => setupConnection(conn));
+}
+
+function sendMessage() {
+    let box = document.getElementById("msgBox");
+    let msg = box.value.trim();
+    if (!msg) return;
+    addMessage("Me: " + msg);
+    connections.forEach(c => c.send(msg));
+    box.value = "";
+}
+
+function addMessage(text) {
+    let m = document.getElementById("messages");
+    m.innerHTML += text + "<br>";
+    m.scrollTop = m.scrollHeight;
+}
+
+/* ---------------------------
+           VOICE CHAT
+--------------------------- */
+
+async function startVoice() {
+    localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+    connections.forEach(conn => {
+        let call = peer.call(conn.peer, localStream);
+        call.on('stream', remoteStream => playAudio(remoteStream));
+    });
+}
+
+function playAudio(stream) {
+    let audio = new Audio();
+    audio.srcObject = stream;
+    audio.play();
+}
+</script>
+
+</body>
+</html>
