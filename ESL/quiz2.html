@@ -55,7 +55,7 @@
       user-select: none;
       position: relative;
       overflow: hidden;
-margin-bottom: 222px;
+      margin-bottom: 222px;
     }
     .player::before {
       content: '';
@@ -128,9 +128,7 @@ margin-bottom: 222px;
       backdrop-filter: blur(10px);
       padding: 30px 40px;
       border-radius: 16px;
-
       margin-top: 20px;
-
       margin-bottom: 20px;
       min-height: 100px;
       display: flex;
@@ -143,6 +141,59 @@ margin-bottom: 222px;
       font-weight: 500;
       line-height: 1.6;
       margin: 0;
+    }
+    #setupModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      max-width: 600px;
+      width: 90%;
+    }
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .modal-content p {
+      margin-bottom: 15px;
+      color: #666;
+    }
+    #questionsInput {
+      width: 100%;
+      height: 300px;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: inherit;
+      resize: vertical;
+    }
+    #startButton {
+      margin-top: 20px;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.2s;
+    }
+    #startButton:hover {
+      transform: translateY(-2px);
+    }
+    #startButton:active {
+      transform: translateY(0);
     }
   </style>
 </head>
@@ -165,6 +216,17 @@ margin-bottom: 222px;
     </div>
   </div>
 
+  <div id="setupModal">
+    <div class="modal-content">
+      <h2>Setup Questions</h2>
+      <p>Enter your questions below (one per line):</p>
+      <textarea id="questionsInput" placeholder="What is your name?
+What is your favourite color?
+What do you like to do?"></textarea>
+      <button id="startButton">Start Game</button>
+    </div>
+  </div>
+
   <script>
     class ChessTimer {
       constructor(initialTime) {
@@ -184,19 +246,31 @@ margin-bottom: 222px;
         this.inputBuffer = ""
         this.inputTimeout = null
         this.currentQuestionIndex = -1
-       
-        this.questions = [
-          "What should you do when you drive a car?",
-          "What’s your favourite kind of meat?",
-          "How often do you take a shower?",
-          "How often do you brush your teeth?",
-          "How often do you have a meal?",
-          "How often do you get a haircut?",
-          "What should you do when you see a fight?"
-        ]
+        this.questions = []
         
-        this.bindEvents()
-        this.updateDisplay()
+        this.setupModal()
+      }
+
+      setupModal() {
+        const modal = document.getElementById('setupModal')
+        const startButton = document.getElementById('startButton')
+        const questionsInput = document.getElementById('questionsInput')
+        
+        startButton.addEventListener('click', () => {
+          const inputText = questionsInput.value.trim()
+          if (inputText) {
+            this.questions = inputText.split('\n').filter(q => q.trim() !== '')
+            if (this.questions.length > 0) {
+              modal.style.display = 'none'
+              this.bindEvents()
+              this.updateDisplay()
+            } else {
+              alert('Please enter at least one question!')
+            }
+          } else {
+            alert('Please enter at least one question!')
+          }
+        })
       }
 
       bindEvents() {
