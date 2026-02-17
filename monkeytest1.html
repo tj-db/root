@@ -1,1 +1,55 @@
-monkeytest2
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Changer</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            background-color: #f4f4f9;
+        }
+
+        #colorBtn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #3498db;
+            color: white;
+            transition: transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        #colorBtn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <button id="colorBtn">Change My Color!</button>
+
+    <script>
+        const btn = document.getElementById('colorBtn');
+
+        btn.addEventListener('click', () => {
+            // Generate a random hex color
+            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+            
+            // Apply the color to the button's background
+            btn.style.backgroundColor = randomColor;
+            
+            // Optional: Log it to the console so you can see the hex code
+            console.log("New color:", randomColor);
+        });
+    </script>
+
+</body>
+</html>
