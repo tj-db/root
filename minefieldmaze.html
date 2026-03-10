@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Minefield Maze</title>
+
+<style>
+body{
+    font-family:Arial, sans-serif;
+    text-align:center;
+    background:#222;
+    color:white;
+}
+
+#game{
+    display:grid;
+    margin:20px auto;
+    gap:2px;
+    width:max-content;
+}
+
+.cell{
+    width:40px;
+    height:40px;
+    background:#444;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.cell.red{ background:#c0392b; }
+.cell.blue{ background:#2980b9; }
+.cell.exploded{ background:#e74c3c; }
+
+#status{
+    margin-top:10px;
+    font-size:20px;
+}
+
+button{
+    padding:10px 20px;
+    font-size:16px;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>💣 Minefield Maze</h1>
+<p>Reach the opposite side without hitting a bomb!</p>
+
+<div id="status"></div>
+<div id="game"></div>
+
+<button onclick="resetGame()">Restart Game</button>
+
+<script>
+
+const cols = 10
+const rows = 8
+const bombCount = 15
+
+let bombs = new Set()
+let redPos
+let bluePos
+let turn = "red"
+let gameOver = false
+
+const game = document.getElementById("game")
+const status = document.getElementById("status")
+
+function key(x,y){
+    return x+","+y
+}
+
+function placeBombs(){
+    bombs.clear()
+
+    while(bombs.size < bombCount){
+        let x = Math.floor(Math.random()*cols)
+        let y = Math.floor(Math.random()*rows)
+
+        if((x==0 && y==redPos.y) || (x==cols-1 && y==bluePos.y)) continue
+
+        bombs.add(key(x,y))
+    }
+}
+
+function createGrid(){
+    game.style.gridTemplateColumns = `repeat(${cols},40px)`
+    game.innerHTML=""
+
+    for(let y=0;y<rows;y++){
+        for(let x=0;x<cols;x++){
+
+            const cell=document.createElement("div")
+            cell.className="cell"
+            cell.dataset.x=x
+            cell.dataset.y=y
+
+            cell.onclick=()=>move(x,y)
+
+            game.appendChild(cell)
+        }
+    }
+}
+
+function draw(){
+    document.querySelectorAll(".cell").forEach(c=>{
+        c.classList.remove("red","blue","exploded")
+        c.textContent=""
+    })
+
+    let redCell = document.querySelector(`[data-x="${redPos.x}"][data-y="${redPos.y}"]`)
+    redCell.classList.add("red")
+    redCell.textContent="R"
+
+    let blueCell = document.querySelector(`[data-x="${bluePos.x}"][data-y="${bluePos.y}"]`)
+    blueCell.classList.add("blue")
+    blueCell.textContent="B"
+
+    status.textContent = gameOver ? status.textContent :
+        (turn==="red" ? "Red Team Turn" : "Blue Team Turn")
+}
+
+function resetGame(){
+
+    redPos = {x:0,y:Math.floor(rows/2)}
+    bluePos = {x:cols-1,y:Math.floor(rows/2)}
+
+    turn="red"
+    gameOver=false
+
+    placeBombs()
+    createGrid()
+    draw()
+}
+
+function explode(x,y){
+    const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`)
+    cell.classList.add("exploded")
+    cell.textContent="💥"
+
+    setTimeout(()=>{
+        if(turn==="red"){
+            redPos={x:0,y:Math.floor(rows/2)}
+        }else{
+            bluePos={x:cols-1,y:Math.floor(rows/2)}
+        }
+
+        turn = turn==="red" ? "blue" : "red"
+        draw()
+    },800)
+}
+
+function move(x,y){
+
+    if(gameOver) return
+
+    const pos = turn==="red" ? redPos : bluePos
+
+    const dx = Math.abs(x-pos.x)
+    const dy = Math.abs(y-pos.y)
+
+    if(dx+dy !== 1) return
+
+    if(turn==="red"){
+        redPos={x,y}
+    }else{
+        bluePos={x,y}
+    }
+
+    if(bombs.has(key(x,y))){
+        explode(x,y)
+        return
+    }
+
+    if(turn==="red" && x===cols-1){
+        status.textContent="🏆 RED TEAM WINS!"
+        gameOver=true
+    }
+
+    if(turn==="blue" && x===0){
+        status.textContent="🏆 BLUE TEAM WINS!"
+        gameOver=true
+    }
+
+    turn = turn==="red" ? "blue" : "red"
+
+    draw()
+}
+
+resetGame()
+
+</script>
+
+</body>
+</html>
