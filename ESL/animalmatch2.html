@@ -10,7 +10,7 @@
 <style>
 :root{
   --bg:#fdf6ec;
-  --card:#ffffff; [cite: 3]
+  --card:#ffffff;
   --p1:#ff7043;
   --p2:#5c6bc0;
   --text:#2d2013;
@@ -25,7 +25,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:var(--bg);
-  font-family:'Nunito',sans-serif; [cite: 4]
+  font-family:'Nunito',sans-serif;
   color:var(--text);
   min-height:100vh;
   display:flex;
@@ -36,7 +36,7 @@ body{
 body::before{
   content:'';position:fixed;inset:0;
   background-image:radial-gradient(circle,#e8d5bc 1px,transparent 1px);
-  background-size:28px 28px;opacity:0.4;pointer-events:none;z-index:0; [cite: 5]
+  background-size:28px 28px;opacity:0.4;pointer-events:none;z-index:0;
 }
 .wrap{position:relative;z-index:1;width:min(920px,100%);display:flex;flex-direction:column;align-items:center;gap:14px}
 .board-row{display:flex;align-items:flex-start;gap:16px;width:100%;justify-content:center}
@@ -67,7 +67,7 @@ body::before{
 .confetti-wrap{pointer-events:none;position:absolute;inset:0;overflow:hidden;z-index:20}
 .confetti-piece{
   position:absolute;width:10px;height:14px;border-radius:2px;opacity:0.95;
-  animation:confetti-fall linear forwards; [cite: 6]
+  animation:confetti-fall linear forwards;
 }
 @keyframes confetti-fall{
   0%{transform:translateY(-10vh) rotate(0deg);opacity:1}
@@ -91,7 +91,7 @@ body::before{
       <div class="gameover" id="gameover">
         <div class="go-title" id="goTitle"></div>
         <div class="go-score" id="goScore"></div>
-        <button class="btn" onclick="newGame()">Play again ↺</button> [cite: 7]
+        <button class="btn" onclick="newGame()">Play again ↺</button>
       </div>
       <div class="confetti-wrap" id="confettiWrap" aria-hidden="true"></div>
     </div>
@@ -113,32 +113,30 @@ body::before{
     {name:'tiger',emoji:'🐯'},
     {name:'bear',emoji:'🐻'},
     {name:'koala',emoji:'🐨'}
-  ]; [cite: 8]
-  const DIRS = [[0,1],[1,0],[1,1],[1,-1]]; [cite: 9]
+  ];
+  const DIRS = [[0,1],[1,0],[1,1],[1,-1]];
   
   let grid, turn, scores, selected, busy;
   const gridEl = document.getElementById('grid');
   const pickerNameEl = document.getElementById('pickerName');
-  const statusEl = document.getElementById('status'); [cite: 10]
+  const statusEl = document.getElementById('status');
   const leftScoreEl = document.getElementById('leftScore');
   const rightScoreEl = document.getElementById('rightScore');
   const gameoverEl = document.getElementById('gameover');
   const goTitleEl = document.getElementById('goTitle');
-  const goScoreEl = document.getElementById('goScore'); [cite: 11]
+  const goScoreEl = document.getElementById('goScore');
   const confettiWrap = document.getElementById('confettiWrap');
 
   function init(){
-    grid = Array.from({length:ROWS},()=>Array(COLS).fill(null)); [cite: 11]
+    grid = Array.from({length:ROWS},()=>Array(COLS).fill(null));
     turn = 1;
-    scores = [0,0]; [cite: 12]
+    scores = [0,0];
     selected = null;
     busy = false;
 
-    // Set initial state for the browser back button
     saveState(true);
   }
 
-  // --- NEW UNDO LOGIC ---
   function saveState(replace = false) {
     const state = {
       grid: JSON.parse(JSON.stringify(grid)),
@@ -160,7 +158,7 @@ body::before{
       scores = event.state.scores;
       selected = event.state.selected;
       
-      busy = false; // Allow interaction again
+      busy = false;
       syncAll();
       updateScores();
       updatePickerDisplay();
@@ -168,123 +166,121 @@ body::before{
       gameoverEl.classList.remove('show');
     }
   });
-  // ----------------------
 
   function buildUI(){
-    gridEl.innerHTML = ''; [cite: 13]
+    gridEl.innerHTML = '';
     for(let r=0;r<ROWS;r++){
       for(let c=0;c<COLS;c++){
         const el = document.createElement('div');
-        el.className = 'cell'; [cite: 14]
+        el.className = 'cell';
         el.id = `c${r}_${c}`;
         el.addEventListener('click', ()=>drop(c));
         el.addEventListener('mouseenter', ()=>showPreview(c));
         el.addEventListener('mouseleave', ()=>clearPreview());
-        gridEl.appendChild(el); [cite: 15]
+        gridEl.appendChild(el);
       }
     }
   }
 
-  function cel(r,c){ return document.getElementById(`c${r}_${c}`); [cite: 16] }
+  function cel(r,c){ return document.getElementById(`c${r}_${c}`); }
 
   function syncCell(r,c,extra=''){
     const el = cel(r,c);
     if(!el) return;
     const d = grid[r][c];
-    if(!d){ el.className='cell'; el.textContent=''; [cite: 17] }
-    else { el.className=`cell p${d.p}${extra?' '+extra:''}`; el.textContent=d.e; [cite: 18] }
+    if(!d){ el.className='cell'; el.textContent=''; }
+    else { el.className=`cell p${d.p}${extra?' '+extra:''}`; el.textContent=d.e; }
   }
 
-  function syncAll(){ for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) syncCell(r,c); [cite: 19] }
+  function syncAll(){ for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) syncCell(r,c); }
 
   function autoPick(){
     const idx = Math.floor(Math.random()*ANIMALS.length);
     const a = ANIMALS[idx];
     selected = a;
-    updatePickerDisplay(); [cite: 20]
+    updatePickerDisplay();
   }
 
   function updatePickerDisplay(){
     if(selected){
-      pickerNameEl.textContent = selected.name; [cite: 21]
+      pickerNameEl.textContent = selected.name;
       pickerNameEl.style.color = turn === 1 ? 'var(--p1)' : 'var(--p2)';
     } else {
-      pickerNameEl.textContent = ''; [cite: 22]
+      pickerNameEl.textContent = '';
     }
   }
 
   let previewRow = -1, previewCol = -1;
 
   function showPreview(col){
-    if(busy || !selected) return; [cite: 23]
+    if(busy || !selected) return;
     clearPreview();
     let row = -1;
     for(let r=ROWS-1;r>=0;r--){ if(!grid[r][col]){row=r;break;} }
     if(row===-1) return;
-    previewRow = row; previewCol = col; [cite: 24]
+    previewRow = row; previewCol = col;
     const el = cel(row,col);
     el.className = 'cell preview';
-    el.textContent = selected.name; [cite: 25]
+    el.textContent = selected.name;
   }
 
   function clearPreview(){
     if(previewRow>=0 && previewCol>=0){
-      const el = cel(previewRow,previewCol); [cite: 26]
+      const el = cel(previewRow,previewCol);
       if(el && el.classList.contains('preview')){ el.className='cell'; el.textContent=''; }
     }
-    previewRow = -1; previewCol = -1; [cite: 27]
+    previewRow = -1; previewCol = -1;
   }
 
   function drop(col){
     if(busy) return;
     if(!selected){ autoPick(); return; }
-    let row = -1; [cite: 28]
+    let row = -1;
     for(let r=ROWS-1;r>=0;r--){ if(!grid[r][col]){row=r;break;} }
     if(row===-1){ setStatus(); return; }
 
-    // Save current state before modifying grid to allow back-button undo
     saveState();
 
     clearPreview();
-    busy = true; [cite: 29]
+    busy = true;
     grid[row][col] = {e:selected.emoji, p:turn};
     syncCell(row,col,'dropped');
     if(row === 0){
       setTimeout(()=>endGame(), 230);
-      return; [cite: 30]
+      return;
     }
     setTimeout(()=>resolveMatches(),230);
   }
 
   function findMatches(){
-    const hit = new Set(); [cite: 31]
+    const hit = new Set();
     for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
       if(!grid[r][c]) continue;
-      const emoji = grid[r][c].e; [cite: 32]
+      const emoji = grid[r][c].e;
       for(const [dr,dc] of DIRS){
-        const line = []; [cite: 33]
+        const line = [];
         for(let i=0;i<MATCH;i++){
           const nr = r+dr*i, nc = c+dc*i;
-          if(nr<0||nr>=ROWS||nc<0||nc>=COLS) break; [cite: 34]
+          if(nr<0||nr>=ROWS||nc<0||nc>=COLS) break;
           if(grid[nr][nc] && grid[nr][nc].e === emoji) line.push(`${nr},${nc}`);
           else break;
         }
-        if(line.length>=MATCH) line.forEach(k=>hit.add(k)); [cite: 35]
+        if(line.length>=MATCH) line.forEach(k=>hit.add(k));
       }
     }
-    return hit; [cite: 36]
+    return hit;
   }
 
   function resolveMatches(){
     const hit = findMatches();
     if(!hit.size){ nextTurn(); return; }
     scores[turn-1]++;
-    updateScores(); [cite: 37]
+    updateScores();
     hit.forEach(k=>{
       const [r,c] = k.split(',').map(Number);
       const el = cel(r,c);
       if(el) el.classList.add('matching');
-    }); [cite: 38]
+    });
     setTimeout(()=>{
       hit.forEach(k=>{
         const [r,c] = k.split(',').map(Number);
@@ -293,70 +289,69 @@ body::before{
       applyGravity();
       syncAll();
       setTimeout(()=>resolveMatches(),140);
-    },420); [cite: 39]
+    },420);
   }
 
   function applyGravity(){
     for(let c=0;c<COLS;c++){
-      const stack = []; [cite: 40]
+      const stack = [];
       for(let r=ROWS-1;r>=0;r--) if(grid[r][c]) stack.push(grid[r][c]);
-      for(let r=ROWS-1;r>=0;r--) grid[r][c] = stack.length ? stack.shift() : null; [cite: 41]
+      for(let r=ROWS-1;r>=0;r--) grid[r][c] = stack.length ? stack.shift() : null;
     }
   }
 
   function nextTurn(){
     if(grid[0].some(c=>c!==null)){ endGame(); return; }
-    turn = turn===1 ? 2 : 1; [cite: 42]
+    turn = turn===1 ? 2 : 1;
     selected = null;
     autoPick();
     setStatus();
-    setTimeout(() => { busy = false; }, 300); [cite: 43]
+    setTimeout(() => { busy = false; }, 300);
   }
 
   function updateScores(){
     leftScoreEl.textContent = scores[0];
-    rightScoreEl.textContent = scores[1]; [cite: 44]
+    rightScoreEl.textContent = scores[1];
   }
 
   function setStatus(){
-    statusEl.className = `status p${turn}`; [cite: 45]
+    statusEl.className = `status p${turn}`;
   }
 
   function spawnConfetti(count = 80){
     confettiWrap.innerHTML = '';
-    const colors = ['#ff6b6b','#ffd166','#6bcB77','#4d96ff','#b388ff','#ff9f1c']; [cite: 46]
-    const width = confettiWrap.clientWidth || window.innerWidth;
+    const colors = ['#ff6b6b','#ffd166','#6bcB77','#4d96ff','#b388ff','#ff9f1c'];
     for(let i=0;i<count;i++){
       const el = document.createElement('div');
-      el.className = 'confetti-piece'; [cite: 47]
+      el.className = 'confetti-piece';
       el.style.background = colors[Math.floor(Math.random()*colors.length)];
       el.style.left = Math.random()*100 + '%';
       el.style.top = (Math.random()*-20) + 'vh';
-      el.style.width = (8 + Math.random()*8) + 'px'; [cite: 48]
+      el.style.width = (8 + Math.random()*8) + 'px';
       el.style.height = (10 + Math.random()*12) + 'px';
       el.style.opacity = 0.95;
       el.style.animationDuration = (2 + Math.random()*2.5) + 's';
-      el.style.transform = `rotate(${Math.random()*360}deg)`; [cite: 49]
+      el.style.transform = `rotate(${Math.random()*360}deg)`;
       confettiWrap.appendChild(el);
       setTimeout(()=>{ if(el && el.parentNode) el.parentNode.removeChild(el); }, 7000);
     }
   }
 
   function endGame(){
-    busy = true; [cite: 50]
+    busy = true;
     pickerNameEl.textContent = 'GOOD GAME!';
     pickerNameEl.style.color = '#2d2013';
     spawnConfetti(120);
     const [s1,s2] = scores;
-    if(s1>s2){ goTitleEl.textContent = '🔴 Red Team wins!'; [cite: 51] }
-    else if(s2>s1){ goTitleEl.textContent = '🔵 Blue Team wins!'; [cite: 52] }
-    else { goTitleEl.textContent = "It's a tie! 🤝"; [cite: 53] }
+    if(s1>s2){ goTitleEl.textContent = '🔴 Red Team wins!'; }
+    else if(s2>s1){ goTitleEl.textContent = '🔵 Blue Team wins!'; }
+    else { goTitleEl.textContent = "It's a tie! 🤝"; }
     goScoreEl.textContent = `${s1} – ${s2} matches`;
     gameoverEl.classList.add('show');
   }
 
   window.newGame = function(){
-    gameoverEl.classList.remove('show'); [cite: 54]
+    gameoverEl.classList.remove('show');
     confettiWrap.innerHTML = '';
     init();
     buildUI();
