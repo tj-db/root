@@ -282,13 +282,15 @@ body::before{
     }
   }
 
-  function nextTurn(){
+function nextTurn(){
     if(grid[0].some(c=>c!==null)){ endGame(); return; }
     turn = turn===1 ? 2 : 1;
     selected = null;
-    busy = false;
     autoPick();
     setStatus();
+    setTimeout(() => {
+      busy = false;
+    }, 3000);
   }
 
   function updateScores(){
