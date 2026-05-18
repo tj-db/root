@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Word Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      user-select: none;
+    }
+    #page1, #page2 {
+      display: none;
+      height: 100vh;
+      width: 100vw;
+    }
+    #page1 {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    textarea {
+      width: 300px;
+      height: 150px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #page2 {
+      display: flex;
+    }
+    .side {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2em;
+      cursor: pointer;
+      border: 1px solid #000;
+      user-select: none;
+    }
+    .left {
+      background-color: #f0f8ff;
+    }
+    .right {
+      background-color: #ffe4e1;
+    }
+  </style>
+</head>
+<body>
+  <div id="page1">
+    <h1>Enter Your Word List</h1>
+    <textarea id="wordList" placeholder="Enter words separated by new lines"></textarea>
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <div id="page2">
+    <div class="side left" onclick="changeWord('left')">Left Word</div>
+    <div class="side right" onclick="changeWord('right')">Right Word</div>
+  </div>
+
+  <script>
+    let words = [];
+    let leftWord = '';
+    let rightWord = '';
+
+    function startGame() {
+      const input = document.getElementById('wordList').value.trim();
+      if (!input) {
+        alert("Please enter at least one word.");
+        return;
+      }
+      words = input.split(/\s*\n\s*/).filter(w => w.length > 0);
+      if (words.length < 2) {
+        alert("Please enter at least two words.");
+        return;
+      }
+      document.getElementById('page1').style.display = 'none';
+      document.getElementById('page2').style.display = 'flex';
+      leftWord = getRandomWord('', '');
+      rightWord = getRandomWord('', leftWord);
+      document.querySelector('.left').textContent = leftWord;
+      document.querySelector('.right').textContent = rightWord;
+    }
+
+    function getRandomWord(exclude, otherSide) {
+      let newWord;
+      do {
+        newWord = words[Math.floor(Math.random() * words.length)];
+      } while ((newWord === exclude || newWord === otherSide) && words.length > 1);
+      return newWord;
+    }
+
+    function changeWord(side) {
+      if (side === 'left') {
+        leftWord = getRandomWord(leftWord, rightWord);
+        document.querySelector('.left').textContent = leftWord;
+      } else {
+        rightWord = getRandomWord(rightWord, leftWord);
+        document.querySelector('.right').textContent = rightWord;
+      }
+    }
+
+    document.getElementById('page1').style.display = 'flex';
+  </script>
+</body>
+</html>
