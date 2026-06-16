@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scrambled Word Game</title>
+<style>
+  body {
+    margin: 0;
+    background: white;
+    color: black;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+  }
+  #input-area, #start-btn {
+    font-size: 1.2rem;
+    padding: 10px;
+    margin: 5px;
+  }
+  #input-area {
+    width: 90%;
+    height: 140px;
+    resize: vertical;
+  }
+  #hint {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-align: center;
+    display: none;
+  }
+  #word {
+    font-size: 10vw;
+    text-align: center;
+    display: none;
+    word-break: break-word;
+    padding: 0 10px;
+  }
+</style>
+</head>
+<body>
+
+<textarea id="input-area" placeholder="Enter entries like: apple : a fruit"></textarea>
+<button id="start-btn">Start</button>
+<div id="hint"></div>
+<div id="word"></div>
+
+<script>
+  const inputArea = document.getElementById('input-area');
+  const startBtn = document.getElementById('start-btn');
+  const wordDisplay = document.getElementById('word');
+  const hintDisplay = document.getElementById('hint');
+
+  let entries = [];
+  let index = 0;
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+ function scrambleWord(word) {
+    let letters = word.split('');
+    let indices = letters
+      .map((ch, i) => ch === ' ' ? null : i)
+      .filter(i => i !== null);
+
+    let chars = indices.map(i => letters[i]);
+    shuffleArray(chars);
+
+    indices.forEach((i, idx) => {
+      letters[i] = chars[idx];
+    });
+
+    return letters.join('');
+  }
+
+  startBtn.addEventListener('click', () => {
+    entries = inputArea.value.split(/\r?\n/).map(line => {
+      const parts = line.split(':');
+      if (parts.length < 2) return null;
+      return {
+        word: parts[0].trim(),
+        hint: parts[1].trim()
+      };
+    }).filter(Boolean);
+
+    if (entries.length === 0) return alert('Please enter at least one entry in the format "word : hint".');
+
+    shuffleArray(entries);
+    index = 0;
+    inputArea.style.display = 'none';
+    startBtn.style.display = 'none';
+    wordDisplay.style.display = 'block';
+    hintDisplay.style.display = 'block';
+
+    showEntry(entries[index]);
+  });
+
+  function showEntry(entry) {
+    hintDisplay.textContent = entry.hint;
+    wordDisplay.textContent = scrambleWord(entry.word);
+  }
+
+  document.addEventListener('keydown', () => {
+    if (entries.length === 0) return;
+    index = (index + 1) % entries.length;
+    showEntry(entries[index]);
+  });
+</script>
+
+</body>
+</html>
