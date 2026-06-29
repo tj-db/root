@@ -56,7 +56,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    /* --- Intro Styles --- */
+
     .intro {
         background: rgba(0,0,0,0.25);
         padding: 25px;
@@ -86,7 +86,7 @@
         flex-wrap: wrap;
         justify-content: center;
         gap: 25px;
-        padding: 40px 20px; /* Added padding for scaling effect */
+        padding: 40px 20px; 
     }
     .color-item {
         display: flex;
@@ -96,11 +96,11 @@
         padding: 10px;
         border-radius: 15px;
         background: rgba(255,255,255,0.1);
-        transition: all 0.4s ease; /* Updated transition */
+        transition: all 0.4s ease; 
         width: 110px;
         cursor: default;
     }
-    /* --- New Highlight Style --- */
+
     .color-item.highlighted {
         transform: scale(1.75);
         z-index: 10;
@@ -296,7 +296,7 @@
   <div class="particles" id="particles"></div>
   <div class="game-content">
     <div class="title">🎨 Color Number Challenge 🔢</div>
-    
+
     <div class="intro" id="intro-screen">
         <h2 class="intro-title">Meet the Colors!</h2>
         <div class="intro-subtitle">Press <strong>SPACEBAR</strong> to cycle through the colors.</div>
@@ -344,10 +344,10 @@
     const colorGrid = document.getElementById('color-grid');
 
     let team1Time=60, team2Time=60, activeTeam=1, intervalId=null, gameStartTime=0, totalSwitches=0;
-    let highlightedColorIndex = -1; // New state for intro cycling
+    let highlightedColorIndex = -1; 
     const intervalStep=100, maxTime=60.0, warningTime=20.0, dangerTime=10.0;
     const colors=[
-      {name:'RED',value:'#FF0000'}, // Changed to a more vibrant red
+      {name:'RED',value:'#FF0000'}, 
       {name:'YELLOW',value:'#fbbf24'},
       {name:'PINK',value:'#ec4899'},
       {name:'GREEN',value:'#10b981'},
@@ -356,10 +356,9 @@
       {name:'BLUE',value:'#3b82f6'}
     ];
 
-
 const numbers=[
-  "sixteen","one","two","three","four",
-  "five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen"
+  "eleven","twelve","thirteen","fourteen","fifteen",
+  "sixteen","seventeen","eighteen","nineteen","twenty"
 ];
 
     function populateColorIntro() {
@@ -374,8 +373,7 @@ const numbers=[
             colorGrid.appendChild(item);
         });
     }
-    
-    // --- New Function to cycle through intro colors ---
+
     function cycleIntroColor() {
         const colorItems = colorGrid.querySelectorAll('.color-item');
         if (colorItems.length === 0) return;
@@ -383,9 +381,9 @@ const numbers=[
         if (highlightedColorIndex > -1) {
             colorItems[highlightedColorIndex].classList.remove('highlighted');
         }
-        
+
         highlightedColorIndex = (highlightedColorIndex + 1) % colorItems.length;
-        
+
         colorItems[highlightedColorIndex].classList.add('highlighted');
         playSound(300 + highlightedColorIndex * 50, 0.15);
     }
@@ -457,24 +455,24 @@ const numbers=[
       activeTeam = 1;
       totalSwitches = 0;
       gameStartTime = Date.now();
-      
+
       team1TimerEl.textContent = `60.0s`;
       team2TimerEl.textContent = `60.0s`;
       team1ProgressEl.style.width = '100%';
       team2ProgressEl.style.width = '100%';
       team1ProgressEl.classList.remove('warning', 'danger');
       team2ProgressEl.classList.remove('warning', 'danger');
-      
+
       finalScreen.style.display = 'none';
       startBtn.style.display = 'none';
       introScreen.style.display = 'none';
       gameContainer.style.display = 'flex';
-      
+
       team1El.classList.add("active");
       team2El.classList.remove("active");
-      
+
       generateRandomColorNumber();
-      
+
       playSound(600, 0.4);
       intervalId = setInterval(updateTimers, intervalStep);
     }
@@ -482,36 +480,36 @@ const numbers=[
     function endGame(winnerTeam) {
       clearInterval(intervalId);
       const gameDuration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-      
+
       playSound(winnerTeam === 1 ? 700 : 500, 1.5);
-      
+
       finalMessage.textContent = `Team ${winnerTeam} Wins! 🎉`;
-      
+
       if (winnerTeam === 1) {
         finalScreen.style.background = 'linear-gradient(135deg, #10b981, #059669)';
       } else {
         finalScreen.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
       }
-      
+
       finalStats.innerHTML = `
         Game Duration: ${gameDuration}s<br>
         Total Switches: ${totalSwitches}<br>
         Team 1 Time Left: ${team1Time.toFixed(1)}s<br>
         Team 2 Time Left: ${team2Time.toFixed(1)}s
       `;
-      
+
       finalScreen.style.display = 'flex';
-      
+
       team1El.classList.remove("active");
       team2El.classList.remove("active");
     }
 
     function resetGame() {
-      // Clear any intro highlight
+
       const highlightedItem = colorGrid.querySelector('.color-item.highlighted');
       if (highlightedItem) highlightedItem.classList.remove('highlighted');
       highlightedColorIndex = -1;
-      
+
       startBtn.style.display = 'block';
       introScreen.style.display = 'block';
       gameContainer.style.display = 'none';
@@ -524,21 +522,20 @@ const numbers=[
     startBtn.addEventListener('click', startGame);
     playAgainBtn.addEventListener('click', resetGame);
 
-    // --- Updated Event Listener for Spacebar ---
     window.addEventListener('keydown', e => {
       if (e.code === 'Space') {
         e.preventDefault();
-        // If game is active, switch teams
+
         if (gameContainer.style.display === 'flex') {
           switchTeam();
         } 
-        // If intro is active, cycle colors
+
         else if (introScreen.style.display !== 'none') {
           cycleIntroColor();
         }
       }
     });
-    
+
     createParticles();
     populateColorIntro();
   </script>
