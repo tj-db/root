@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Word to JPG Generator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 50px;
+    }
+    textarea {
+      margin: 10px;
+      padding: 10px;
+      font-size: 1rem;
+      width: 300px;
+      height: 150px;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 12px;
+      font-size: 1rem;
+    }
+    .download-list {
+      margin-top: 20px;
+      width: 300px;
+    }
+    .download-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 5px 0;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Word Square Generator</h1>
+  <label for="wordInput">Enter words (one per line):</label>
+  <textarea id="wordInput" placeholder="apple\nbanana\ncarrot"></textarea>
+  <button onclick="generateList()">Generate List</button>
+
+  <div class="download-list" id="downloadList"></div>
+
+  <canvas id="canvas" width="1000" height="1000" style="display: none;"></canvas>
+
+  <script>
+    function generateList() {
+      const input = document.getElementById('wordInput').value.trim();
+      if (!input) return;
+
+      const words = input.split(/\r?\n/).map(w => w.trim()).filter(Boolean);
+      const listContainer = document.getElementById('downloadList');
+      listContainer.innerHTML = '';
+
+      words.forEach(word => {
+        const item = document.createElement('div');
+        item.className = 'download-item';
+
+        const label = document.createElement('span');
+        label.textContent = word;
+
+        const button = document.createElement('button');
+        button.textContent = 'Download';
+        button.onclick = () => generateImage(word);
+
+        item.appendChild(label);
+        item.appendChild(button);
+        listContainer.appendChild(item);
+      });
+    }
+
+    function generateImage(word) {
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      let fontSize = 300;
+      ctx.font = `${fontSize}px sans-serif`;
+      let textWidth = ctx.measureText(word).width;
+      const targetWidth = canvas.width * 0.8;
+
+      let minSize = 10;
+      let maxSize = 1000;
+      while (maxSize - minSize > 1) {
+        fontSize = (minSize + maxSize) / 2;
+        ctx.font = `${fontSize}px sans-serif`;
+        textWidth = ctx.measureText(word).width;
+        if (textWidth > targetWidth) {
+          maxSize = fontSize;
+        } else {
+          minSize = fontSize;
+        }
+      }
+
+      ctx.font = `${minSize}px sans-serif`;
+      ctx.fillStyle = "#000000";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(word, canvas.width / 2, canvas.height / 2);
+
+      const link = document.createElement('a');
+      link.download = `${word}.jpg`;
+      link.href = canvas.toDataURL("image/jpeg", 1.0);
+      link.click();
+    }
+  </script>
+</body>
+</html>
