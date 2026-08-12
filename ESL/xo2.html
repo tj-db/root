@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Tic-Tac-Toe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #F3ECD8;
+    --paper-edge: #E6DBB8;
+    --line: #D9CBA0;
+    --ink: #2B2620;
+    --ink-soft: #7A705C;
+    --stamp-x: #B23A2E;
+    --stamp-o: #2C5C86;
+    --gold: #B8892B;
+    --shadow: rgba(43, 38, 32, 0.28);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 32px 16px;
+    font-family: "Inter", sans-serif;
+    color: var(--ink);
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 6px),
+      radial-gradient(circle at 20% 15%, #5c4a37 0%, #4a3a2b 45%, #3c2f22 100%);
+    background-blend-mode: overlay, normal;
+  }
+
+  .container {
+    width: min(92vw, 620px);
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #cbb98f;
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: "Special Elite", monospace;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    font-size: clamp(26px, 5vw, 36px);
+    color: #f3ecd8;
+    margin: 0 0 26px;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.25);
+  }
+
+  .card {
+    position: relative;
+    background: var(--paper);
+    padding: 30px 26px 26px;
+    border-radius: 3px;
+    box-shadow: 0 18px 40px var(--shadow), 0 2px 0 var(--paper-edge) inset;
+    transform: rotate(-0.4deg);
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    width: 90px;
+    height: 30px;
+    background: rgba(184, 137, 43, 0.55);
+    transform: translateX(-50%) rotate(-2deg);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+  }
+
+  .instructions {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0 0 18px;
+  }
+
+  #wordCount {
+    color: var(--ink-soft);
+    font-size: 12px;
+    margin: -10px 0 14px;
+    text-align: right;
+  }
+
+  #words {
+    width: 100%;
+    height: 240px;
+    padding: 16px 18px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background:
+      repeating-linear-gradient(var(--paper) 0 27px, var(--line) 27px 28px);
+    line-height: 28px;
+    font-family: "Special Elite", monospace;
+    font-size: 16px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  #words:focus {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  button {
+    border: none;
+    border-radius: 999px;
+    padding: 13px 28px;
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    background: var(--ink);
+    color: var(--paper);
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+
+  button:hover { background: #443c30; }
+  button:active { transform: scale(0.96); }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  .secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+  }
+
+  .secondary:hover { background: rgba(43,38,32,0.06); }
+
+  #game { display: none; }
+
+  #status {
+    font-family: "Special Elite", monospace;
+    font-size: 20px;
+    color: #f3ecd8;
+    margin-bottom: 4px;
+  }
+
+  #score {
+    font-size: 13px;
+    color: #cbb98f;
+    letter-spacing: 0.02em;
+    margin-bottom: 18px;
+  }
+
+  #boardWrap {
+    position: relative;
+    width: min(90vw, 560px);
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+  }
+
+  #board {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  #winOverlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .win-line-path {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 7;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s ease;
+  }
+
+  .cell {
+    position: relative;
+    background: var(--paper);
+    border: none;
+    border-radius: 3px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+  }
+
+  .cell:nth-child(1) { transform: rotate(-1.2deg); }
+  .cell:nth-child(2) { transform: rotate(0.6deg); }
+  .cell:nth-child(3) { transform: rotate(-0.5deg); }
+  .cell:nth-child(4) { transform: rotate(0.9deg); }
+  .cell:nth-child(5) { transform: rotate(-0.3deg); }
+  .cell:nth-child(6) { transform: rotate(1.1deg); }
+  .cell:nth-child(7) { transform: rotate(-0.8deg); }
+  .cell:nth-child(8) { transform: rotate(0.4deg); }
+  .cell:nth-child(9) { transform: rotate(-1deg); }
+
+  .cell:hover:not(:disabled) {
+    box-shadow: 0 10px 20px rgba(0,0,0,0.32);
+    transform: translateY(-3px) rotate(0deg);
+  }
+
+  .cell:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+  }
+
+  .cell:disabled { cursor: default; }
+
+  .word {
+    font-family: "Special Elite", monospace;
+    font-size: clamp(12px, 2.6vw, 19px);
+    color: var(--ink);
+    text-align: center;
+    word-break: break-word;
+    line-height: 1.25;
+  }
+
+  .mark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Special Elite", monospace;
+    font-size: clamp(40px, 9vw, 64px);
+    opacity: 0.86;
+    pointer-events: none;
+    animation: stampIn 0.22s ease-out;
+  }
+
+  .mark.x { color: var(--stamp-x); }
+  .mark.o { color: var(--stamp-o); }
+
+  @keyframes stampIn {
+    0% { transform: scale(2.4) rotate(var(--tilt, -4deg)); opacity: 0; }
+    60% { transform: scale(0.92) rotate(var(--tilt, -4deg)); opacity: 0.9; }
+    100% { transform: scale(1) rotate(var(--tilt, -4deg)); opacity: 0.86; }
+  }
+
+  .winning-cell { background: #eaddb0; }
+
+  .actions {
+    margin-top: 26px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mark { animation: none; }
+    .win-line-path { transition: none; }
+    .cell { transition: none; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div id="wordSetup">
+    <p class="eyebrow">Nine cards, one grid</p>
+    <h1>Word Tic-Tac-Toe</h1>
+
+    <div class="card">
+      <p class="instructions">Type at least 9 words, one per line. We'll randomly deal 9 of them onto the board.</p>
+      <textarea id="words" placeholder="Word 1
+Word 2
+Word 3
+Word 4
+Word 5
+Word 6
+Word 7
+Word 8
+Word 9
+Word 10
+..."></textarea>
+      <div id="wordCount">0 words entered</div>
+      <button id="startButton">Deal the Board</button>
+    </div>
+  </div>
+
+  <div id="game">
+    <p class="eyebrow">Nine cards, one grid</p>
+    <h1>Word Tic-Tac-Toe</h1>
+
+    <div id="status" aria-live="polite">X's turn</div>
+    <div id="score">X 0 &nbsp;·&nbsp; O 0 &nbsp;·&nbsp; Draws 0</div>
+
+    <div id="boardWrap">
+      <div id="board"></div>
+      <svg id="winOverlay"></svg>
+    </div>
+
+    <div class="actions">
+      <button id="rematchButton">Rematch</button>
+      <button id="reshuffleButton" class="secondary">New 9 From List</button>
+      <button id="newWordsButton" class="secondary">New Words</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const wordSetup = document.getElementById("wordSetup");
+const wordsInput = document.getElementById("words");
+const wordCount = document.getElementById("wordCount");
+const startButton = document.getElementById("startButton");
+const rematchButton = document.getElementById("rematchButton");
+const reshuffleButton = document.getElementById("reshuffleButton");
+const newWordsButton = document.getElementById("newWordsButton");
+const game = document.getElementById("game");
+const board = document.getElementById("board");
+const boardWrap = document.getElementById("boardWrap");
+const winOverlay = document.getElementById("winOverlay");
+const status = document.getElementById("status");
+const scoreEl = document.getElementById("score");
+
+let currentPlayer = "X";
+let gameOver = false;
+let moves = 0;
+let cells = [];
+let allWords = [];
+let currentWords = [];
+const score = { X: 0, O: 0, draws: 0 };
+
+const winningCombinations = [
+  [0, 1, 2], [3, 4, 5], [6, 7, 8],
+  [0, 3, 6], [1, 4, 7], [2, 5, 8],
+  [0, 4, 8], [2, 4, 6]
+];
+
+function parseWords() {
+  return wordsInput.value
+    .split("\n")
+    .map(w => w.trim())
+    .filter(w => w !== "");
+}
+
+function updateWordCount() {
+  const count = parseWords().length;
+  wordCount.textContent = count === 1 ? "1 word entered" : `${count} words entered`;
+}
+
+wordsInput.addEventListener("input", updateWordCount);
+updateWordCount();
+
+function shuffle(array) {
+  const result = array.slice();
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+startButton.addEventListener("click", () => {
+  const words = parseWords();
+
+  if (words.length < 9) {
+    alert(`Please enter at least 9 words.\n\nYou entered ${words.length} word(s).`);
+    return;
+  }
+
+  const seen = new Set();
+  for (const w of words) {
+    const key = w.toLowerCase();
+    if (seen.has(key)) {
+      alert(`"${w}" appears more than once. Please make sure every word is unique.`);
+      return;
+    }
+    seen.add(key);
+  }
+
+  allWords = words;
+  score.X = 0;
+  score.O = 0;
+  score.draws = 0;
+  currentWords = shuffle(allWords).slice(0, 9);
+  buildBoard(currentWords);
+  wordSetup.style.display = "none";
+  game.style.display = "block";
+});
+
+rematchButton.addEventListener("click", () => {
+  buildBoard(currentWords);
+});
+
+reshuffleButton.addEventListener("click", () => {
+  score.X = 0;
+  score.O = 0;
+  score.draws = 0;
+  currentWords = shuffle(allWords).slice(0, 9);
+  buildBoard(currentWords);
+});
+
+newWordsButton.addEventListener("click", () => {
+  game.style.display = "none";
+  wordSetup.style.display = "block";
+  wordsInput.focus();
+});
+
+function buildBoard(words) {
+  currentPlayer = "X";
+  gameOver = false;
+  moves = 0;
+  cells = [];
+
+  status.textContent = "X's turn";
+  updateScoreDisplay();
+  board.innerHTML = "";
+  winOverlay.innerHTML = "";
+
+  words.forEach((word, index) => {
+    const cell = document.createElement("button");
+    cell.className = "cell";
+    cell.type = "button";
+    cell.setAttribute("aria-label", word);
+
+    const wordEl = document.createElement("div");
+    wordEl.className = "word";
+    wordEl.textContent = word;
+    cell.appendChild(wordEl);
+
+    cell.addEventListener("click", () => handleCellClick(index));
+
+    board.appendChild(cell);
+    cells.push(cell);
+  });
+}
+
+function handleCellClick(index) {
+  if (gameOver) return;
+
+  const cell = cells[index];
+  if (cell.dataset.mark) return;
+
+  cell.dataset.mark = currentPlayer;
+  cell.disabled = true;
+
+  const mark = document.createElement("div");
+  mark.className = `mark ${currentPlayer.toLowerCase()}`;
+  mark.textContent = currentPlayer;
+  mark.style.setProperty("--tilt", `${(Math.random() * 12 - 6).toFixed(1)}deg`);
+  cell.appendChild(mark);
+
+  moves++;
+
+  const winningLine = checkWinner();
+  if (winningLine) {
+    gameOver = true;
+    winningLine.forEach(i => cells[i].classList.add("winning-cell"));
+    cells.forEach(c => c.disabled = true);
+    drawWinLine(winningLine);
+    score[currentPlayer]++;
+    updateScoreDisplay();
+    status.textContent = `${currentPlayer} wins!`;
+    return;
+  }
+
+  if (moves === 9) {
+    gameOver = true;
+    score.draws++;
+    updateScoreDisplay();
+    status.textContent = "It's a draw!";
+    return;
+  }
+
+  currentPlayer = currentPlayer === "X" ? "O" : "X";
+  status.textContent = `${currentPlayer}'s turn`;
+}
+
+function checkWinner() {
+  for (const combo of winningCombinations) {
+    const [a, b, c] = combo;
+    if (
+      cells[a].dataset.mark &&
+      cells[a].dataset.mark === cells[b].dataset.mark &&
+      cells[a].dataset.mark === cells[c].dataset.mark
+    ) {
+      return combo;
+    }
+  }
+  return null;
+}
+
+function updateScoreDisplay() {
+  scoreEl.textContent = `X ${score.X}  ·  O ${score.O}  ·  Draws ${score.draws}`;
+}
+
+function drawWinLine(combo) {
+  const wrapRect = boardWrap.getBoundingClientRect();
+  const startRect = cells[combo[0]].getBoundingClientRect();
+  const endRect = cells[combo[2]].getBoundingClientRect();
+
+  const x1 = startRect.left + startRect.width / 2 - wrapRect.left;
+  const y1 = startRect.top + startRect.height / 2 - wrapRect.top;
+  const x2 = endRect.left + endRect.width / 2 - wrapRect.left;
+  const y2 = endRect.top + endRect.height / 2 - wrapRect.top;
+
+  const mx = (x1 + x2) / 2 + (Math.random() * 10 - 5);
+  const my = (y1 + y2) / 2 + (Math.random() * 10 - 5);
+
+  winOverlay.setAttribute("viewBox", `0 0 ${wrapRect.width} ${wrapRect.height}`);
+  winOverlay.setAttribute("width", wrapRect.width);
+  winOverlay.setAttribute("height", wrapRect.height);
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`);
+  path.classList.add("win-line-path");
+  winOverlay.appendChild(path);
+
+  const length = path.getTotalLength();
+  path.style.strokeDasharray = length;
+  path.style.strokeDashoffset = length;
+  requestAnimationFrame(() => {
+    path.style.strokeDashoffset = "0";
+  });
+}
+</script>
+
+</body>
+</html>
