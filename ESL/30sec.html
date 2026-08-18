@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>30 Seconds</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,6 +58,29 @@
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 18px;
     padding: 28px;
+  }
+
+  .controls-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  label {
+    font-size: 13px;
+    color: rgba(245,241,232,0.8);
+  }
+
+  input[type="number"] {
+    width: 110px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--navy-deep);
+    color: var(--cream);
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
   }
 
   textarea {
@@ -146,7 +169,7 @@
     background: linear-gradient(90deg, var(--amber), var(--red));
     width: 100%;
     transform-origin: left;
-    transition: width 1s linear;
+    transition: width 0.25s linear;
   }
 
   .word-grid {
@@ -204,8 +227,13 @@
   <h1>30 SECONDS</h1>
 
   <div id="setup" class="panel">
+    <div class="controls-row">
+      <label for="roundSecondsInput">Seconds per round</label>
+      <input id="roundSecondsInput" type="number" min="5" max="300" value="30" />
+    </div>
+
     <textarea id="wordInput" placeholder="banana&#10;volcano&#10;guitar&#10;..."></textarea>
-    <div class="hint">One word per line. You'll need at least 5.</div>
+    <div class="hint">One word per line. You'll need at least 5. Use the Seconds per round input above to set round length.</div>
     <button id="startBtn">Start Game</button>
   </div>
 
@@ -218,27 +246,26 @@
     <div class="word-grid" id="wordGrid"></div>
     <button id="skipBtn" class="ghost">Skip to Next Round</button>
   </div>
-
-  <button id="stopBtn" class="ghost hidden">Stop Game</button>
 </div>
 
 <script>
-const ROUND_SECONDS = 30;
+const DEFAULT_SECONDS = 30;
 const WORDS_PER_ROUND = 5;
 
 const setupEl = document.getElementById('setup');
 const gameEl = document.getElementById('game');
-const stopBtn = document.getElementById('stopBtn');
 const wordInput = document.getElementById('wordInput');
 const wordGrid = document.getElementById('wordGrid');
 const timerEl = document.getElementById('timer');
 const barFill = document.getElementById('barFill');
 const roundNumEl = document.getElementById('roundNum');
+const roundSecondsInput = document.getElementById('roundSecondsInput');
 
 let wordPool = [];
 let rounds = [];
 let roundIndex = 0;
-let secondsLeft = ROUND_SECONDS;
+let secondsLeft = DEFAULT_SECONDS;
+let roundSeconds = DEFAULT_SECONDS;
 let intervalId = null;
 
 function shuffle(arr) {
@@ -259,7 +286,11 @@ function chunk(arr, size) {
 }
 
 function startGame() {
-  const words = wordInput.value
+  // Read and validate seconds from the numeric input above the word list
+  const n = parseInt(roundSecondsInput.value, 10);
+  roundSeconds = (Number.isFinite(n) && n >= 5) ? n : DEFAULT_SECONDS;
+
+  const words = (wordInput.value || '')
     .split('\n')
     .map(w => w.trim())
     .filter(Boolean);
@@ -274,7 +305,6 @@ function startGame() {
   roundIndex = 0;
   setupEl.classList.add('hidden');
   gameEl.classList.remove('hidden');
-  stopBtn.classList.remove('hidden');
   playRound();
 }
 
@@ -289,7 +319,7 @@ function playRound() {
       </div>
     `).join('');
 
-  secondsLeft = ROUND_SECONDS;
+  secondsLeft = roundSeconds;
   updateTimerDisplay();
   clearInterval(intervalId);
   intervalId = setInterval(tick, 1000);
@@ -306,7 +336,8 @@ function tick() {
 function updateTimerDisplay() {
   timerEl.textContent = secondsLeft;
   timerEl.classList.toggle('urgent', secondsLeft <= 10);
-  barFill.style.width = `${(secondsLeft / ROUND_SECONDS) * 100}%`;
+  const pct = Math.max(0, Math.min(1, secondsLeft / roundSeconds));
+  barFill.style.width = `${pct * 100}%`;
 }
 
 function nextRound() {
@@ -327,12 +358,6 @@ function escapeHtml(str) {
 
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('skipBtn').addEventListener('click', nextRound);
-stopBtn.addEventListener('click', () => {
-  clearInterval(intervalId);
-  gameEl.classList.add('hidden');
-  stopBtn.classList.add('hidden');
-  setupEl.classList.remove('hidden');
-});
 </script>
 
 </body>
