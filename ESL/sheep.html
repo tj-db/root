@@ -21,8 +21,11 @@
       --card: rgba(20, 30, 60, 0.7);
     }
   }
-  * { box-sizing: border-box; }
-  html, body {
+  * {
+    box-sizing: border-box;
+  }
+  html,
+  body {
     height: 100%;
     margin: 0;
     font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", sans-serif;
@@ -32,20 +35,27 @@
     cursor: pointer;
   }
   body {
-    background: linear-gradient(var(--sky-top), var(--sky-bottom) 70%);
+    background: linear-gradient(
+      var(--sky-top),
+      var(--sky-bottom) 70%
+    );
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
+  /* Grass */
   .ground {
     position: fixed;
-    left: 0; right: 0; bottom: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     height: 22%;
     background: var(--grass);
     border-top-left-radius: 50% 40px;
     border-top-right-radius: 50% 40px;
     z-index: 0;
   }
+  /* Main counting area */
   main {
     position: relative;
     z-index: 1;
@@ -75,100 +85,304 @@
     font-size: clamp(3rem, 11vw, 6.5rem);
     line-height: 1.1;
   }
+  /*
+    SHEEP RUNNING LANE
+    The sheep are completely separate from the centre counting area.
+    They run across the bottom of the screen:
+    
+      OFF SCREEN LEFT
+            ↓
+      ───────────────→
+                    OFF SCREEN RIGHT
+  */
+  #lane {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 18%;
+    height: 180px;
+    z-index: 3;
+    pointer-events: none;
+    overflow: hidden;
+  }
   .sheep {
+    position: absolute;
+    left: -12rem;
+    bottom: 0;
+    font-size: clamp(4rem, 14vw, 9rem);
+    line-height: 1;
+    /*
+      The sheep now travel based on the lane itself,
+      rather than transforming from a central position.
+    */
+    animation:
+      run var(--run-time, 3.5s) linear forwards;
+  }
+  .hopper {
     display: inline-block;
-    animation: pop 0.35s ease-out backwards;
+    transform: scaleX(-1);
+    /*
+      Continuous jumping while running.
+    */
+    animation: hop 0.55s ease-in-out infinite;
   }
-  @keyframes pop {
-    from { transform: scale(0) rotate(-20deg); opacity: 0; }
-    to { transform: scale(1) rotate(0); opacity: 1; }
+  /*
+    SHEEP TRAVEL
+    Start:
+      Completely outside the left edge.
+    End:
+      Completely outside the right edge.
+  */
+  @keyframes run {
+    from {
+      left: -12rem;
+    }
+    to {
+      left: calc(100% + 12rem);
+    }
   }
+  /*
+    SHEEP JUMP
+    The sheep repeatedly bounce upward while
+    moving across the screen.
+  */
+  @keyframes hop {
+    0%,
+    100% {
+      transform:
+        scaleX(-1)
+        translateY(0)
+        rotate(0deg);
+    }
+    50% {
+      transform:
+        scaleX(-1)
+        translateY(-35px)
+        rotate(8deg);
+    }
+  }
+  /*
+    Answer number
+  */
   .answer {
     font-size: clamp(8rem, 38vw, 22rem);
     font-weight: bold;
     line-height: 1;
     animation: bounce 0.5s ease-out;
-    text-shadow: 0 6px 0 rgba(0,0,0,0.12);
+    text-shadow: 0 6px 0 rgba(0, 0, 0, 0.12);
   }
+  /*
+    Answer word
+  */
   .word {
     font-size: clamp(2rem, 8vw, 4.5rem);
     margin-top: 8px;
     animation: bounce 0.5s ease-out;
   }
+  /*
+    Answer entrance animation
+  */
   @keyframes bounce {
-    0% { transform: scale(0.2); opacity: 0; }
-    60% { transform: scale(1.15); opacity: 1; }
-    100% { transform: scale(1); }
+    0% {
+      transform: scale(0.2);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.15);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
   }
+  /*
+    Bottom instruction
+  */
   .hint {
     position: fixed;
     bottom: 14px;
-    left: 0; right: 0;
+    left: 0;
+    right: 0;
     text-align: center;
-    z-index: 2;
+    z-index: 4;
     font-size: clamp(0.9rem, 2.5vw, 1.2rem);
     color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
   }
 </style>
 </head>
 <body>
-<div class="ground"></div>
-<main>
-  <div class="prompt" id="prompt">Click or press SPACE to start!</div>
-  <div class="stage" id="stage">🐑</div>
-  <div class="word" id="word"></div>
-</main>
-<div class="hint">Click or press SPACE</div>
-
+  <!-- Grass -->
+  <div class="ground"></div>
+  <!-- Sheep running area -->
+  <div id="lane"></div>
+  <!-- Main game -->
+  <main>
+    <div class="prompt" id="prompt">
+      Click or press SPACE to start!
+    </div>
+    <div class="stage" id="stage">
+      🐑
+    </div>
+    <div class="word" id="word"></div>
+  </main>
+  <!-- Instructions -->
+  <div class="hint">
+    Click or press SPACE
+  </div>
 <script>
-  const words = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty"];
+  /*
+    Number words
+  */
+  const words = [
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+    "twenty"
+  ];
+  /*
+    Game range
+  */
   const MIN = 1;
   const MAX = 10;
-
+  /*
+    Elements
+  */
   const stage = document.getElementById("stage");
   const prompt = document.getElementById("prompt");
   const word = document.getElementById("word");
-
+  const lane = document.getElementById("lane");
+  /*
+    Game state
+  */
   let state = "start";
   let count = 0;
   let last = 0;
-
+  /*
+    Pick a random number.
+    Prevents the same number appearing
+    twice in a row.
+  */
   function randomCount() {
     let n;
     do {
-      n = Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
+      n =
+        Math.floor(
+          Math.random() * (MAX - MIN + 1)
+        ) + MIN;
     } while (n === last);
     last = n;
     return n;
   }
-
+  /*
+    Show the sheep.
+    The sheep are created in the bottom
+    running lane rather than in the centre
+    of the screen.
+  */
   function showSheep() {
     count = randomCount();
+    /*
+      Clear previous content.
+    */
     stage.innerHTML = "";
+    lane.innerHTML = "";
     word.textContent = "";
+    /*
+      How long each sheep takes to cross
+      the screen.
+      A longer time makes the movement
+      easier for children to follow.
+    */
+    const runTime = 3.5;
+    /*
+      Time between sheep.
+    */
+    const sheepDelay = 0.55;
+    /*
+      Create each sheep.
+    */
     for (let i = 0; i < count; i++) {
-      const s = document.createElement("span");
-      s.className = "sheep";
-      s.textContent = "🐑";
-      s.style.animationDelay = (i * 0.08) + "s";
-      stage.appendChild(s);
+      const sheep = document.createElement("span");
+      sheep.className = "sheep";
+      /*
+        Inner element handles the jumping.
+      */
+      const hopper = document.createElement("span");
+      hopper.className = "hopper";
+      hopper.textContent = "🐑";
+      sheep.appendChild(hopper);
+      /*
+        Tell CSS how long the sheep should
+        take to cross the screen.
+      */
+      sheep.style.setProperty(
+        "--run-time",
+        runTime + "s"
+      );
+      /*
+        Each sheep starts slightly after
+        the previous sheep.
+      */
+      sheep.style.animationDelay =
+        (i * sheepDelay) + "s";
+      /*
+        Add sheep to the running lane.
+      */
+      lane.appendChild(sheep);
     }
+    /*
+      Update instructions.
+    */
     prompt.textContent = "How many sheep? 🐑";
     state = "sheep";
   }
-
+  /*
+    Show the answer.
+  */
   function showAnswer() {
+    /*
+      Remove the running sheep.
+    */
     stage.innerHTML = "";
-    const a = document.createElement("div");
-    a.className = "answer";
-    a.textContent = count;
-    stage.appendChild(a);
+    lane.innerHTML = "";
+    /*
+      Create large answer number.
+    */
+    const answer = document.createElement("div");
+    answer.className = "answer";
+    answer.textContent = count;
+    stage.appendChild(answer);
+    /*
+      Show number as a word.
+    */
     word.textContent = words[count];
+    /*
+      Update prompt.
+    */
     prompt.textContent = "There are...";
     state = "answer";
   }
-
+  /*
+    Move to the next game state.
+  */
   function advance() {
     if (state === "sheep") {
       showAnswer();
@@ -176,14 +390,27 @@
       showSheep();
     }
   }
-
+  /*
+    Keyboard controls.
+    SPACE starts the game, reveals the
+    answer, and starts the next round.
+  */
   document.addEventListener("keydown", function (e) {
     if (e.code === "Space") {
       e.preventDefault();
-      if (!e.repeat) advance();
+      /*
+        Prevent holding SPACE from rapidly
+        advancing multiple times.
+      */
+      if (!e.repeat) {
+        advance();
+      }
     }
   });
-
+  /*
+    Mouse / touch controls.
+    Clicking anywhere advances the game.
+  */
   document.addEventListener("click", advance);
 </script>
 </body>
