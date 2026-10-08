@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Count the Sheep!</title>
+<style>
+  :root {
+    --sky-top: #7ec8f5;
+    --sky-bottom: #d9f2ff;
+    --grass: #7bc96f;
+    --text: #1f3b5c;
+    --card: rgba(255, 255, 255, 0.85);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --sky-top: #1b2a5c;
+      --sky-bottom: #3b4f8f;
+      --grass: #2f6b3a;
+      --text: #fdfdfd;
+      --card: rgba(20, 30, 60, 0.7);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: "Comic Sans MS", "Chalkboard SE", "Trebuchet MS", sans-serif;
+    color: var(--text);
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+  }
+  body {
+    background: linear-gradient(var(--sky-top), var(--sky-bottom) 70%);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .ground {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: 22%;
+    background: var(--grass);
+    border-top-left-radius: 50% 40px;
+    border-top-right-radius: 50% 40px;
+    z-index: 0;
+  }
+  main {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    text-align: center;
+  }
+  .prompt {
+    background: var(--card);
+    border-radius: 999px;
+    padding: 10px 28px;
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    margin-bottom: 20px;
+  }
+  .stage {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px 10px;
+    max-width: 900px;
+    min-height: 40vh;
+    font-size: clamp(3rem, 11vw, 6.5rem);
+    line-height: 1.1;
+  }
+  .sheep {
+    display: inline-block;
+    animation: pop 0.35s ease-out backwards;
+  }
+  @keyframes pop {
+    from { transform: scale(0) rotate(-20deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .answer {
+    font-size: clamp(8rem, 38vw, 22rem);
+    font-weight: bold;
+    line-height: 1;
+    animation: bounce 0.5s ease-out;
+    text-shadow: 0 6px 0 rgba(0,0,0,0.12);
+  }
+  .word {
+    font-size: clamp(2rem, 8vw, 4.5rem);
+    margin-top: 8px;
+    animation: bounce 0.5s ease-out;
+  }
+  @keyframes bounce {
+    0% { transform: scale(0.2); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .hint {
+    position: fixed;
+    bottom: 14px;
+    left: 0; right: 0;
+    text-align: center;
+    z-index: 2;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  }
+</style>
+</head>
+<body>
+<div class="ground"></div>
+<main>
+  <div class="prompt" id="prompt">Click or press SPACE to start!</div>
+  <div class="stage" id="stage">🐑</div>
+  <div class="word" id="word"></div>
+</main>
+<div class="hint">Click or press SPACE</div>
+
+<script>
+  const words = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty"];
+  const MIN = 1;
+  const MAX = 10;
+
+  const stage = document.getElementById("stage");
+  const prompt = document.getElementById("prompt");
+  const word = document.getElementById("word");
+
+  let state = "start";
+  let count = 0;
+  let last = 0;
+
+  function randomCount() {
+    let n;
+    do {
+      n = Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
+    } while (n === last);
+    last = n;
+    return n;
+  }
+
+  function showSheep() {
+    count = randomCount();
+    stage.innerHTML = "";
+    word.textContent = "";
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement("span");
+      s.className = "sheep";
+      s.textContent = "🐑";
+      s.style.animationDelay = (i * 0.08) + "s";
+      stage.appendChild(s);
+    }
+    prompt.textContent = "How many sheep? 🐑";
+    state = "sheep";
+  }
+
+  function showAnswer() {
+    stage.innerHTML = "";
+    const a = document.createElement("div");
+    a.className = "answer";
+    a.textContent = count;
+    stage.appendChild(a);
+    word.textContent = words[count];
+    prompt.textContent = "There are...";
+    state = "answer";
+  }
+
+  function advance() {
+    if (state === "sheep") {
+      showAnswer();
+    } else {
+      showSheep();
+    }
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.code === "Space") {
+      e.preventDefault();
+      if (!e.repeat) advance();
+    }
+  });
+
+  document.addEventListener("click", advance);
+</script>
+</body>
+</html>
