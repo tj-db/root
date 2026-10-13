@@ -103,6 +103,9 @@ button.on .dot { background: var(--live); animation: pulse 1.2s ease-in-out infi
       <option value="zh">中文</option>
     </select>
   </label>
+  <label>Accent
+    <select id="accent"></select>
+  </label>
   <button id="toggle" type="button"><span class="dot"></span><span id="toggleText">Start listening</span></button>
 </div>
 <main class="stage" aria-live="polite">
@@ -119,6 +122,34 @@ const statusEl = document.getElementById("status");
 const toggleBtn = document.getElementById("toggle");
 const toggleText = document.getElementById("toggleText");
 const langSel = document.getElementById("lang");
+
+const accentSel = document.getElementById("accent");
+const ACCENTS = {
+  en: [
+    ["en-US", "US"],
+    ["en-GB", "UK"],
+    ["en-SG", "Singapore"],
+    ["en-HK", "Hong Kong"],
+    ["en-IN", "India"],
+    ["en-AU", "Australia"],
+    ["en-PH", "Philippines"]
+  ],
+  zh: [
+    ["zh-TW", "台灣國語"],
+    ["zh-HK", "粵語 (香港)"]
+  ]
+};
+
+function populateAccents() {
+  accentSel.innerHTML = "";
+  ACCENTS[langSel.value].forEach(([code, label]) => {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = label;
+    accentSel.appendChild(opt);
+  });
+}
+populateAccents();
 
 let rec = null;
 let running = false;
@@ -210,7 +241,7 @@ function buildRecognizer() {
   const r = new SR();
   r.continuous = true;
   r.interimResults = true;
-  r.lang = langSel.value === "en" ? "en-US" : "zh-TW";
+  r.lang = accentSel.value;
   r.onresult = handleResult;
   r.onerror = (e) => {
     if (e.error === "not-allowed" || e.error === "service-not-allowed") {
@@ -260,7 +291,7 @@ function stop() {
 
 toggleBtn.addEventListener("click", () => (running ? stop() : start()));
 
-langSel.addEventListener("change", () => {
+function restartIfRunning() {
   enEl.textContent = "";
   zhEl.textContent = "";
   seq++;
@@ -270,7 +301,14 @@ langSel.addEventListener("change", () => {
     try { old.abort(); } catch (e) {}
     start();
   }
+}
+
+langSel.addEventListener("change", () => {
+  populateAccents();
+  restartIfRunning();
 });
+
+accentSel.addEventListener("change", restartIfRunning);
 
 if (!SR) {
   toggleBtn.disabled = true;
