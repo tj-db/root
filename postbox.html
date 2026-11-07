@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
-    <meta name="`apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icons/512x512.png">
     <title>POSTBOX</title>
@@ -63,7 +63,7 @@
         display: flex;
         gap: 1rem;
         justify-content: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
       }
       input, button {
         padding: 0.5rem 1rem;
@@ -84,9 +84,17 @@
       button:hover {
         opacity: 0.9;
       }
+      .message {
+        min-height: 1.5rem;
+        margin: 0.5rem 0 1rem;
+        color: var(--accent);
+      }
+      .message.error {
+        color: var(--error);
+      }
       .file-transfer {
         display: none;
-        margin-top: 2rem;
+        margin-top: 1rem;
       }
       .file-list {
         margin-top: 1rem;
@@ -100,6 +108,33 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 1rem;
+        text-align: left;
+      }
+      .file-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .file-name {
+        word-break: break-all;
+      }
+      .file-status {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-top: 0.2rem;
+      }
+      .file-status.error {
+        color: var(--error);
+        opacity: 1;
+      }
+      .file-actions a {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 16px;
+        background-color: var(--accent);
+        color: white;
+        text-decoration: none;
+        font-size: 0.9rem;
       }
       .progress-bar {
         height: 5px;
@@ -113,10 +148,6 @@
         background-color: var(--accent);
         width: 0%;
         transition: width 0.3s;
-      }
-      .error {
-        color: var(--error);
-        margin: 1rem 0;
       }
       #refresh-btn {
         display: inline-flex;
@@ -145,14 +176,14 @@
       </div>
       <div id="connect-section">
         <div class="connect-form">
-          <input type="text" id="connect-id" placeholder="Connect to ID no." maxlength="4" pattern="\d{4}">
+          <input type="text" id="connect-id" placeholder="Connect to ID no." maxlength="4" inputmode="numeric" pattern="\d{4}">
           <button id="connect-btn">Join</button>
         </div>
       </div>
+      <div id="message" class="message" role="status" aria-live="polite"></div>
       <div class="file-transfer" id="file-transfer">
         <input type="file" id="file-input" multiple style="display: none">
         <button id="select-files">Select Files</button>
-        <div id="error" class="error"></div>
         <ul class="file-list" id="file-list"></ul>
       </div>
       <button id="refresh-btn" aria-label="Refresh">
@@ -160,12 +191,56 @@
       </button>
     </div>
     <script>
+      const CHUNK_SIZE = 16384;
+      const MAX_BUFFERED = 1024 * 1024;
+      const FRAME_HEADER = 12;
+
       let peer = null;
       let conn = null;
-      let chunks = {};
+      let nextFileId = 1;
+      const incoming = new Map();
+      const items = new Map();
+      const objectUrls = [];
+
+      const crcTable = (() => {
+        const table = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let k = 0; k < 8; k++) {
+            c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+          }
+          table[i] = c >>> 0;
+        }
+        return table;
+      })();
+
+      function crc32Update(crc, bytes) {
+        for (let i = 0; i < bytes.length; i++) {
+          crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        }
+        return crc >>> 0;
+      }
+
+      function crc32Finish(crc) {
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
 
       function generatePeerId() {
         return Math.floor(1000 + Math.random() * 9000).toString();
+      }
+
+      function showMessage(text, isError) {
+        const el = document.getElementById('message');
+        el.textContent = text;
+        el.classList.toggle('error', Boolean(isError));
+      }
+
+      function showFileTransfer(visible) {
+        document.getElementById('file-transfer').style.display = visible ? 'block' : 'none';
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
       }
 
       function initializePeer() {
@@ -177,154 +252,338 @@
         });
 
         peer.on('connection', (connection) => {
-          conn = connection;
-          setupConnection();
-          showFileTransfer();
+          if (conn && conn.open) {
+            connection.on('open', () => connection.close());
+            return;
+          }
+          attachConnection(connection);
         });
 
         peer.on('error', (error) => {
-          document.getElementById('error').textContent = `Error: ${error.message}`;
-        });
-      }
-
-      function setupConnection() {
-        conn.on('data', (data) => {
-          if (data.type === 'file-header') {
-            chunks[data.fileId] = {
-              chunks: [],
-              name: data.fileName,
-              size: data.fileSize,
-              received: 0
-            };
-            addFileToList(data.fileId, data.fileName, 'receiving');
-          } else if (data.type === 'file-chunk') {
-            receiveChunk(data);
+          if (error.type === 'peer-unavailable') {
+            showMessage('No peer found with that ID', true);
+          } else {
+            showMessage(`Error: ${error.message || error.type}`, true);
           }
         });
       }
 
-      function connectToPeer() {
-        const connectId = document.getElementById('connect-id').value;
-        if (connectId.length !== 4) {
-          document.getElementById('error').textContent = 'Please enter a valid 4-digit Peer ID';
-          return;
-        }
+      function attachConnection(connection) {
+        connection.on('open', () => {
+          if (conn && conn !== connection && conn.open) {
+            connection.close();
+            return;
+          }
+          conn = connection;
+          showMessage('Connected successfully!', false);
+          showFileTransfer(true);
+        });
 
-        conn = peer.connect(connectId);
-        conn.on('open', () => {
-          setupConnection();
-          document.getElementById('error').textContent = 'Connected successfully!';
-          showFileTransfer();
+        connection.on('data', handleData);
+
+        connection.on('close', () => handleDisconnect(connection));
+
+        connection.on('error', (error) => {
+          showMessage(`Connection error: ${error.message || error.type}`, true);
+          handleDisconnect(connection);
         });
       }
 
-      function showFileTransfer() {
-        document.getElementById('file-transfer').style.display = 'block';
+      function handleDisconnect(connection) {
+        if (connection !== conn) return;
+        conn = null;
+        incoming.clear();
+        items.clear();
+        document.getElementById('file-list').replaceChildren();
+        objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+        showFileTransfer(false);
+        showMessage('Connection closed', true);
       }
 
-      function addFileToList(fileId, fileName, type) {
-        const li = document.createElement('li');
-        li.className = 'file-item';
-        li.id = `file-${fileId}`;
-        li.innerHTML = `
-          <div>
-            <div>${fileName}</div>
-            <div class="progress-bar">
-              <div class="progress" id="progress-${fileId}"></div>
-            </div>
-          </div>
-        `;
-        document.getElementById('file-list').appendChild(li);
-      }
-
-      function updateProgress(fileId, progress) {
-        const progressBar = document.getElementById(`progress-${fileId}`);
-        if (progressBar) {
-          progressBar.style.width = `${progress}%`;
+      function handleData(data) {
+        if (typeof data === 'string') {
+          let message;
+          try {
+            message = JSON.parse(data);
+          } catch (error) {
+            return;
+          }
+          if (!message || typeof message !== 'object') return;
+          if (message.type === 'file-header') {
+            receiveHeader(message);
+          } else if (message.type === 'file-end') {
+            receiveEnd(message);
+          } else if (message.type === 'file-result') {
+            receiveResult(message);
+          }
+        } else if (data instanceof ArrayBuffer) {
+          receiveFrame(data);
+        } else if (ArrayBuffer.isView(data)) {
+          receiveFrame(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
         }
       }
 
-      function sendFile(file) {
-        const fileId = Math.random().toString(36).substr(2, 9);
-        const chunkSize = 16384;
+      function connectToPeer() {
+        if (!peer || !peer.open) {
+          showMessage('Still connecting to the server, try again in a moment', true);
+          return;
+        }
+        if (conn && conn.open) {
+          showMessage('Already connected', true);
+          return;
+        }
+        const connectId = document.getElementById('connect-id').value.trim();
+        if (!/^\d{4}$/.test(connectId)) {
+          showMessage('Please enter a valid 4-digit Peer ID', true);
+          return;
+        }
+        if (connectId === peer.id) {
+          showMessage('You cannot connect to yourself', true);
+          return;
+        }
+        showMessage('Connecting...', false);
+        attachConnection(peer.connect(connectId, { reliable: true, serialization: 'raw' }));
+      }
 
-        conn.send({
+      function addFileToList(key, fileName, statusText) {
+        const li = document.createElement('li');
+        li.className = 'file-item';
+
+        const info = document.createElement('div');
+        info.className = 'file-info';
+
+        const name = document.createElement('div');
+        name.className = 'file-name';
+        name.textContent = fileName;
+
+        const status = document.createElement('div');
+        status.className = 'file-status';
+        status.textContent = statusText;
+
+        const bar = document.createElement('div');
+        bar.className = 'progress-bar';
+
+        const progress = document.createElement('div');
+        progress.className = 'progress';
+        bar.appendChild(progress);
+
+        info.append(name, status, bar);
+
+        const actions = document.createElement('div');
+        actions.className = 'file-actions';
+
+        li.append(info, actions);
+        document.getElementById('file-list').appendChild(li);
+        items.set(key, { progress, status, actions });
+      }
+
+      function updateProgress(key, percent) {
+        const item = items.get(key);
+        if (item) item.progress.style.width = `${Math.min(100, percent)}%`;
+      }
+
+      function setStatus(key, text, isError) {
+        const item = items.get(key);
+        if (!item) return;
+        item.status.textContent = text;
+        item.status.classList.toggle('error', Boolean(isError));
+      }
+
+      async function waitForBuffer(connection) {
+        const channel = connection.dataChannel;
+        if (!channel) return;
+        while (connection.open && channel.bufferedAmount > MAX_BUFFERED) {
+          await sleep(50);
+        }
+      }
+
+      async function sendFile(file, connection) {
+        const fileId = nextFileId++;
+        const key = `s${fileId}`;
+
+        connection.send(JSON.stringify({
           type: 'file-header',
           fileId: fileId,
           fileName: file.name,
           fileSize: file.size
-        });
+        }));
 
-        addFileToList(fileId, file.name, 'sending');
+        addFileToList(key, file.name, 'Sending...');
 
         let offset = 0;
-        function readChunk() {
-          const reader = new FileReader();
-          const blob = file.slice(offset, offset + chunkSize);
-
-          reader.onload = (e) => {
-            conn.send({
-              type: 'file-chunk',
-              fileId: fileId,
-              chunk: e.target.result,
-              offset: offset
-            });
-
-            offset += blob.size;
-            const progress = (offset / file.size) * 100;
-            updateProgress(fileId, progress);
-
-            if (offset < file.size) {
-              readChunk();
+        let crc = 0xFFFFFFFF;
+        try {
+          while (offset < file.size) {
+            if (!connection.open || connection !== conn) {
+              throw new Error('Connection lost');
             }
-          };
-
-          reader.readAsArrayBuffer(blob);
+            await waitForBuffer(connection);
+            const payload = new Uint8Array(await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer());
+            const frame = new Uint8Array(FRAME_HEADER + payload.byteLength);
+            const view = new DataView(frame.buffer);
+            view.setUint32(0, fileId);
+            view.setFloat64(4, offset);
+            frame.set(payload, FRAME_HEADER);
+            crc = crc32Update(crc, payload);
+            connection.send(frame.buffer);
+            offset += payload.byteLength;
+            updateProgress(key, (offset / file.size) * 100);
+          }
+          connection.send(JSON.stringify({
+            type: 'file-end',
+            fileId: fileId,
+            crc: crc32Finish(crc)
+          }));
+          updateProgress(key, 100);
+          setStatus(key, 'Sent, waiting for confirmation...');
+        } catch (error) {
+          setStatus(key, 'Failed', true);
         }
-
-        readChunk();
       }
 
-      function receiveChunk(data) {
-        const fileInfo = chunks[data.fileId];
-        if (!fileInfo) return;
+      function receiveHeader(data) {
+        if (!Number.isInteger(data.fileId) || incoming.has(data.fileId)) return;
+        const name = typeof data.fileName === 'string' && data.fileName ? data.fileName : 'file';
+        const size = Number(data.fileSize);
+        if (!Number.isFinite(size) || size < 0) return;
 
-        fileInfo.chunks.push(data.chunk);
-        fileInfo.received += data.chunk.byteLength;
+        incoming.set(data.fileId, {
+          chunks: new Map(),
+          name: name,
+          size: size,
+          received: 0,
+          crc: null
+        });
+        addFileToList(`r${data.fileId}`, name, 'Receiving...');
+      }
 
-        const progress = (fileInfo.received / fileInfo.size) * 100;
-        updateProgress(data.fileId, progress);
+      function receiveFrame(buffer) {
+        if (buffer.byteLength <= FRAME_HEADER) return;
+        const view = new DataView(buffer);
+        const fileId = view.getUint32(0);
+        const offset = view.getFloat64(4);
+        const info = incoming.get(fileId);
+        if (!info) return;
 
-        if (fileInfo.received === fileInfo.size) {
-          const blob = new Blob(fileInfo.chunks);
-          const url = URL.createObjectURL(blob);
-
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = fileInfo.name;
-          a.click();
-
-          delete chunks[data.fileId];
+        const payload = new Uint8Array(buffer, FRAME_HEADER);
+        if (!(offset >= 0) || offset + payload.byteLength > info.size) {
+          failReceive(fileId, 'Corrupted, please resend');
+          return;
         }
+        if (info.chunks.has(offset)) return;
+
+        info.chunks.set(offset, payload);
+        info.received += payload.byteLength;
+        updateProgress(`r${fileId}`, info.size ? (info.received / info.size) * 100 : 100);
+        tryFinish(fileId);
+      }
+
+      function receiveEnd(data) {
+        const info = incoming.get(data.fileId);
+        if (!info) return;
+        info.crc = Number(data.crc);
+        tryFinish(data.fileId);
+      }
+
+      function receiveResult(data) {
+        const key = `s${data.fileId}`;
+        if (data.ok) {
+          setStatus(key, 'Delivered');
+        } else {
+          setStatus(key, 'Corrupted on receiver, please resend', true);
+        }
+      }
+
+      function reportResult(fileId, ok) {
+        if (conn && conn.open) {
+          conn.send(JSON.stringify({ type: 'file-result', fileId: fileId, ok: ok }));
+        }
+      }
+
+      function failReceive(fileId, text) {
+        incoming.delete(fileId);
+        setStatus(`r${fileId}`, text, true);
+        reportResult(fileId, false);
+      }
+
+      function tryFinish(fileId) {
+        const info = incoming.get(fileId);
+        if (!info || info.crc === null || info.received < info.size) return;
+
+        const offsets = Array.from(info.chunks.keys()).sort((a, b) => a - b);
+        let crc = 0xFFFFFFFF;
+        let expected = 0;
+        let contiguous = true;
+        for (const offset of offsets) {
+          if (offset !== expected) {
+            contiguous = false;
+            break;
+          }
+          const chunk = info.chunks.get(offset);
+          crc = crc32Update(crc, chunk);
+          expected += chunk.byteLength;
+        }
+
+        if (!contiguous || expected !== info.size || crc32Finish(crc) !== info.crc) {
+          failReceive(fileId, 'Corrupted, please resend');
+          return;
+        }
+
+        incoming.delete(fileId);
+
+        const blob = new Blob(offsets.map((offset) => info.chunks.get(offset)));
+        const url = URL.createObjectURL(blob);
+        objectUrls.push(url);
+
+        const key = `r${fileId}`;
+        updateProgress(key, 100);
+        setStatus(key, 'Received');
+        reportResult(fileId, true);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = info.name;
+        link.textContent = 'Save';
+
+        const item = items.get(key);
+        if (item) item.actions.appendChild(link);
+
+        link.click();
       }
 
       document.getElementById('connect-btn').addEventListener('click', connectToPeer);
+
+      document.getElementById('connect-id').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') connectToPeer();
+      });
+
       document.getElementById('select-files').addEventListener('click', () => {
         document.getElementById('file-input').click();
       });
 
-      document.getElementById('file-input').addEventListener('change', (e) => {
-        if (!conn) {
-          document.getElementById('error').textContent = 'Please connect to a peer first';
+      document.getElementById('file-input').addEventListener('change', async (e) => {
+        const connection = conn;
+        if (!connection || !connection.open) {
+          showMessage('Please connect to a peer first', true);
+          e.target.value = '';
           return;
         }
 
-        Array.from(e.target.files).forEach(file => sendFile(file));
+        const files = Array.from(e.target.files);
         e.target.value = '';
+
+        for (const file of files) {
+          if (!connection.open || connection !== conn) break;
+          await sendFile(file, connection);
+        }
       });
 
       document.getElementById('refresh-btn').addEventListener('click', () => {
         location.reload();
+      });
+
+      window.addEventListener('pagehide', () => {
+        objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
       });
 
       initializePeer();
