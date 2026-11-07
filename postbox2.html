@@ -123,6 +123,10 @@
         opacity: 0.7;
         margin-top: 0.2rem;
       }
+      .file-status.error {
+        color: var(--error);
+        opacity: 1;
+      }
       .file-actions a {
         display: inline-block;
         padding: 0.5rem 1rem;
@@ -189,12 +193,37 @@
     <script>
       const CHUNK_SIZE = 16384;
       const MAX_BUFFERED = 1024 * 1024;
+      const FRAME_HEADER = 12;
 
       let peer = null;
       let conn = null;
+      let nextFileId = 1;
       const incoming = new Map();
       const items = new Map();
       const objectUrls = [];
+
+      const crcTable = (() => {
+        const table = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let k = 0; k < 8; k++) {
+            c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+          }
+          table[i] = c >>> 0;
+        }
+        return table;
+      })();
+
+      function crc32Update(crc, bytes) {
+        for (let i = 0; i < bytes.length; i++) {
+          crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        }
+        return crc >>> 0;
+      }
+
+      function crc32Finish(crc) {
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
 
       function generatePeerId() {
         return Math.floor(1000 + Math.random() * 9000).toString();
@@ -272,11 +301,25 @@
       }
 
       function handleData(data) {
-        if (!data || typeof data !== 'object') return;
-        if (data.type === 'file-header') {
-          receiveHeader(data);
-        } else if (data.type === 'file-chunk') {
-          receiveChunk(data);
+        if (typeof data === 'string') {
+          let message;
+          try {
+            message = JSON.parse(data);
+          } catch (error) {
+            return;
+          }
+          if (!message || typeof message !== 'object') return;
+          if (message.type === 'file-header') {
+            receiveHeader(message);
+          } else if (message.type === 'file-end') {
+            receiveEnd(message);
+          } else if (message.type === 'file-result') {
+            receiveResult(message);
+          }
+        } else if (data instanceof ArrayBuffer) {
+          receiveFrame(data);
+        } else if (ArrayBuffer.isView(data)) {
+          receiveFrame(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
         }
       }
 
@@ -299,10 +342,10 @@
           return;
         }
         showMessage('Connecting...', false);
-        attachConnection(peer.connect(connectId, { reliable: true }));
+        attachConnection(peer.connect(connectId, { reliable: true, serialization: 'raw' }));
       }
 
-      function addFileToList(fileId, fileName, statusText) {
+      function addFileToList(key, fileName, statusText) {
         const li = document.createElement('li');
         li.className = 'file-item';
 
@@ -331,17 +374,19 @@
 
         li.append(info, actions);
         document.getElementById('file-list').appendChild(li);
-        items.set(fileId, { progress, status, actions });
+        items.set(key, { progress, status, actions });
       }
 
-      function updateProgress(fileId, percent) {
-        const item = items.get(fileId);
+      function updateProgress(key, percent) {
+        const item = items.get(key);
         if (item) item.progress.style.width = `${Math.min(100, percent)}%`;
       }
 
-      function setStatus(fileId, text) {
-        const item = items.get(fileId);
-        if (item) item.status.textContent = text;
+      function setStatus(key, text, isError) {
+        const item = items.get(key);
+        if (!item) return;
+        item.status.textContent = text;
+        item.status.classList.toggle('error', Boolean(isError));
       }
 
       async function waitForBuffer(connection) {
@@ -353,85 +398,154 @@
       }
 
       async function sendFile(file, connection) {
-        const fileId = Math.random().toString(36).slice(2, 11);
+        const fileId = nextFileId++;
+        const key = `s${fileId}`;
 
-        connection.send({
+        connection.send(JSON.stringify({
           type: 'file-header',
           fileId: fileId,
           fileName: file.name,
           fileSize: file.size
-        });
+        }));
 
-        addFileToList(fileId, file.name, 'Sending...');
+        addFileToList(key, file.name, 'Sending...');
 
         let offset = 0;
+        let crc = 0xFFFFFFFF;
         try {
           while (offset < file.size) {
             if (!connection.open || connection !== conn) {
               throw new Error('Connection lost');
             }
             await waitForBuffer(connection);
-            const buffer = await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer();
-            connection.send({
-              type: 'file-chunk',
-              fileId: fileId,
-              chunk: buffer,
-              offset: offset
-            });
-            offset += buffer.byteLength;
-            updateProgress(fileId, (offset / file.size) * 100);
+            const payload = new Uint8Array(await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer());
+            const frame = new Uint8Array(FRAME_HEADER + payload.byteLength);
+            const view = new DataView(frame.buffer);
+            view.setUint32(0, fileId);
+            view.setFloat64(4, offset);
+            frame.set(payload, FRAME_HEADER);
+            crc = crc32Update(crc, payload);
+            connection.send(frame.buffer);
+            offset += payload.byteLength;
+            updateProgress(key, (offset / file.size) * 100);
           }
-          updateProgress(fileId, 100);
-          setStatus(fileId, 'Sent');
+          connection.send(JSON.stringify({
+            type: 'file-end',
+            fileId: fileId,
+            crc: crc32Finish(crc)
+          }));
+          updateProgress(key, 100);
+          setStatus(key, 'Sent, waiting for confirmation...');
         } catch (error) {
-          setStatus(fileId, 'Failed');
+          setStatus(key, 'Failed', true);
         }
       }
 
       function receiveHeader(data) {
-        if (typeof data.fileId !== 'string' || incoming.has(data.fileId)) return;
+        if (!Number.isInteger(data.fileId) || incoming.has(data.fileId)) return;
         const name = typeof data.fileName === 'string' && data.fileName ? data.fileName : 'file';
         const size = Number(data.fileSize);
         if (!Number.isFinite(size) || size < 0) return;
 
-        incoming.set(data.fileId, { chunks: [], name: name, size: size, received: 0 });
-        addFileToList(data.fileId, name, 'Receiving...');
-
-        if (size === 0) finishReceive(data.fileId);
+        incoming.set(data.fileId, {
+          chunks: new Map(),
+          name: name,
+          size: size,
+          received: 0,
+          crc: null
+        });
+        addFileToList(`r${data.fileId}`, name, 'Receiving...');
       }
 
-      function receiveChunk(data) {
-        const fileInfo = incoming.get(data.fileId);
-        if (!fileInfo || !data.chunk) return;
+      function receiveFrame(buffer) {
+        if (buffer.byteLength <= FRAME_HEADER) return;
+        const view = new DataView(buffer);
+        const fileId = view.getUint32(0);
+        const offset = view.getFloat64(4);
+        const info = incoming.get(fileId);
+        if (!info) return;
 
-        fileInfo.chunks.push(data.chunk);
-        fileInfo.received += data.chunk.byteLength;
+        const payload = new Uint8Array(buffer, FRAME_HEADER);
+        if (!(offset >= 0) || offset + payload.byteLength > info.size) {
+          failReceive(fileId, 'Corrupted, please resend');
+          return;
+        }
+        if (info.chunks.has(offset)) return;
 
-        updateProgress(data.fileId, (fileInfo.received / fileInfo.size) * 100);
+        info.chunks.set(offset, payload);
+        info.received += payload.byteLength;
+        updateProgress(`r${fileId}`, info.size ? (info.received / info.size) * 100 : 100);
+        tryFinish(fileId);
+      }
 
-        if (fileInfo.received >= fileInfo.size) {
-          finishReceive(data.fileId);
+      function receiveEnd(data) {
+        const info = incoming.get(data.fileId);
+        if (!info) return;
+        info.crc = Number(data.crc);
+        tryFinish(data.fileId);
+      }
+
+      function receiveResult(data) {
+        const key = `s${data.fileId}`;
+        if (data.ok) {
+          setStatus(key, 'Delivered');
+        } else {
+          setStatus(key, 'Corrupted on receiver, please resend', true);
         }
       }
 
-      function finishReceive(fileId) {
-        const fileInfo = incoming.get(fileId);
-        const item = items.get(fileId);
-        if (!fileInfo) return;
+      function reportResult(fileId, ok) {
+        if (conn && conn.open) {
+          conn.send(JSON.stringify({ type: 'file-result', fileId: fileId, ok: ok }));
+        }
+      }
+
+      function failReceive(fileId, text) {
+        incoming.delete(fileId);
+        setStatus(`r${fileId}`, text, true);
+        reportResult(fileId, false);
+      }
+
+      function tryFinish(fileId) {
+        const info = incoming.get(fileId);
+        if (!info || info.crc === null || info.received < info.size) return;
+
+        const offsets = Array.from(info.chunks.keys()).sort((a, b) => a - b);
+        let crc = 0xFFFFFFFF;
+        let expected = 0;
+        let contiguous = true;
+        for (const offset of offsets) {
+          if (offset !== expected) {
+            contiguous = false;
+            break;
+          }
+          const chunk = info.chunks.get(offset);
+          crc = crc32Update(crc, chunk);
+          expected += chunk.byteLength;
+        }
+
+        if (!contiguous || expected !== info.size || crc32Finish(crc) !== info.crc) {
+          failReceive(fileId, 'Corrupted, please resend');
+          return;
+        }
+
         incoming.delete(fileId);
 
-        const blob = new Blob(fileInfo.chunks);
+        const blob = new Blob(offsets.map((offset) => info.chunks.get(offset)));
         const url = URL.createObjectURL(blob);
         objectUrls.push(url);
 
-        updateProgress(fileId, 100);
-        setStatus(fileId, 'Received');
+        const key = `r${fileId}`;
+        updateProgress(key, 100);
+        setStatus(key, 'Received');
+        reportResult(fileId, true);
 
         const link = document.createElement('a');
         link.href = url;
-        link.download = fileInfo.name;
+        link.download = info.name;
         link.textContent = 'Save';
 
+        const item = items.get(key);
         if (item) item.actions.appendChild(link);
 
         link.click();
