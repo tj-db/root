@@ -127,6 +127,12 @@
         color: var(--error);
         opacity: 1;
       }
+      .file-actions {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
       .file-actions a {
         display: inline-block;
         padding: 0.5rem 1rem;
@@ -135,6 +141,13 @@
         color: white;
         text-decoration: none;
         font-size: 0.9rem;
+      }
+      .file-actions button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+      .file-actions button.secondary {
+        background-color: #555;
       }
       .progress-bar {
         height: 5px;
@@ -184,8 +197,8 @@
       <div class="file-transfer" id="file-transfer">
         <input type="file" id="file-input" multiple style="display: none">
         <button id="select-files">Select Files</button>
-        <ul class="file-list" id="file-list"></ul>
       </div>
+      <ul class="file-list" id="file-list"></ul>
       <button id="refresh-btn" aria-label="Refresh">
         <i class="fa fa-refresh" style="color: var(--accent);"></i>
       </button>
@@ -194,11 +207,16 @@
       const CHUNK_SIZE = 16384;
       const MAX_BUFFERED = 1024 * 1024;
       const FRAME_HEADER = 12;
+      const READY_TIMEOUT = 8000;
 
       let peer = null;
       let conn = null;
       let nextFileId = 1;
-      const incoming = new Map();
+      let nextKey = 1;
+      const outgoing = new Map();
+      const partials = new Map();
+      const incomingIds = new Map();
+      const pendingReady = new Map();
       const items = new Map();
       const objectUrls = [];
 
@@ -241,6 +259,14 @@
 
       function sleep(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function sendJson(payload) {
+        if (conn && conn.open) {
+          conn.send(JSON.stringify(payload));
+          return true;
+        }
+        return false;
       }
 
       function initializePeer() {
@@ -292,10 +318,28 @@
       function handleDisconnect(connection) {
         if (connection !== conn) return;
         conn = null;
-        incoming.clear();
-        items.clear();
-        document.getElementById('file-list').replaceChildren();
-        objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+
+        pendingReady.forEach((resolve) => resolve(null));
+        pendingReady.clear();
+
+        incomingIds.forEach((sig) => {
+          const info = partials.get(sig);
+          if (!info) return;
+          setStatus(info.key, `Interrupted at ${percent(info.received, info.size)}%`, true);
+          setActions(info.key, [
+            { label: 'Request resume', handler: () => requestResume(info.sig, false) },
+            { label: 'Request resend', secondary: true, handler: () => requestResume(info.sig, true) }
+          ]);
+        });
+        incomingIds.clear();
+
+        outgoing.forEach((entry) => {
+          if (!entry.awaiting) return;
+          entry.awaiting = false;
+          setStatus(entry.key, 'Connection lost before confirmation', true);
+          setSenderActions(entry);
+        });
+
         showFileTransfer(false);
         showMessage('Connection closed', true);
       }
@@ -309,12 +353,25 @@
             return;
           }
           if (!message || typeof message !== 'object') return;
-          if (message.type === 'file-header') {
-            receiveHeader(message);
-          } else if (message.type === 'file-end') {
-            receiveEnd(message);
-          } else if (message.type === 'file-result') {
-            receiveResult(message);
+          switch (message.type) {
+            case 'file-header':
+              receiveHeader(message);
+              break;
+            case 'file-ready':
+              receiveReady(message);
+              break;
+            case 'file-end':
+              receiveEnd(message);
+              break;
+            case 'file-result':
+              receiveResult(message);
+              break;
+            case 'resume-request':
+              receiveResumeRequest(message);
+              break;
+            case 'resume-unavailable':
+              receiveResumeUnavailable(message);
+              break;
           }
         } else if (data instanceof ArrayBuffer) {
           receiveFrame(data);
@@ -343,6 +400,10 @@
         }
         showMessage('Connecting...', false);
         attachConnection(peer.connect(connectId, { reliable: true, serialization: 'raw' }));
+      }
+
+      function percent(done, total) {
+        return total ? Math.min(100, Math.round((done / total) * 100)) : 100;
       }
 
       function addFileToList(key, fileName, statusText) {
@@ -377,9 +438,9 @@
         items.set(key, { progress, status, actions });
       }
 
-      function updateProgress(key, percent) {
+      function updateProgress(key, value) {
         const item = items.get(key);
-        if (item) item.progress.style.width = `${Math.min(100, percent)}%`;
+        if (item) item.progress.style.width = `${Math.min(100, value)}%`;
       }
 
       function setStatus(key, text, isError) {
@@ -387,6 +448,31 @@
         if (!item) return;
         item.status.textContent = text;
         item.status.classList.toggle('error', Boolean(isError));
+      }
+
+      function clearActions(key) {
+        const item = items.get(key);
+        if (item) item.actions.replaceChildren();
+      }
+
+      function setActions(key, buttons) {
+        const item = items.get(key);
+        if (!item) return;
+        item.actions.replaceChildren();
+        for (const spec of buttons) {
+          const button = document.createElement('button');
+          button.textContent = spec.label;
+          if (spec.secondary) button.className = 'secondary';
+          button.addEventListener('click', spec.handler);
+          item.actions.appendChild(button);
+        }
+      }
+
+      function setSenderActions(entry) {
+        setActions(entry.key, [
+          { label: 'Resume', handler: () => startTransfer(entry, false) },
+          { label: 'Resend', secondary: true, handler: () => startTransfer(entry, true) }
+        ]);
       }
 
       async function waitForBuffer(connection) {
@@ -397,22 +483,91 @@
         }
       }
 
-      async function sendFile(file, connection) {
+      function waitForReady(fileId) {
+        return new Promise((resolve) => {
+          const timer = setTimeout(() => {
+            pendingReady.delete(fileId);
+            resolve(null);
+          }, READY_TIMEOUT);
+          pendingReady.set(fileId, (offset) => {
+            clearTimeout(timer);
+            pendingReady.delete(fileId);
+            resolve(offset);
+          });
+        });
+      }
+
+      function signatureOf(file) {
+        return `${file.name}|${file.size}|${file.lastModified}`;
+      }
+
+      function getOrCreateEntry(file) {
+        const sig = signatureOf(file);
+        let entry = outgoing.get(sig);
+        if (entry) {
+          entry.file = file;
+          return entry;
+        }
+        entry = {
+          sig: sig,
+          file: file,
+          key: `s${nextKey++}`,
+          fileId: 0,
+          active: false,
+          awaiting: false
+        };
+        outgoing.set(sig, entry);
+        addFileToList(entry.key, file.name, 'Waiting...');
+        return entry;
+      }
+
+      async function startTransfer(entry, restart) {
+        const connection = conn;
+        if (!connection || !connection.open) {
+          showMessage('Please connect to a peer first', true);
+          return;
+        }
+        if (entry.active) return;
+
+        entry.active = true;
+        entry.awaiting = false;
+        const key = entry.key;
+        const file = entry.file;
         const fileId = nextFileId++;
-        const key = `s${fileId}`;
+        entry.fileId = fileId;
 
-        connection.send(JSON.stringify({
-          type: 'file-header',
-          fileId: fileId,
-          fileName: file.name,
-          fileSize: file.size
-        }));
-
-        addFileToList(key, file.name, 'Sending...');
+        clearActions(key);
+        setStatus(key, 'Negotiating...');
 
         let offset = 0;
-        let crc = 0xFFFFFFFF;
         try {
+          const ready = waitForReady(fileId);
+          connection.send(JSON.stringify({
+            type: 'file-header',
+            fileId: fileId,
+            sig: entry.sig,
+            fileName: file.name,
+            fileSize: file.size,
+            restart: Boolean(restart)
+          }));
+
+          const granted = await ready;
+          if (granted === null) throw new Error('No response');
+
+          let start = Math.max(0, Math.min(Number(granted) || 0, file.size));
+          if (start < file.size) start -= start % CHUNK_SIZE;
+
+          let crc = 0xFFFFFFFF;
+          for (let skipped = 0; skipped < start; skipped += CHUNK_SIZE) {
+            if (!connection.open || connection !== conn) throw new Error('Connection lost');
+            const end = Math.min(skipped + CHUNK_SIZE, start);
+            crc = crc32Update(crc, new Uint8Array(await file.slice(skipped, end).arrayBuffer()));
+          }
+
+          offset = start;
+          updateProgress(key, percent(offset, file.size));
+          setStatus(key, start > 0 ? `Resuming from ${percent(offset, file.size)}%...` : 'Sending...');
+
           while (offset < file.size) {
             if (!connection.open || connection !== conn) {
               throw new Error('Connection lost');
@@ -427,34 +582,88 @@
             crc = crc32Update(crc, payload);
             connection.send(frame.buffer);
             offset += payload.byteLength;
-            updateProgress(key, (offset / file.size) * 100);
+            updateProgress(key, percent(offset, file.size));
           }
+
           connection.send(JSON.stringify({
             type: 'file-end',
             fileId: fileId,
             crc: crc32Finish(crc)
           }));
+          entry.awaiting = true;
           updateProgress(key, 100);
           setStatus(key, 'Sent, waiting for confirmation...');
         } catch (error) {
-          setStatus(key, 'Failed', true);
+          setStatus(key, `Interrupted at ${percent(offset, file.size)}%`, true);
+          setSenderActions(entry);
+        } finally {
+          entry.active = false;
         }
       }
 
       function receiveHeader(data) {
-        if (!Number.isInteger(data.fileId) || incoming.has(data.fileId)) return;
-        const name = typeof data.fileName === 'string' && data.fileName ? data.fileName : 'file';
+        if (!Number.isInteger(data.fileId) || typeof data.sig !== 'string') return;
         const size = Number(data.fileSize);
         if (!Number.isFinite(size) || size < 0) return;
+        const name = typeof data.fileName === 'string' && data.fileName ? data.fileName : 'file';
 
-        incoming.set(data.fileId, {
-          chunks: new Map(),
-          name: name,
-          size: size,
-          received: 0,
-          crc: null
-        });
-        addFileToList(`r${data.fileId}`, name, 'Receiving...');
+        let info = partials.get(data.sig);
+        if (info && info.size !== size) {
+          setStatus(info.key, 'Superseded', true);
+          clearActions(info.key);
+          partials.delete(data.sig);
+          info = null;
+        }
+
+        if (!info) {
+          info = {
+            sig: data.sig,
+            key: `r${nextKey++}`,
+            name: name,
+            size: size,
+            chunks: new Map(),
+            received: 0,
+            crc: null,
+            fileId: data.fileId
+          };
+          partials.set(data.sig, info);
+          addFileToList(info.key, name, 'Receiving...');
+        } else if (data.restart) {
+          info.chunks.clear();
+          info.received = 0;
+        }
+
+        const prefix = contiguousPrefix(info);
+        for (const offset of Array.from(info.chunks.keys())) {
+          if (offset >= prefix) info.chunks.delete(offset);
+        }
+        info.received = prefix;
+        info.crc = null;
+
+        if (info.fileId !== data.fileId) incomingIds.delete(info.fileId);
+        info.fileId = data.fileId;
+        incomingIds.set(data.fileId, info.sig);
+
+        clearActions(info.key);
+        updateProgress(info.key, percent(info.received, info.size));
+        setStatus(info.key, prefix > 0 ? `Resuming from ${percent(prefix, info.size)}%...` : 'Receiving...');
+
+        sendJson({ type: 'file-ready', fileId: data.fileId, offset: prefix });
+      }
+
+      function contiguousPrefix(info) {
+        const offsets = Array.from(info.chunks.keys()).sort((a, b) => a - b);
+        let expected = 0;
+        for (const offset of offsets) {
+          if (offset !== expected) break;
+          expected += info.chunks.get(offset).byteLength;
+        }
+        return expected;
+      }
+
+      function receiveReady(data) {
+        const resolve = pendingReady.get(data.fileId);
+        if (resolve) resolve(Number(data.offset) || 0);
       }
 
       function receiveFrame(buffer) {
@@ -462,53 +671,93 @@
         const view = new DataView(buffer);
         const fileId = view.getUint32(0);
         const offset = view.getFloat64(4);
-        const info = incoming.get(fileId);
-        if (!info) return;
+        const sig = incomingIds.get(fileId);
+        const info = sig === undefined ? null : partials.get(sig);
+        if (!info || info.fileId !== fileId) return;
 
         const payload = new Uint8Array(buffer, FRAME_HEADER);
         if (!(offset >= 0) || offset + payload.byteLength > info.size) {
-          failReceive(fileId, 'Corrupted, please resend');
+          failReceive(info, 'Corrupted, please resend');
           return;
         }
         if (info.chunks.has(offset)) return;
 
         info.chunks.set(offset, payload);
         info.received += payload.byteLength;
-        updateProgress(`r${fileId}`, info.size ? (info.received / info.size) * 100 : 100);
-        tryFinish(fileId);
+        updateProgress(info.key, percent(info.received, info.size));
+        tryFinish(info);
       }
 
       function receiveEnd(data) {
-        const info = incoming.get(data.fileId);
+        const sig = incomingIds.get(data.fileId);
+        const info = sig === undefined ? null : partials.get(sig);
         if (!info) return;
         info.crc = Number(data.crc);
-        tryFinish(data.fileId);
+        tryFinish(info);
+      }
+
+      function findEntryByFileId(fileId) {
+        for (const entry of outgoing.values()) {
+          if (entry.fileId === fileId) return entry;
+        }
+        return null;
       }
 
       function receiveResult(data) {
-        const key = `s${data.fileId}`;
+        const entry = findEntryByFileId(data.fileId);
+        if (!entry) return;
+        entry.awaiting = false;
         if (data.ok) {
-          setStatus(key, 'Delivered');
+          setStatus(entry.key, 'Delivered');
+          clearActions(entry.key);
         } else {
-          setStatus(key, 'Corrupted on receiver, please resend', true);
+          setStatus(entry.key, 'Corrupted on receiver, please resend', true);
+          setActions(entry.key, [
+            { label: 'Resend', handler: () => startTransfer(entry, true) }
+          ]);
+        }
+      }
+
+      function receiveResumeRequest(data) {
+        const entry = typeof data.sig === 'string' ? outgoing.get(data.sig) : null;
+        if (!entry) {
+          sendJson({ type: 'resume-unavailable', sig: data.sig });
+          return;
+        }
+        startTransfer(entry, Boolean(data.restart));
+      }
+
+      function receiveResumeUnavailable(data) {
+        const info = partials.get(data.sig);
+        if (!info) return;
+        setStatus(info.key, 'Sender no longer has this file', true);
+      }
+
+      function requestResume(sig, restart) {
+        if (!sendJson({ type: 'resume-request', sig: sig, restart: Boolean(restart) })) {
+          showMessage('Please connect to a peer first', true);
         }
       }
 
       function reportResult(fileId, ok) {
-        if (conn && conn.open) {
-          conn.send(JSON.stringify({ type: 'file-result', fileId: fileId, ok: ok }));
-        }
+        sendJson({ type: 'file-result', fileId: fileId, ok: ok });
       }
 
-      function failReceive(fileId, text) {
-        incoming.delete(fileId);
-        setStatus(`r${fileId}`, text, true);
-        reportResult(fileId, false);
+      function failReceive(info, text) {
+        incomingIds.delete(info.fileId);
+        info.chunks.clear();
+        info.received = 0;
+        info.crc = null;
+        updateProgress(info.key, 0);
+        setStatus(info.key, text, true);
+        setActions(info.key, [
+          { label: 'Request resend', handler: () => requestResume(info.sig, true) }
+        ]);
+        reportResult(info.fileId, false);
       }
 
-      function tryFinish(fileId) {
-        const info = incoming.get(fileId);
-        if (!info || info.crc === null || info.received < info.size) return;
+      function tryFinish(info) {
+        if (info.crc === null || info.received < info.size) return;
 
         const offsets = Array.from(info.chunks.keys()).sort((a, b) => a - b);
         let crc = 0xFFFFFFFF;
@@ -525,27 +774,28 @@
         }
 
         if (!contiguous || expected !== info.size || crc32Finish(crc) !== info.crc) {
-          failReceive(fileId, 'Corrupted, please resend');
+          failReceive(info, 'Corrupted, please resend');
           return;
         }
 
-        incoming.delete(fileId);
+        partials.delete(info.sig);
+        incomingIds.delete(info.fileId);
 
         const blob = new Blob(offsets.map((offset) => info.chunks.get(offset)));
         const url = URL.createObjectURL(blob);
         objectUrls.push(url);
 
-        const key = `r${fileId}`;
-        updateProgress(key, 100);
-        setStatus(key, 'Received');
-        reportResult(fileId, true);
+        updateProgress(info.key, 100);
+        setStatus(info.key, 'Received');
+        reportResult(info.fileId, true);
 
         const link = document.createElement('a');
         link.href = url;
         link.download = info.name;
         link.textContent = 'Save';
 
-        const item = items.get(key);
+        clearActions(info.key);
+        const item = items.get(info.key);
         if (item) item.actions.appendChild(link);
 
         link.click();
@@ -574,7 +824,7 @@
 
         for (const file of files) {
           if (!connection.open || connection !== conn) break;
-          await sendFile(file, connection);
+          await startTransfer(getOrCreateEntry(file), false);
         }
       });
 
