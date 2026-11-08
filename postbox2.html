@@ -178,6 +178,24 @@
         opacity: 0.9;
         transform: rotate(360deg);
       }
+      #reset-btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+        background-color: transparent;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.8rem;
+        transition: opacity 0.2s;
+      }
+      .tools {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
     </style>
   </head>
   <body>
@@ -199,9 +217,14 @@
         <button id="select-files">Select Files</button>
       </div>
       <ul class="file-list" id="file-list"></ul>
-      <button id="refresh-btn" aria-label="Refresh">
-        <i class="fa fa-refresh" style="color: var(--accent);"></i>
-      </button>
+      <div class="tools">
+        <button id="refresh-btn" aria-label="Refresh">
+          <i class="fa fa-refresh" style="color: var(--accent);"></i>
+        </button>
+        <button id="reset-btn" aria-label="Reset all data" title="Reset all data">
+          <i class="fa fa-trash" style="color: var(--error);"></i>
+        </button>
+      </div>
     </div>
     <script>
       const CHUNK_SIZE = 16384;
@@ -372,10 +395,7 @@
           partials.set(info.sig, info);
           addFileToList(info.key, info.name, `Restored at ${percent(prefix, info.size)}%, waiting for sender`);
           updateProgress(info.key, percent(prefix, info.size));
-          setActions(info.key, [
-            { label: 'Request resume', handler: () => requestResume(info.sig, false) },
-            { label: 'Request resend', secondary: true, handler: () => requestResume(info.sig, true) }
-          ]);
+          setActions(info.key, receiverActions(info));
         }
       }
 
@@ -519,10 +539,7 @@
           const info = partials.get(sig);
           if (!info) return;
           setStatus(info.key, `Interrupted at ${percent(info.received, info.size)}%`, true);
-          setActions(info.key, [
-            { label: 'Request resume', handler: () => requestResume(info.sig, false) },
-            { label: 'Request resend', secondary: true, handler: () => requestResume(info.sig, true) }
-          ]);
+          setActions(info.key, receiverActions(info));
         });
         incomingIds.clear();
 
@@ -564,6 +581,12 @@
               break;
             case 'resume-unavailable':
               receiveResumeUnavailable(message);
+              break;
+            case 'cancel-send':
+              receiveCancelSend(message);
+              break;
+            case 'cancel-receive':
+              receiveCancelReceive(message);
               break;
           }
         } else if (data instanceof ArrayBuffer) {
@@ -628,7 +651,7 @@
 
         li.append(info, actions);
         document.getElementById('file-list').appendChild(li);
-        items.set(key, { progress, status, actions });
+        items.set(key, { li, progress, status, actions });
       }
 
       function updateProgress(key, value) {
@@ -661,11 +684,42 @@
         }
       }
 
+      function removeItem(key) {
+        const item = items.get(key);
+        if (!item) return;
+        item.li.remove();
+        items.delete(key);
+      }
+
       function setSenderActions(entry) {
         setActions(entry.key, [
           { label: 'Resume', handler: () => startTransfer(entry, false) },
-          { label: 'Resend', secondary: true, handler: () => startTransfer(entry, true) }
+          { label: 'Resend', secondary: true, handler: () => startTransfer(entry, true) },
+          { label: 'Cancel', secondary: true, handler: () => cancelSend(entry, true) }
         ]);
+      }
+
+      function receiverActions(info) {
+        return [
+          { label: 'Request resume', handler: () => requestResume(info.sig, false) },
+          { label: 'Request resend', secondary: true, handler: () => requestResume(info.sig, true) },
+          { label: 'Cancel', secondary: true, handler: () => cancelReceive(info, true) }
+        ];
+      }
+
+      function cancelSend(entry, notify) {
+        if (entry.active) return;
+        outgoing.delete(entry.sig);
+        removeItem(entry.key);
+        if (notify) sendJson({ type: 'cancel-send', sig: entry.sig });
+      }
+
+      function cancelReceive(info, notify) {
+        incomingIds.delete(info.fileId);
+        partials.delete(info.sig);
+        discardStored(info.sig);
+        removeItem(info.key);
+        if (notify) sendJson({ type: 'cancel-receive', sig: info.sig });
       }
 
       async function waitForBuffer(connection) {
@@ -915,7 +969,8 @@
         } else {
           setStatus(entry.key, 'Corrupted on receiver, please resend', true);
           setActions(entry.key, [
-            { label: 'Resend', handler: () => startTransfer(entry, true) }
+            { label: 'Resend', handler: () => startTransfer(entry, true) },
+            { label: 'Cancel', secondary: true, handler: () => cancelSend(entry, true) }
           ]);
         }
       }
@@ -933,6 +988,33 @@
         const info = partials.get(data.sig);
         if (!info) return;
         setStatus(info.key, 'Sender no longer has this file', true);
+        setActions(info.key, [
+          { label: 'Cancel', secondary: true, handler: () => cancelReceive(info, false) }
+        ]);
+      }
+
+      function receiveCancelSend(data) {
+        const info = typeof data.sig === 'string' ? partials.get(data.sig) : null;
+        if (!info) return;
+        incomingIds.delete(info.fileId);
+        partials.delete(info.sig);
+        discardStored(info.sig);
+        updateProgress(info.key, 0);
+        setStatus(info.key, 'Cancelled by sender', true);
+        setActions(info.key, [
+          { label: 'Dismiss', secondary: true, handler: () => removeItem(info.key) }
+        ]);
+      }
+
+      function receiveCancelReceive(data) {
+        const entry = typeof data.sig === 'string' ? outgoing.get(data.sig) : null;
+        if (!entry || entry.active) return;
+        entry.awaiting = false;
+        setStatus(entry.key, 'Cancelled by receiver', true);
+        setActions(entry.key, [
+          { label: 'Resend', handler: () => startTransfer(entry, true) },
+          { label: 'Dismiss', secondary: true, handler: () => cancelSend(entry, false) }
+        ]);
       }
 
       function requestResume(sig, restart) {
@@ -954,7 +1036,8 @@
         updateProgress(info.key, 0);
         setStatus(info.key, text, true);
         setActions(info.key, [
-          { label: 'Request resend', handler: () => requestResume(info.sig, true) }
+          { label: 'Request resend', handler: () => requestResume(info.sig, true) },
+          { label: 'Cancel', secondary: true, handler: () => cancelReceive(info, true) }
         ]);
         reportResult(info.fileId, false);
       }
@@ -1035,6 +1118,55 @@
       document.getElementById('refresh-btn').addEventListener('click', () => {
         location.reload();
       });
+
+      async function resetAll() {
+        if (!confirm('Clear all stored data? This removes unfinished transfers and your saved ID.')) return;
+
+        clearTimeout(flushTimer);
+        flushTimer = null;
+        writeQueue.length = 0;
+
+        if (conn) {
+          const connection = conn;
+          conn = null;
+          try {
+            connection.close();
+          } catch (error) {
+            showMessage('Connection closed', true);
+          }
+        }
+
+        try {
+          await flushing;
+        } catch (error) {
+          showMessage('Clearing storage', false);
+        }
+
+        const db = await openDb();
+        if (db) db.close();
+
+        await new Promise((resolve) => {
+          if (!('indexedDB' in window)) {
+            resolve();
+            return;
+          }
+          const request = indexedDB.deleteDatabase('postbox');
+          request.onsuccess = () => resolve();
+          request.onerror = () => resolve();
+          request.onblocked = () => resolve();
+        });
+
+        try {
+          localStorage.removeItem(PEER_ID_KEY);
+        } catch (error) {
+          showMessage('Clearing storage', false);
+        }
+
+        objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+        location.reload();
+      }
+
+      document.getElementById('reset-btn').addEventListener('click', resetAll);
 
       window.addEventListener('pagehide', () => {
         flushWrites();
