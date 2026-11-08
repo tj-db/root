@@ -219,6 +219,182 @@
       const pendingReady = new Map();
       const items = new Map();
       const objectUrls = [];
+      const PEER_ID_KEY = 'postbox-peer-id';
+      const FLUSH_BATCH = 64;
+      const FLUSH_DELAY = 300;
+      const writeQueue = [];
+      let flushTimer = null;
+      let flushing = Promise.resolve();
+      let dbPromise = null;
+      let idAttempts = 0;
+
+      function openDb() {
+        if (dbPromise) return dbPromise;
+        dbPromise = new Promise((resolve) => {
+          if (!('indexedDB' in window)) {
+            resolve(null);
+            return;
+          }
+          const request = indexedDB.open('postbox', 1);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            db.createObjectStore('meta', { keyPath: 'sig' });
+            db.createObjectStore('chunks');
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => resolve(null);
+          request.onblocked = () => resolve(null);
+        });
+        return dbPromise;
+      }
+
+      function transactionDone(tx) {
+        return new Promise((resolve) => {
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+          tx.onabort = () => resolve(false);
+        });
+      }
+
+      function chunkRange(sig, from) {
+        return IDBKeyRange.bound([sig, from], [sig, Infinity]);
+      }
+
+      function saveMeta(info) {
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('meta', 'readwrite');
+          tx.objectStore('meta').put({ sig: info.sig, name: info.name, size: info.size });
+          await transactionDone(tx);
+        });
+      }
+
+      function queueChunk(sig, offset, data) {
+        writeQueue.push({ sig: sig, offset: offset, data: data });
+        if (writeQueue.length >= FLUSH_BATCH) {
+          flushWrites();
+        } else if (!flushTimer) {
+          flushTimer = setTimeout(flushWrites, FLUSH_DELAY);
+        }
+      }
+
+      function flushWrites() {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+        if (!writeQueue.length) return flushing;
+        const batch = writeQueue.splice(0);
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('chunks', 'readwrite');
+          const store = tx.objectStore('chunks');
+          for (const item of batch) store.put(item.data, [item.sig, item.offset]);
+          await transactionDone(tx);
+        });
+        return flushing;
+      }
+
+      function deleteChunks(sig, from) {
+        for (let i = writeQueue.length - 1; i >= 0; i--) {
+          if (writeQueue[i].sig === sig && writeQueue[i].offset >= from) writeQueue.splice(i, 1);
+        }
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('chunks', 'readwrite');
+          tx.objectStore('chunks').delete(chunkRange(sig, from));
+          await transactionDone(tx);
+        });
+      }
+
+      function discardStored(sig) {
+        deleteChunks(sig, 0);
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('meta', 'readwrite');
+          tx.objectStore('meta').delete(sig);
+          await transactionDone(tx);
+        });
+      }
+
+      async function restorePartials() {
+        const db = await openDb();
+        if (!db) return;
+
+        const metas = await new Promise((resolve) => {
+          const request = db.transaction('meta').objectStore('meta').getAll();
+          request.onsuccess = () => resolve(request.result || []);
+          request.onerror = () => resolve([]);
+        });
+
+        for (const meta of metas) {
+          if (partials.has(meta.sig)) continue;
+          const chunks = new Map();
+          await new Promise((resolve) => {
+            const request = db.transaction('chunks').objectStore('chunks').openCursor(chunkRange(meta.sig, 0));
+            request.onsuccess = () => {
+              const cursor = request.result;
+              if (!cursor) {
+                resolve();
+                return;
+              }
+              const value = cursor.value instanceof Uint8Array ? cursor.value : new Uint8Array(cursor.value);
+              chunks.set(cursor.key[1], value);
+              cursor.continue();
+            };
+            request.onerror = () => resolve();
+          });
+
+          if (chunks.size === 0) {
+            discardStored(meta.sig);
+            continue;
+          }
+
+          const info = {
+            sig: meta.sig,
+            key: `r${nextKey++}`,
+            name: meta.name,
+            size: meta.size,
+            chunks: chunks,
+            received: 0,
+            crc: null,
+            fileId: 0
+          };
+          const prefix = contiguousPrefix(info);
+          for (const offset of Array.from(chunks.keys())) {
+            if (offset >= prefix) chunks.delete(offset);
+          }
+          deleteChunks(info.sig, prefix);
+          info.received = prefix;
+
+          partials.set(info.sig, info);
+          addFileToList(info.key, info.name, `Restored at ${percent(prefix, info.size)}%, waiting for sender`);
+          updateProgress(info.key, percent(prefix, info.size));
+          setActions(info.key, [
+            { label: 'Request resume', handler: () => requestResume(info.sig, false) },
+            { label: 'Request resend', secondary: true, handler: () => requestResume(info.sig, true) }
+          ]);
+        }
+      }
+
+      function storedPeerId() {
+        try {
+          const value = localStorage.getItem(PEER_ID_KEY);
+          return /^\d{4}$/.test(value || '') ? value : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function savePeerId(id) {
+        try {
+          localStorage.setItem(PEER_ID_KEY, id);
+        } catch (error) {
+          return;
+        }
+      }
 
       const crcTable = (() => {
         const table = new Uint32Array(256);
@@ -269,15 +445,24 @@
         return false;
       }
 
-      function initializePeer() {
-        const peerId = generatePeerId();
-        peer = new Peer(peerId);
+      function initializePeer(preferred) {
+        const peerId = preferred || storedPeerId() || generatePeerId();
+        const current = new Peer(peerId);
+        peer = current;
 
-        peer.on('open', (id) => {
+        current.on('open', (id) => {
+          idAttempts = 0;
+          savePeerId(id);
           document.getElementById('peer-id').textContent = id;
         });
 
-        peer.on('connection', (connection) => {
+        current.on('disconnected', () => {
+          setTimeout(() => {
+            if (peer === current && current.disconnected && !current.destroyed) current.reconnect();
+          }, 1000);
+        });
+
+        current.on('connection', (connection) => {
           if (conn && conn.open) {
             connection.on('open', () => connection.close());
             return;
@@ -285,7 +470,15 @@
           attachConnection(connection);
         });
 
-        peer.on('error', (error) => {
+        current.on('error', (error) => {
+          if (error.type === 'unavailable-id') {
+            idAttempts++;
+            const retrySame = idAttempts < 4;
+            document.getElementById('peer-id').textContent = 'Connecting...';
+            current.destroy();
+            setTimeout(() => initializePeer(retrySame ? peerId : generatePeerId()), retrySame ? 2000 : 0);
+            return;
+          }
           if (error.type === 'peer-unavailable') {
             showMessage('No peer found with that ID', true);
           } else {
@@ -612,6 +805,7 @@
           setStatus(info.key, 'Superseded', true);
           clearActions(info.key);
           partials.delete(data.sig);
+          discardStored(data.sig);
           info = null;
         }
 
@@ -627,16 +821,23 @@
             fileId: data.fileId
           };
           partials.set(data.sig, info);
+          saveMeta(info);
           addFileToList(info.key, name, 'Receiving...');
         } else if (data.restart) {
           info.chunks.clear();
           info.received = 0;
+          deleteChunks(info.sig, 0);
         }
 
         const prefix = contiguousPrefix(info);
+        let trimmed = false;
         for (const offset of Array.from(info.chunks.keys())) {
-          if (offset >= prefix) info.chunks.delete(offset);
+          if (offset >= prefix) {
+            info.chunks.delete(offset);
+            trimmed = true;
+          }
         }
+        if (trimmed) deleteChunks(info.sig, prefix);
         info.received = prefix;
         info.crc = null;
 
@@ -675,7 +876,7 @@
         const info = sig === undefined ? null : partials.get(sig);
         if (!info || info.fileId !== fileId) return;
 
-        const payload = new Uint8Array(buffer, FRAME_HEADER);
+        const payload = new Uint8Array(buffer.slice(FRAME_HEADER));
         if (!(offset >= 0) || offset + payload.byteLength > info.size) {
           failReceive(info, 'Corrupted, please resend');
           return;
@@ -684,6 +885,7 @@
 
         info.chunks.set(offset, payload);
         info.received += payload.byteLength;
+        queueChunk(info.sig, offset, payload);
         updateProgress(info.key, percent(info.received, info.size));
         tryFinish(info);
       }
@@ -748,6 +950,7 @@
         info.chunks.clear();
         info.received = 0;
         info.crc = null;
+        deleteChunks(info.sig, 0);
         updateProgress(info.key, 0);
         setStatus(info.key, text, true);
         setActions(info.key, [
@@ -780,6 +983,7 @@
 
         partials.delete(info.sig);
         incomingIds.delete(info.fileId);
+        discardStored(info.sig);
 
         const blob = new Blob(offsets.map((offset) => info.chunks.get(offset)));
         const url = URL.createObjectURL(blob);
@@ -833,9 +1037,19 @@
       });
 
       window.addEventListener('pagehide', () => {
+        flushWrites();
         objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
       });
 
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') flushWrites();
+      });
+
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
+      }
+
+      restorePartials();
       initializePeer();
 
       if ("serviceWorker" in navigator) {
