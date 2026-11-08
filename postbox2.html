@@ -242,14 +242,13 @@
       const pendingReady = new Map();
       const items = new Map();
       const objectUrls = [];
-      const PEER_ID_KEY = 'postbox-peer-id';
+      const LEGACY_PEER_ID_KEY = 'postbox-peer-id';
       const FLUSH_BATCH = 64;
       const FLUSH_DELAY = 300;
       const writeQueue = [];
       let flushTimer = null;
       let flushing = Promise.resolve();
       let dbPromise = null;
-      let idAttempts = 0;
 
       function openDb() {
         if (dbPromise) return dbPromise;
@@ -399,18 +398,9 @@
         }
       }
 
-      function storedPeerId() {
+      function removeLegacyPeerId() {
         try {
-          const value = localStorage.getItem(PEER_ID_KEY);
-          return /^\d{4}$/.test(value || '') ? value : null;
-        } catch (error) {
-          return null;
-        }
-      }
-
-      function savePeerId(id) {
-        try {
-          localStorage.setItem(PEER_ID_KEY, id);
+          localStorage.removeItem(LEGACY_PEER_ID_KEY);
         } catch (error) {
           return;
         }
@@ -465,14 +455,11 @@
         return false;
       }
 
-      function initializePeer(preferred) {
-        const peerId = preferred || storedPeerId() || generatePeerId();
-        const current = new Peer(peerId);
+      function initializePeer() {
+        const current = new Peer(generatePeerId());
         peer = current;
 
         current.on('open', (id) => {
-          idAttempts = 0;
-          savePeerId(id);
           document.getElementById('peer-id').textContent = id;
         });
 
@@ -492,11 +479,9 @@
 
         current.on('error', (error) => {
           if (error.type === 'unavailable-id') {
-            idAttempts++;
-            const retrySame = idAttempts < 4;
             document.getElementById('peer-id').textContent = 'Connecting...';
             current.destroy();
-            setTimeout(() => initializePeer(retrySame ? peerId : generatePeerId()), retrySame ? 2000 : 0);
+            initializePeer();
             return;
           }
           if (error.type === 'peer-unavailable') {
@@ -1120,7 +1105,7 @@
       });
 
       async function resetAll() {
-        if (!confirm('Clear all stored data? This removes unfinished transfers and your saved ID.')) return;
+        if (!confirm('Clear all stored data? This removes unfinished transfers.')) return;
 
         clearTimeout(flushTimer);
         flushTimer = null;
@@ -1156,11 +1141,7 @@
           request.onblocked = () => resolve();
         });
 
-        try {
-          localStorage.removeItem(PEER_ID_KEY);
-        } catch (error) {
-          showMessage('Clearing storage', false);
-        }
+        removeLegacyPeerId();
 
         objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
         location.reload();
@@ -1181,6 +1162,7 @@
         navigator.storage.persist().catch(() => {});
       }
 
+      removeLegacyPeerId();
       restorePartials();
       initializePeer();
 
