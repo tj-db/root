@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icons/512x512.png">
+    <title>POSTBOX</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <style>
+      :root {
+        --bg-primary: #1a1a1a;
+        --text-primary: #ffffff;
+        --accent: #4CAF50;
+        --error: #ff4444;
+        --card-bg: #2d2d2d;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      body {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+      }
+      .container {
+        max-width: 800px;
+        width: 100%;
+        background-color: var(--card-bg);
+        padding: 2rem;
+        border-radius: 22px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      h1 {
+        margin-bottom: 2rem;
+        color: var(--accent);
+        font-size: 3.3rem;
+      }
+      .status {
+        margin-bottom: 2rem;
+      }
+      .peer-id {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 1rem 0;
+        margin-bottom: 1rem;
+        color: var(--accent);
+      }
+      .connect-form {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+      }
+      input, button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 16px;
+        font-size: 1rem;
+      }
+      input {
+        background-color: #333;
+        color: var(--text-primary);
+      }
+      button {
+        background-color: var(--accent);
+        color: white;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      .message {
+        min-height: 1.5rem;
+        margin: 0.5rem 0 1rem;
+        color: var(--accent);
+      }
+      .message.error {
+        color: var(--error);
+      }
+      .file-transfer {
+        display: none;
+        margin-top: 1rem;
+      }
+      .file-list {
+        margin-top: 1rem;
+        list-style: none;
+      }
+      .file-item {
+        background-color: #333;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 11px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        text-align: left;
+      }
+      .file-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .file-name {
+        word-break: break-all;
+      }
+      .file-status {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        margin-top: 0.2rem;
+      }
+      .file-status.error {
+        color: var(--error);
+        opacity: 1;
+      }
+      .file-actions {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .file-actions a {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 16px;
+        background-color: var(--accent);
+        color: white;
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+      .file-actions button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+      .file-actions button.secondary {
+        background-color: #555;
+      }
+      .progress-bar {
+        height: 5px;
+        background-color: #444;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+      }
+      .progress {
+        height: 100%;
+        background-color: var(--accent);
+        width: 0%;
+        transition: width 0.3s;
+      }
+      #refresh-btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+        background-color: transparent;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 2.2rem;
+        transition: transform 1.1s ease, opacity 0.2s;
+      }
+      #refresh-btn:hover {
+        opacity: 0.9;
+        transform: rotate(360deg);
+      }
+      #reset-btn {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+        background-color: transparent;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.8rem;
+        transition: opacity 0.2s;
+      }
+      .tools {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>POSTBOX</h1>
+      <div id="host-section">
+        <div class="status"></div>
+        <div class="peer-id" id="peer-id">Connecting...</div>
+      </div>
+      <div id="connect-section">
+        <div class="connect-form">
+          <input type="text" id="connect-id" placeholder="Connect to ID no." maxlength="4" inputmode="numeric" pattern="\d{4}">
+          <button id="connect-btn">Join</button>
+        </div>
+      </div>
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+      <div class="file-transfer" id="file-transfer">
+        <input type="file" id="file-input" multiple style="display: none">
+        <button id="select-files">Select Files</button>
+      </div>
+      <input type="file" id="resume-input" style="display: none">
+      <ul class="file-list" id="file-list"></ul>
+      <div class="tools">
+        <button id="refresh-btn" aria-label="Refresh">
+          <i class="fa fa-refresh" style="color: var(--accent);"></i>
+        </button>
+        <button id="reset-btn" aria-label="Reset all data" title="Reset all data">
+          <i class="fa fa-trash" style="color: var(--error);"></i>
+        </button>
+      </div>
+    </div>
+    <script>
+      const CHUNK_SIZE = 16384;
+      const MAX_BUFFERED = 1024 * 1024;
+      const FRAME_HEADER = 12;
+      const READY_TIMEOUT = 8000;
+
+      let peer = null;
+      let conn = null;
+      let nextFileId = 1;
+      let nextKey = 1;
+      const outgoing = new Map();
+      const partials = new Map();
+      const incomingIds = new Map();
+      const pendingReady = new Map();
+      const items = new Map();
+      const objectUrls = [];
+      const LEGACY_PEER_ID_KEY = 'postbox-peer-id';
+      const FLUSH_BATCH = 64;
+      const FLUSH_DELAY = 300;
+      const writeQueue = [];
+      let flushTimer = null;
+      let flushing = Promise.resolve();
+      let dbPromise = null;
+
+      function openDb() {
+        if (dbPromise) return dbPromise;
+        dbPromise = new Promise((resolve) => {
+          if (!('indexedDB' in window)) {
+            resolve(null);
+            return;
+          }
+          const request = indexedDB.open('postbox', 2);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'sig' });
+            if (!db.objectStoreNames.contains('chunks')) db.createObjectStore('chunks');
+            if (!db.objectStoreNames.contains('outgoing')) db.createObjectStore('outgoing', { keyPath: 'sig' });
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => resolve(null);
+          request.onblocked = () => resolve(null);
+        });
+        return dbPromise;
+      }
+
+      function transactionDone(tx) {
+        return new Promise((resolve) => {
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+          tx.onabort = () => resolve(false);
+        });
+      }
+
+      function chunkRange(sig, from) {
+        return IDBKeyRange.bound([sig, from], [sig, Infinity]);
+      }
+
+      function saveMeta(info) {
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('meta', 'readwrite');
+          tx.objectStore('meta').put({ sig: info.sig, name: info.name, size: info.size });
+          await transactionDone(tx);
+        });
+      }
+
+      function saveOutgoing(entry) {
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('outgoing', 'readwrite');
+          tx.objectStore('outgoing').put({ sig: entry.sig, name: entry.name, size: entry.size });
+          await transactionDone(tx);
+        });
+      }
+
+      function deleteOutgoing(sig) {
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('outgoing', 'readwrite');
+          tx.objectStore('outgoing').delete(sig);
+          await transactionDone(tx);
+        });
+      }
+
+      async function restoreOutgoing() {
+        const db = await openDb();
+        if (!db) return;
+
+        const records = await new Promise((resolve) => {
+          const request = db.transaction('outgoing').objectStore('outgoing').getAll();
+          request.onsuccess = () => resolve(request.result || []);
+          request.onerror = () => resolve([]);
+        });
+
+        for (const record of records) {
+          if (outgoing.has(record.sig)) continue;
+          const entry = {
+            sig: record.sig,
+            name: record.name,
+            size: record.size,
+            file: null,
+            key: `s${nextKey++}`,
+            fileId: 0,
+            active: false,
+            awaiting: false
+          };
+          outgoing.set(entry.sig, entry);
+          addFileToList(entry.key, entry.name, 'Unfinished, choose the file again to resume');
+          setSenderActions(entry);
+        }
+      }
+
+      function queueChunk(sig, offset, data) {
+        writeQueue.push({ sig: sig, offset: offset, data: data });
+        if (writeQueue.length >= FLUSH_BATCH) {
+          flushWrites();
+        } else if (!flushTimer) {
+          flushTimer = setTimeout(flushWrites, FLUSH_DELAY);
+        }
+      }
+
+      function flushWrites() {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+        if (!writeQueue.length) return flushing;
+        const batch = writeQueue.splice(0);
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('chunks', 'readwrite');
+          const store = tx.objectStore('chunks');
+          for (const item of batch) store.put(item.data, [item.sig, item.offset]);
+          await transactionDone(tx);
+        });
+        return flushing;
+      }
+
+      function deleteChunks(sig, from) {
+        for (let i = writeQueue.length - 1; i >= 0; i--) {
+          if (writeQueue[i].sig === sig && writeQueue[i].offset >= from) writeQueue.splice(i, 1);
+        }
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('chunks', 'readwrite');
+          tx.objectStore('chunks').delete(chunkRange(sig, from));
+          await transactionDone(tx);
+        });
+      }
+
+      function discardStored(sig) {
+        deleteChunks(sig, 0);
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('meta', 'readwrite');
+          tx.objectStore('meta').delete(sig);
+          await transactionDone(tx);
+        });
+      }
+
+      async function restorePartials() {
+        const db = await openDb();
+        if (!db) return;
+
+        const metas = await new Promise((resolve) => {
+          const request = db.transaction('meta').objectStore('meta').getAll();
+          request.onsuccess = () => resolve(request.result || []);
+          request.onerror = () => resolve([]);
+        });
+
+        for (const meta of metas) {
+          if (partials.has(meta.sig)) continue;
+          const chunks = new Map();
+          await new Promise((resolve) => {
+            const request = db.transaction('chunks').objectStore('chunks').openCursor(chunkRange(meta.sig, 0));
+            request.onsuccess = () => {
+              const cursor = request.result;
+              if (!cursor) {
+                resolve();
+                return;
+              }
+              const value = cursor.value instanceof Uint8Array ? cursor.value : new Uint8Array(cursor.value);
+              chunks.set(cursor.key[1], value);
+              cursor.continue();
+            };
+            request.onerror = () => resolve();
+          });
+
+          if (chunks.size === 0) {
+            discardStored(meta.sig);
+            continue;
+          }
+
+          const info = {
+            sig: meta.sig,
+            key: `r${nextKey++}`,
+            name: meta.name,
+            size: meta.size,
+            chunks: chunks,
+            received: 0,
+            crc: null,
+            fileId: 0
+          };
+          const prefix = contiguousPrefix(info);
+          for (const offset of Array.from(chunks.keys())) {
+            if (offset >= prefix) chunks.delete(offset);
+          }
+          deleteChunks(info.sig, prefix);
+          info.received = prefix;
+
+          partials.set(info.sig, info);
+          addFileToList(info.key, info.name, `Restored at ${percent(prefix, info.size)}%, waiting for sender`);
+          updateProgress(info.key, percent(prefix, info.size));
+          setActions(info.key, receiverActions(info));
+        }
+      }
+
+      function removeLegacyPeerId() {
+        try {
+          localStorage.removeItem(LEGACY_PEER_ID_KEY);
+        } catch (error) {
+          return;
+        }
+      }
+
+      const crcTable = (() => {
+        const table = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let k = 0; k < 8; k++) {
+            c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+          }
+          table[i] = c >>> 0;
+        }
+        return table;
+      })();
+
+      function crc32Update(crc, bytes) {
+        for (let i = 0; i < bytes.length; i++) {
+          crc = crcTable[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+        }
+        return crc >>> 0;
+      }
+
+      function crc32Finish(crc) {
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+      }
+
+      function generatePeerId() {
+        return Math.floor(1000 + Math.random() * 9000).toString();
+      }
+
+      function showMessage(text, isError) {
+        const el = document.getElementById('message');
+        el.textContent = text;
+        el.classList.toggle('error', Boolean(isError));
+      }
+
+      function showFileTransfer(visible) {
+        document.getElementById('file-transfer').style.display = visible ? 'block' : 'none';
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function sendJson(payload) {
+        if (conn && conn.open) {
+          conn.send(JSON.stringify(payload));
+          return true;
+        }
+        return false;
+      }
+
+      function initializePeer() {
+        const current = new Peer(generatePeerId());
+        peer = current;
+
+        current.on('open', (id) => {
+          document.getElementById('peer-id').textContent = id;
+        });
+
+        current.on('disconnected', () => {
+          setTimeout(() => {
+            if (peer === current && current.disconnected && !current.destroyed) current.reconnect();
+          }, 1000);
+        });
+
+        current.on('connection', (connection) => {
+          if (conn && conn.open) {
+            connection.on('open', () => connection.close());
+            return;
+          }
+          attachConnection(connection);
+        });
+
+        current.on('error', (error) => {
+          if (error.type === 'unavailable-id') {
+            document.getElementById('peer-id').textContent = 'Connecting...';
+            current.destroy();
+            initializePeer();
+            return;
+          }
+          if (error.type === 'peer-unavailable') {
+            showMessage('No peer found with that ID', true);
+          } else {
+            showMessage(`Error: ${error.message || error.type}`, true);
+          }
+        });
+      }
+
+      function attachConnection(connection) {
+        connection.on('open', () => {
+          if (conn && conn !== connection && conn.open) {
+            connection.close();
+            return;
+          }
+          conn = connection;
+          showMessage('Connected successfully!', false);
+          showFileTransfer(true);
+        });
+
+        connection.on('data', handleData);
+
+        connection.on('close', () => handleDisconnect(connection));
+
+        connection.on('error', (error) => {
+          showMessage(`Connection error: ${error.message || error.type}`, true);
+          handleDisconnect(connection);
+        });
+      }
+
+      function handleDisconnect(connection) {
+        if (connection !== conn) return;
+        conn = null;
+
+        pendingReady.forEach((resolve) => resolve(null));
+        pendingReady.clear();
+
+        incomingIds.forEach((sig) => {
+          const info = partials.get(sig);
+          if (!info) return;
+          setStatus(info.key, `Interrupted at ${percent(info.received, info.size)}%`, true);
+          setActions(info.key, receiverActions(info));
+        });
+        incomingIds.clear();
+
+        outgoing.forEach((entry) => {
+          if (!entry.awaiting) return;
+          entry.awaiting = false;
+          setStatus(entry.key, 'Connection lost before confirmation', true);
+          setSenderActions(entry);
+        });
+
+        showFileTransfer(false);
+        showMessage('Connection closed', true);
+      }
+
+      function handleData(data) {
+        if (typeof data === 'string') {
+          let message;
+          try {
+            message = JSON.parse(data);
+          } catch (error) {
+            return;
+          }
+          if (!message || typeof message !== 'object') return;
+          switch (message.type) {
+            case 'file-header':
+              receiveHeader(message);
+              break;
+            case 'file-ready':
+              receiveReady(message);
+              break;
+            case 'file-end':
+              receiveEnd(message);
+              break;
+            case 'file-result':
+              receiveResult(message);
+              break;
+            case 'resume-request':
+              receiveResumeRequest(message);
+              break;
+            case 'resume-unavailable':
+              receiveResumeUnavailable(message);
+              break;
+            case 'cancel-send':
+              receiveCancelSend(message);
+              break;
+            case 'cancel-receive':
+              receiveCancelReceive(message);
+              break;
+          }
+        } else if (data instanceof ArrayBuffer) {
+          receiveFrame(data);
+        } else if (ArrayBuffer.isView(data)) {
+          receiveFrame(data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
+        }
+      }
+
+      function connectToPeer() {
+        if (!peer || !peer.open) {
+          showMessage('Still connecting to the server, try again in a moment', true);
+          return;
+        }
+        if (conn && conn.open) {
+          showMessage('Already connected', true);
+          return;
+        }
+        const connectId = document.getElementById('connect-id').value.trim();
+        if (!/^\d{4}$/.test(connectId)) {
+          showMessage('Please enter a valid 4-digit Peer ID', true);
+          return;
+        }
+        if (connectId === peer.id) {
+          showMessage('You cannot connect to yourself', true);
+          return;
+        }
+        showMessage('Connecting...', false);
+        attachConnection(peer.connect(connectId, { reliable: true, serialization: 'raw' }));
+      }
+
+      function percent(done, total) {
+        return total ? Math.min(100, Math.round((done / total) * 100)) : 100;
+      }
+
+      function addFileToList(key, fileName, statusText) {
+        const li = document.createElement('li');
+        li.className = 'file-item';
+
+        const info = document.createElement('div');
+        info.className = 'file-info';
+
+        const name = document.createElement('div');
+        name.className = 'file-name';
+        name.textContent = fileName;
+
+        const status = document.createElement('div');
+        status.className = 'file-status';
+        status.textContent = statusText;
+
+        const bar = document.createElement('div');
+        bar.className = 'progress-bar';
+
+        const progress = document.createElement('div');
+        progress.className = 'progress';
+        bar.appendChild(progress);
+
+        info.append(name, status, bar);
+
+        const actions = document.createElement('div');
+        actions.className = 'file-actions';
+
+        li.append(info, actions);
+        document.getElementById('file-list').appendChild(li);
+        items.set(key, { li, progress, status, actions });
+      }
+
+      function updateProgress(key, value) {
+        const item = items.get(key);
+        if (item) item.progress.style.width = `${Math.min(100, value)}%`;
+      }
+
+      function setStatus(key, text, isError) {
+        const item = items.get(key);
+        if (!item) return;
+        item.status.textContent = text;
+        item.status.classList.toggle('error', Boolean(isError));
+      }
+
+      function clearActions(key) {
+        const item = items.get(key);
+        if (item) item.actions.replaceChildren();
+      }
+
+      function setActions(key, buttons) {
+        const item = items.get(key);
+        if (!item) return;
+        item.actions.replaceChildren();
+        for (const spec of buttons) {
+          const button = document.createElement('button');
+          button.textContent = spec.label;
+          if (spec.secondary) button.className = 'secondary';
+          button.addEventListener('click', spec.handler);
+          item.actions.appendChild(button);
+        }
+      }
+
+      function removeItem(key) {
+        const item = items.get(key);
+        if (!item) return;
+        item.li.remove();
+        items.delete(key);
+      }
+
+      function setSenderActions(entry) {
+        setActions(entry.key, [
+          { label: 'Resume', handler: () => startTransfer(entry, false) },
+          { label: 'Resend', secondary: true, handler: () => startTransfer(entry, true) },
+          { label: 'Cancel', secondary: true, handler: () => cancelSend(entry, true) }
+        ]);
+      }
+
+      function receiverActions(info) {
+        return [
+          { label: 'Request resume', handler: () => requestResume(info.sig, false) },
+          { label: 'Request resend', secondary: true, handler: () => requestResume(info.sig, true) },
+          { label: 'Cancel', secondary: true, handler: () => cancelReceive(info, true) }
+        ];
+      }
+
+      let pickTarget = null;
+
+      function pickFile(entry, restart) {
+        pickTarget = { entry: entry, restart: Boolean(restart) };
+        document.getElementById('resume-input').click();
+      }
+
+      function cancelSend(entry, notify) {
+        if (entry.active) return;
+        outgoing.delete(entry.sig);
+        deleteOutgoing(entry.sig);
+        removeItem(entry.key);
+        if (notify) sendJson({ type: 'cancel-send', sig: entry.sig });
+      }
+
+      function cancelReceive(info, notify) {
+        incomingIds.delete(info.fileId);
+        partials.delete(info.sig);
+        discardStored(info.sig);
+        removeItem(info.key);
+        if (notify) sendJson({ type: 'cancel-receive', sig: info.sig });
+      }
+
+      async function waitForBuffer(connection) {
+        const channel = connection.dataChannel;
+        if (!channel) return;
+        while (connection.open && channel.bufferedAmount > MAX_BUFFERED) {
+          await sleep(50);
+        }
+      }
+
+      function waitForReady(fileId) {
+        return new Promise((resolve) => {
+          const timer = setTimeout(() => {
+            pendingReady.delete(fileId);
+            resolve(null);
+          }, READY_TIMEOUT);
+          pendingReady.set(fileId, (offset) => {
+            clearTimeout(timer);
+            pendingReady.delete(fileId);
+            resolve(offset);
+          });
+        });
+      }
+
+      function signatureOf(file) {
+        return `${file.name}|${file.size}|${file.lastModified}`;
+      }
+
+      function getOrCreateEntry(file) {
+        const sig = signatureOf(file);
+        let entry = outgoing.get(sig);
+        if (entry) {
+          entry.file = file;
+          return entry;
+        }
+        entry = {
+          sig: sig,
+          name: file.name,
+          size: file.size,
+          file: file,
+          key: `s${nextKey++}`,
+          fileId: 0,
+          active: false,
+          awaiting: false
+        };
+        outgoing.set(sig, entry);
+        saveOutgoing(entry);
+        addFileToList(entry.key, file.name, 'Waiting...');
+        return entry;
+      }
+
+      async function startTransfer(entry, restart) {
+        const connection = conn;
+        if (!connection || !connection.open) {
+          showMessage('Please connect to a peer first', true);
+          return;
+        }
+        if (entry.active) return;
+        if (!entry.file) {
+          pickFile(entry, restart);
+          return;
+        }
+
+        entry.active = true;
+        entry.awaiting = false;
+        const key = entry.key;
+        const file = entry.file;
+        const fileId = nextFileId++;
+        entry.fileId = fileId;
+
+        clearActions(key);
+        setStatus(key, 'Negotiating...');
+
+        let offset = 0;
+        try {
+          const ready = waitForReady(fileId);
+          connection.send(JSON.stringify({
+            type: 'file-header',
+            fileId: fileId,
+            sig: entry.sig,
+            fileName: file.name,
+            fileSize: file.size,
+            restart: Boolean(restart)
+          }));
+
+          const granted = await ready;
+          if (granted === null) throw new Error('No response');
+
+          let start = Math.max(0, Math.min(Number(granted) || 0, file.size));
+          if (start < file.size) start -= start % CHUNK_SIZE;
+
+          let crc = 0xFFFFFFFF;
+          for (let skipped = 0; skipped < start; skipped += CHUNK_SIZE) {
+            if (!connection.open || connection !== conn) throw new Error('Connection lost');
+            const end = Math.min(skipped + CHUNK_SIZE, start);
+            crc = crc32Update(crc, new Uint8Array(await file.slice(skipped, end).arrayBuffer()));
+          }
+
+          offset = start;
+          updateProgress(key, percent(offset, file.size));
+          setStatus(key, start > 0 ? `Resuming from ${percent(offset, file.size)}%...` : 'Sending...');
+
+          while (offset < file.size) {
+            if (!connection.open || connection !== conn) {
+              throw new Error('Connection lost');
+            }
+            await waitForBuffer(connection);
+            const payload = new Uint8Array(await file.slice(offset, offset + CHUNK_SIZE).arrayBuffer());
+            const frame = new Uint8Array(FRAME_HEADER + payload.byteLength);
+            const view = new DataView(frame.buffer);
+            view.setUint32(0, fileId);
+            view.setFloat64(4, offset);
+            frame.set(payload, FRAME_HEADER);
+            crc = crc32Update(crc, payload);
+            connection.send(frame.buffer);
+            offset += payload.byteLength;
+            updateProgress(key, percent(offset, file.size));
+          }
+
+          connection.send(JSON.stringify({
+            type: 'file-end',
+            fileId: fileId,
+            crc: crc32Finish(crc)
+          }));
+          entry.awaiting = true;
+          updateProgress(key, 100);
+          setStatus(key, 'Sent, waiting for confirmation...');
+        } catch (error) {
+          setStatus(key, `Interrupted at ${percent(offset, file.size)}%`, true);
+          setSenderActions(entry);
+        } finally {
+          entry.active = false;
+        }
+      }
+
+      function receiveHeader(data) {
+        if (!Number.isInteger(data.fileId) || typeof data.sig !== 'string') return;
+        const size = Number(data.fileSize);
+        if (!Number.isFinite(size) || size < 0) return;
+        const name = typeof data.fileName === 'string' && data.fileName ? data.fileName : 'file';
+
+        let info = partials.get(data.sig);
+        if (info && info.size !== size) {
+          setStatus(info.key, 'Superseded', true);
+          clearActions(info.key);
+          partials.delete(data.sig);
+          discardStored(data.sig);
+          info = null;
+        }
+
+        if (!info) {
+          info = {
+            sig: data.sig,
+            key: `r${nextKey++}`,
+            name: name,
+            size: size,
+            chunks: new Map(),
+            received: 0,
+            crc: null,
+            fileId: data.fileId
+          };
+          partials.set(data.sig, info);
+          saveMeta(info);
+          addFileToList(info.key, name, 'Receiving...');
+        } else if (data.restart) {
+          info.chunks.clear();
+          info.received = 0;
+          deleteChunks(info.sig, 0);
+        }
+
+        const prefix = contiguousPrefix(info);
+        let trimmed = false;
+        for (const offset of Array.from(info.chunks.keys())) {
+          if (offset >= prefix) {
+            info.chunks.delete(offset);
+            trimmed = true;
+          }
+        }
+        if (trimmed) deleteChunks(info.sig, prefix);
+        info.received = prefix;
+        info.crc = null;
+
+        if (info.fileId !== data.fileId) incomingIds.delete(info.fileId);
+        info.fileId = data.fileId;
+        incomingIds.set(data.fileId, info.sig);
+
+        clearActions(info.key);
+        updateProgress(info.key, percent(info.received, info.size));
+        setStatus(info.key, prefix > 0 ? `Resuming from ${percent(prefix, info.size)}%...` : 'Receiving...');
+
+        sendJson({ type: 'file-ready', fileId: data.fileId, offset: prefix });
+      }
+
+      function contiguousPrefix(info) {
+        const offsets = Array.from(info.chunks.keys()).sort((a, b) => a - b);
+        let expected = 0;
+        for (const offset of offsets) {
+          if (offset !== expected) break;
+          expected += info.chunks.get(offset).byteLength;
+        }
+        return expected;
+      }
+
+      function receiveReady(data) {
+        const resolve = pendingReady.get(data.fileId);
+        if (resolve) resolve(Number(data.offset) || 0);
+      }
+
+      function receiveFrame(buffer) {
+        if (buffer.byteLength <= FRAME_HEADER) return;
+        const view = new DataView(buffer);
+        const fileId = view.getUint32(0);
+        const offset = view.getFloat64(4);
+        const sig = incomingIds.get(fileId);
+        const info = sig === undefined ? null : partials.get(sig);
+        if (!info || info.fileId !== fileId) return;
+
+        const payload = new Uint8Array(buffer.slice(FRAME_HEADER));
+        if (!(offset >= 0) || offset + payload.byteLength > info.size) {
+          failReceive(info, 'Corrupted, please resend');
+          return;
+        }
+        if (info.chunks.has(offset)) return;
+
+        info.chunks.set(offset, payload);
+        info.received += payload.byteLength;
+        queueChunk(info.sig, offset, payload);
+        updateProgress(info.key, percent(info.received, info.size));
+        tryFinish(info);
+      }
+
+      function receiveEnd(data) {
+        const sig = incomingIds.get(data.fileId);
+        const info = sig === undefined ? null : partials.get(sig);
+        if (!info) return;
+        info.crc = Number(data.crc);
+        tryFinish(info);
+      }
+
+      function findEntryByFileId(fileId) {
+        for (const entry of outgoing.values()) {
+          if (entry.fileId === fileId) return entry;
+        }
+        return null;
+      }
+
+      function receiveResult(data) {
+        const entry = findEntryByFileId(data.fileId);
+        if (!entry) return;
+        entry.awaiting = false;
+        if (data.ok) {
+          setStatus(entry.key, 'Delivered');
+          clearActions(entry.key);
+          deleteOutgoing(entry.sig);
+        } else {
+          setStatus(entry.key, 'Corrupted on receiver, please resend', true);
+          setActions(entry.key, [
+            { label: 'Resend', handler: () => startTransfer(entry, true) },
+            { label: 'Cancel', secondary: true, handler: () => cancelSend(entry, true) }
+          ]);
+        }
+      }
+
+      function receiveResumeRequest(data) {
+        const entry = typeof data.sig === 'string' ? outgoing.get(data.sig) : null;
+        if (!entry) {
+          sendJson({ type: 'resume-unavailable', sig: data.sig });
+          return;
+        }
+        if (!entry.file) {
+          setStatus(entry.key, 'Receiver asked to resume, choose the file to continue', true);
+          setSenderActions(entry);
+          return;
+        }
+        startTransfer(entry, Boolean(data.restart));
+      }
+
+      function receiveResumeUnavailable(data) {
+        const info = partials.get(data.sig);
+        if (!info) return;
+        setStatus(info.key, 'Sender no longer has this file', true);
+        setActions(info.key, [
+          { label: 'Cancel', secondary: true, handler: () => cancelReceive(info, false) }
+        ]);
+      }
+
+      function receiveCancelSend(data) {
+        const info = typeof data.sig === 'string' ? partials.get(data.sig) : null;
+        if (!info) return;
+        incomingIds.delete(info.fileId);
+        partials.delete(info.sig);
+        discardStored(info.sig);
+        updateProgress(info.key, 0);
+        setStatus(info.key, 'Cancelled by sender', true);
+        setActions(info.key, [
+          { label: 'Dismiss', secondary: true, handler: () => removeItem(info.key) }
+        ]);
+      }
+
+      function receiveCancelReceive(data) {
+        const entry = typeof data.sig === 'string' ? outgoing.get(data.sig) : null;
+        if (!entry || entry.active) return;
+        entry.awaiting = false;
+        setStatus(entry.key, 'Cancelled by receiver', true);
+        setActions(entry.key, [
+          { label: 'Resend', handler: () => startTransfer(entry, true) },
+          { label: 'Dismiss', secondary: true, handler: () => cancelSend(entry, false) }
+        ]);
+      }
+
+      function requestResume(sig, restart) {
+        if (!sendJson({ type: 'resume-request', sig: sig, restart: Boolean(restart) })) {
+          showMessage('Please connect to a peer first', true);
+        }
+      }
+
+      function reportResult(fileId, ok) {
+        sendJson({ type: 'file-result', fileId: fileId, ok: ok });
+      }
+
+      function failReceive(info, text) {
+        incomingIds.delete(info.fileId);
+        info.chunks.clear();
+        info.received = 0;
+        info.crc = null;
+        deleteChunks(info.sig, 0);
+        updateProgress(info.key, 0);
+        setStatus(info.key, text, true);
+        setActions(info.key, [
+          { label: 'Request resend', handler: () => requestResume(info.sig, true) },
+          { label: 'Cancel', secondary: true, handler: () => cancelReceive(info, true) }
+        ]);
+        reportResult(info.fileId, false);
+      }
+
+      function tryFinish(info) {
+        if (info.crc === null || info.received < info.size) return;
+
+        const offsets = Array.from(info.chunks.keys()).sort((a, b) => a - b);
+        let crc = 0xFFFFFFFF;
+        let expected = 0;
+        let contiguous = true;
+        for (const offset of offsets) {
+          if (offset !== expected) {
+            contiguous = false;
+            break;
+          }
+          const chunk = info.chunks.get(offset);
+          crc = crc32Update(crc, chunk);
+          expected += chunk.byteLength;
+        }
+
+        if (!contiguous || expected !== info.size || crc32Finish(crc) !== info.crc) {
+          failReceive(info, 'Corrupted, please resend');
+          return;
+        }
+
+        partials.delete(info.sig);
+        incomingIds.delete(info.fileId);
+        discardStored(info.sig);
+
+        const blob = new Blob(offsets.map((offset) => info.chunks.get(offset)));
+        const url = URL.createObjectURL(blob);
+        objectUrls.push(url);
+
+        updateProgress(info.key, 100);
+        setStatus(info.key, 'Received');
+        reportResult(info.fileId, true);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = info.name;
+        link.textContent = 'Save';
+
+        clearActions(info.key);
+        const item = items.get(info.key);
+        if (item) item.actions.appendChild(link);
+
+        link.click();
+      }
+
+      document.getElementById('connect-btn').addEventListener('click', connectToPeer);
+
+      document.getElementById('connect-id').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') connectToPeer();
+      });
+
+      document.getElementById('select-files').addEventListener('click', () => {
+        document.getElementById('file-input').click();
+      });
+
+      document.getElementById('file-input').addEventListener('change', async (e) => {
+        const connection = conn;
+        if (!connection || !connection.open) {
+          showMessage('Please connect to a peer first', true);
+          e.target.value = '';
+          return;
+        }
+
+        const files = Array.from(e.target.files);
+        e.target.value = '';
+
+        for (const file of files) {
+          if (!connection.open || connection !== conn) break;
+          await startTransfer(getOrCreateEntry(file), false);
+        }
+      });
+
+      document.getElementById('resume-input').addEventListener('change', async (e) => {
+        const target = pickTarget;
+        pickTarget = null;
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (!target || !file) return;
+        if (signatureOf(file) !== target.entry.sig) {
+          showMessage('That is not the same file: name, size and modified date must match', true);
+          return;
+        }
+        target.entry.file = file;
+        await startTransfer(target.entry, target.restart);
+      });
+
+      document.getElementById('refresh-btn').addEventListener('click', () => {
+        location.reload();
+      });
+
+      async function resetAll() {
+        if (!confirm('Clear all stored data? This removes unfinished transfers.')) return;
+
+        clearTimeout(flushTimer);
+        flushTimer = null;
+        writeQueue.length = 0;
+
+        if (conn) {
+          const connection = conn;
+          conn = null;
+          try {
+            connection.close();
+          } catch (error) {
+            showMessage('Connection closed', true);
+          }
+        }
+
+        try {
+          await flushing;
+        } catch (error) {
+          showMessage('Clearing storage', false);
+        }
+
+        const db = await openDb();
+        if (db) db.close();
+
+        await new Promise((resolve) => {
+          if (!('indexedDB' in window)) {
+            resolve();
+            return;
+          }
+          const request = indexedDB.deleteDatabase('postbox');
+          request.onsuccess = () => resolve();
+          request.onerror = () => resolve();
+          request.onblocked = () => resolve();
+        });
+
+        removeLegacyPeerId();
+
+        objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+        location.reload();
+      }
+
+      document.getElementById('reset-btn').addEventListener('click', resetAll);
+
+      window.addEventListener('pagehide', () => {
+        flushWrites();
+        objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') flushWrites();
+      });
+
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
+      }
+
+      removeLegacyPeerId();
+      restorePartials();
+      restoreOutgoing();
+      initializePeer();
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/POSTBOX/service-worker.js")
+            .then((registration) => {
+              console.log("Service Worker registered with scope:", registration.scope);
+            })
+            .catch((error) => {
+              console.error("Service Worker registration failed:", error);
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
