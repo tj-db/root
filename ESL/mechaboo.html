@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bunnylink Grid Puzzle</title>
+<style>
+:root{--bg:#171a22;--con:#dcdfd6;--scr:#0b1828;--tile:#15304d;--g:#27d083}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0,#2b3140,var(--bg) 70%);font-family:'Trebuchet MS','Segoe UI',sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;user-select:none;-webkit-tap-highlight-color:transparent}
+.console{width:min(100%,540px);background:var(--con);border:8px solid #9ea298;border-radius:16px;padding:14px;box-shadow:0 20px 40px rgba(0,0,0,.6),inset 0 2px 5px rgba(255,255,255,.8)}
+.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.score{background:#1c1c1c;border:2px solid #333;border-radius:6px;padding:4px 12px;font:700 20px monospace;color:#ff6b35;display:flex;align-items:center;gap:8px;box-shadow:inset 0 2px 4px #000}
+.score small{color:#8a8f98;font-size:12px}
+.led{width:12px;height:12px;border-radius:50%;background:#f30;box-shadow:0 0 8px #f30}
+.cb{display:flex;gap:8px}
+.c-btn{width:38px;height:38px;border-radius:6px;border:2px solid #999;background:linear-gradient(#f2f2f2,#d0d0d0);cursor:pointer;display:grid;place-items:center;box-shadow:0 3px 5px rgba(0,0,0,.2)}
+.c-btn:active{transform:translateY(2px)}
+.c-btn svg{width:18px;height:18px;stroke:#333;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.screen{background:var(--scr);border:4px solid #2a303c;border-radius:10px;padding:8px;position:relative;box-shadow:inset 0 0 15px #000}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:clamp(3px,1.2vw,6px)}
+.t{aspect-ratio:1;border-radius:10px;background:var(--tile);display:grid;place-items:center;position:relative;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(120,180,255,.14);transition:filter .15s,opacity .25s}
+.t:hover{filter:brightness(1.2)}
+.t svg{width:62%;height:62%;overflow:visible}
+.t.x{background:#0a111d;cursor:not-allowed}
+.t.chip{background:#7a3d12;box-shadow:inset 0 0 0 2px #b4631f}
+.t.arrow{background:#25461f;box-shadow:inset 0 0 0 2px #3f7a2d}
+.t.portal.p0{background:#4c1d95;box-shadow:inset 0 0 0 2px #8b5cf6}
+.t.portal.p1{background:#9d174d;box-shadow:inset 0 0 0 2px #f472b6}
+.t.portal svg{animation:spin 5s linear infinite}
+.t.start{background:#6ef0b0;color:#06281a;box-shadow:0 0 12px rgba(110,240,176,.6)}
+.t.end{background:#175a49;box-shadow:inset 0 0 0 2px #27d083}
+.t.done{opacity:.32;filter:saturate(.3);cursor:default}
+.t.ok{box-shadow:inset 0 0 0 3px var(--g),0 0 12px rgba(39,208,131,.5)}
+.t.next{animation:pulse 1.1s infinite alternate}
+.t.hint{outline:3px solid #fff;outline-offset:-3px;animation:pulse .5s infinite alternate}
+.t.shake{animation:shake .3s}
+.lbl{font:800 clamp(9px,2.6vw,13px) 'Trebuchet MS',sans-serif;text-align:center;line-height:1.1}
+.cn{width:66%;height:66%;border:3px solid #f59e0b;border-radius:8px;display:grid;place-items:center;font:800 clamp(16px,5vw,26px) 'Trebuchet MS',sans-serif;color:#fbbf24;background:#4a230a}
+.me{position:absolute;inset:24%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#7cf5c4 60%,#27d083);box-shadow:0 0 16px #27d083;animation:bob .9s ease-in-out infinite alternate;pointer-events:none}
+.stat{margin-top:10px;display:flex;justify-content:space-between;font-size:13px;color:#9db0c8;gap:8px}
+#msg{color:#fbbf24;min-height:18px;text-align:center;font-size:14px;margin-top:6px;font-weight:700}
+.bar{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.ab{background:#252a34;color:#fff;border:1px solid #3f4c6b;padding:9px 16px;border-radius:8px;font:600 14px 'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,.3)}
+.ab:hover{background:#343c4d}
+.ab.pri{background:#17a36b;border-color:#27d083}
+.ab:focus-visible,.c-btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.modal{position:absolute;inset:0;background:rgba(5,10,20,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:5;font-size:14px;line-height:1.5}
+.modal.on{opacity:1;pointer-events:auto}
+.modal h2{margin:0;font-size:24px}
+.modal.win h2{color:#27d083}.modal.lose h2{color:#f87171}.modal.help h2{color:#fbbf24}
+.modal ul{margin:0;padding:0;list-style:none;text-align:left;color:#cbd5e1}
+.modal li{display:flex;gap:10px;align-items:center;margin:4px 0}
+.modal li svg{width:22px;height:22px;flex:none}
+.keys{margin-top:10px;font-size:12px;color:#7d8aa0;text-align:center}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{to{filter:brightness(1.5)}}
+@keyframes bob{to{transform:scale(1.12)}}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+<symbol id="bun" viewBox="0 0 100 100"><ellipse cx="35" cy="25" rx="8" ry="18" fill="#34d399" transform="rotate(-15 35 25)"/><ellipse cx="65" cy="25" rx="8" ry="18" fill="#34d399" transform="rotate(15 65 25)"/><ellipse cx="35" cy="26" rx="4" ry="12" fill="#065f46" transform="rotate(-15 35 25)"/><ellipse cx="65" cy="26" rx="4" ry="12" fill="#065f46" transform="rotate(15 65 25)"/><rect x="16" y="30" width="68" height="58" rx="24" fill="#4ade80" stroke="#065f46" stroke-width="4"/><rect x="26" y="44" width="48" height="20" rx="7" fill="#064e3b"/><circle cx="41" cy="54" r="5" fill="#a7f3d0"/><circle cx="59" cy="54" r="5" fill="#a7f3d0"/><path d="M45 74h10" stroke="#065f46" stroke-width="4" stroke-linecap="round"/></symbol>
+<symbol id="chip" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" fill="none"/><circle cx="5" cy="5" r="3" fill="#1a0d05" stroke="#fbbf24" stroke-width="2"/><circle cx="19" cy="5" r="3" fill="#1a0d05" stroke="#fbbf24" stroke-width="2"/><circle cx="5" cy="19" r="3" fill="#1a0d05" stroke="#fbbf24" stroke-width="2"/><circle cx="19" cy="19" r="3" fill="#1a0d05" stroke="#fbbf24" stroke-width="2"/></symbol>
+<symbol id="xx" viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20" stroke="#3a4352" stroke-width="4" stroke-linecap="round"/></symbol>
+<symbol id="ch" viewBox="0 0 24 24"><path d="M4 5l8 7-8 7M12 5l8 7-8 7" stroke="#86e04f" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></symbol>
+<symbol id="sw" viewBox="0 0 24 24"><path d="M12 2c6 0 10 4 10 10-4 0-7-2-7-5M22 12c0 6-4 10-10 10 0-4 2-7 5-7M12 22C6 22 2 18 2 12c4 0 7 2 7 5M2 12C2 6 6 2 12 2c0 4-2 7-5 7" fill="#fff" fill-opacity=".92"/><circle cx="12" cy="12" r="2.6" fill="#1b1030"/></symbol>
+<symbol id="ck" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="console">
+  <div class="head">
+    <div class="score"><svg width="22" height="22" viewBox="0 0 24 24"><use href="#chip"/></svg><span id="cnt">00/04</span><small id="lv">LV 1</small></div>
+    <div class="led"></div>
+    <div class="cb">
+      <button class="c-btn" id="b-restart" title="Restart level (R)" aria-label="Restart level"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg></button>
+      <button class="c-btn" id="b-help" title="Rules" aria-label="Rules"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></button>
+    </div>
+  </div>
+  <div class="screen">
+    <div class="grid" id="grid"></div>
+    <div class="modal win" id="m-win"><h2>Level cleared</h2><p id="win-t"></p><button class="ab pri" id="b-next">Next level</button></div>
+    <div class="modal lose" id="m-lose"><h2>Dead end</h2><p>No legal move left from here.</p><div class="bar" style="margin:0"><button class="ab pri" id="b-undo2">Undo move</button><button class="ab" id="b-restart2">Restart</button></div></div>
+    <div class="modal help" id="m-help">
+      <h2>How to play</h2>
+      <ul>
+        <li><svg><use href="#chip"/></svg>Collect every yellow chip. Numbered chips go in order 1, 2, 3...</li>
+        <li><svg><use href="#bun"/></svg>Then step on the bunny to finish.</li>
+        <li><svg><use href="#ch"/></svg>Arrows force your next move in their direction.</li>
+        <li><svg><use href="#sw"/><rect width="0" height="0"/></svg>Portals teleport you to the portal of the same color.</li>
+        <li><svg><use href="#xx"/></svg>X tiles are blocked. Every tile can be used once.</li>
+      </ul>
+      <button class="ab" id="b-close">Got it</button>
+    </div>
+  </div>
+  <div id="msg"></div>
+  <div class="stat"><span id="goal"></span><span id="mv">Moves 0</span></div>
+</div>
+<div class="bar">
+  <button class="ab" id="b-undo">Undo</button>
+  <button class="ab" id="b-hint">Hint</button>
+  <button class="ab pri" id="b-new">New level</button>
+</div>
+<div class="keys">Arrow keys / WASD move · Z undo · H hint · R restart · N new level</div>
+
+<script>
+const R=5,C=6,DIR={U:[-1,0],D:[1,0],L:[0,-1],R:[0,1]},ROT={R:0,D:90,L:180,U:270},NAME={U:"up",D:"down",L:"left",R:"right"};
+let L,S,H,busy=0,stuck=0,lvl=0,timer,hintI=-1,mt;
+const $=id=>document.getElementById(id);
+const rr=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const svg=id=>`<svg viewBox="0 0 24 24"><use href="#${id}"/></svg>`;
+
+function move(s,d){
+  if(s.f&&s.f!==d)return null;
+  const r=s.r+DIR[d][0],c=s.c+DIR[d][1];
+  if(r<0||c<0||r>=R||c>=C||s.v[r*C+c])return null;
+  const t=L.g[r][c];
+  if(t.t==="x")return null;
+  if(t.t==="chip"&&t.n&&t.n!==s.g+1)return null;
+  if(t.t==="end"&&s.g<L.n)return null;
+  const v=s.v.slice();v[r*C+c]=1;
+  const n={r,c,v,g:s.g+(t.t==="chip"?1:0),f:null};
+  if(t.t==="portal"){
+    const q=L.pp[t.p].find(p=>p[0]!==r||p[1]!==c);
+    v[q[0]*C+q[1]]=1;n.r=q[0];n.c=q[1];
+  }
+  if(t.t==="arrow")n.f=t.d;
+  return n;
+}
+const won=s=>s.r===L.end[0]&&s.c===L.end[1];
+const moves=s=>Object.keys(DIR).some(d=>move(s,d));
+
+function solve(s){
+  const out=[];let n=0;
+  (function dfs(x){
+    if(won(x))return true;
+    if(++n>200000)return false;
+    for(const d in DIR){const m=move(x,d);if(m){out.push({d,m});if(dfs(m))return true;out.pop();}}
+    return false;
+  })(s);
+  return out.length?out:null;
+}
+
+function gen(){
+  for(;;){
+    const g=Array.from({length:R},()=>Array.from({length:C},()=>({t:"e"})));
+    const u=new Set(),key=(r,c)=>r*C+c;
+    const free=(r,c)=>r>=0&&c>=0&&r<R&&c<C&&!u.has(key(r,c));
+    const nb=(r,c)=>Object.entries(DIR).map(([d,[a,b]])=>[d,r+a,c+b]).filter(p=>free(p[1],p[2]));
+    let r=rr(0,R-1),c=rr(0,C-1);
+    const start=[r,c],path=[[r,c]],len=rr(13,22),pp={};let pc=0;
+    u.add(key(r,c));g[r][c]={t:"start"};
+    while(path.length<len){
+      const opts=nb(r,c);
+      if(!opts.length)break;
+      if(pc<2&&path.length>2&&path.length<len-3&&g[r][c].t==="e"&&Math.random()<.2){
+        const qs=[];
+        for(let a=0;a<R;a++)for(let b=0;b<C;b++)if(free(a,b)&&nb(a,b).length>1)qs.push([a,b]);
+        if(qs.length){
+          const q=qs[rr(0,qs.length-1)];
+          g[r][c]={t:"portal",p:pc};g[q[0]][q[1]]={t:"portal",p:pc};
+          pp[pc]=[[r,c],q];pc++;
+          u.add(key(q[0],q[1]));path.push(q);r=q[0];c=q[1];
+          continue;
+        }
+      }
+      const [d,nr,nc]=opts[rr(0,opts.length-1)];
+      if(g[r][c].t==="e"&&Math.random()<.28)g[r][c]={t:"arrow",d};
+      path.push([nr,nc]);u.add(key(nr,nc));r=nr;c=nc;
+    }
+    if(path.length<10||g[r][c].t!=="e")continue;
+    g[r][c]={t:"end"};
+    const cand=[];
+    path.forEach((p,i)=>{if(g[p[0]][p[1]].t==="e")cand.push(i)});
+    const N=Math.min([3,4,4,4,5,6][rr(0,5)],cand.length);
+    if(N<3)continue;
+    const pick=cand.sort(()=>Math.random()-.5).slice(0,N).sort((a,b)=>a-b);
+    const num=Math.random()<.7;
+    pick.forEach((i,k)=>{const p=path[i];g[p[0]][p[1]]={t:"chip",n:num?k+1:0}});
+    for(let a=0;a<R;a++)for(let b=0;b<C;b++){
+      if(u.has(key(a,b)))continue;
+      const x=Math.random();
+      if(x<.38)g[a][b]={t:"x"};
+      else if(x<.48)g[a][b]={t:"arrow",d:"UDLR"[rr(0,3)]};
+    }
+    const lv={g,start,end:[r,c],n:N,num,pp};
+    L=lv;
+    const s0={r:start[0],c:start[1],v:new Uint8Array(R*C),g:0,f:null};
+    s0.v[start[0]*C+start[1]]=1;
+    if(solve(s0))return lv;
+  }
+}
+
+function init(lv){
+  clearTimeout(timer);busy=0;stuck=0;hintI=-1;L=lv;
+  S={r:lv.start[0],c:lv.start[1],v:new Uint8Array(R*C),g:0,f:null};
+  S.v[S.r*C+S.c]=1;H=[S];
+  ["m-win","m-lose","m-help"].forEach(i=>$(i).classList.remove("on"));
+  render();
+}
+function newLevel(){lvl++;init(gen());}
+function restart(){init(L);}
+
+function msg(t){
+  $("msg").textContent=t;clearTimeout(mt);
+  if(t)mt=setTimeout(()=>$("msg").textContent="",1800);
+}
+
+function push(n){
+  S=n;H.push(n);hintI=-1;render();
+  if(won(S)){
+    $("win-t").textContent=`Cleared in ${H.length-1} moves.`;
+    $("m-win").classList.add("on");return;
+  }
+  if(S.f){
+    busy=1;
+    timer=setTimeout(()=>{busy=0;const m=move(S,S.f);if(m)push(m);else die();},240);
+  }else if(!moves(S))die();
+}
+function die(){stuck=1;render();$("m-lose").classList.add("on");}
+
+function why(d){
+  if(S.f&&S.f!==d)return `The arrow forces you ${NAME[S.f]}`;
+  const r=S.r+DIR[d][0],c=S.c+DIR[d][1];
+  if(r<0||c<0||r>=R||c>=C)return "Edge of the grid";
+  const t=L.g[r][c];
+  if(S.v[r*C+c])return "Already used";
+  if(t.t==="x")return "Blocked";
+  if(t.t==="chip")return `Collect chip ${S.g+1} first`;
+  if(t.t==="end")return "Collect every chip first";
+  return "Cannot move there";
+}
+function go(d){
+  if(busy||stuck||won(S))return;
+  const n=move(S,d);
+  if(n){push(n);return;}
+  msg(why(d));
+  const r=S.r+DIR[d][0],c=S.c+DIR[d][1];
+  const el=$("grid").children[r*C+c];
+  if(el){el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");}
+}
+function undo(){
+  if(H.length<2||won(S))return;
+  clearTimeout(timer);busy=0;stuck=0;
+  do{H.pop();}while(H.length>1&&H[H.length-1].f);
+  S=H[H.length-1];hintI=-1;
+  $("m-lose").classList.remove("on");render();
+}
+function hint(){
+  if(busy||stuck||won(S))return;
+  const p=solve(S);
+  if(!p){msg("No route from here. Undo or restart.");return;}
+  hintI=(S.r+DIR[p[0].d][0])*C+S.c+DIR[p[0].d][1];render();
+}
+
+function render(){
+  const ok=new Set();
+  if(!busy&&!stuck&&!won(S))for(const d in DIR)if(move(S,d))ok.add((S.r+DIR[d][0])*C+S.c+DIR[d][1]);
+  let h="";
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    const t=L.g[r][c],i=r*C+c,vis=S.v[i],me=S.r===r&&S.c===c;
+    let cls=t.t==="e"?"":t.t,inner="";
+    if(t.t==="portal")cls+=" p"+t.p;
+    if(vis&&!me)cls+=" done";
+    if(ok.has(i))cls+=" ok";
+    if(hintI===i)cls+=" hint";
+    if(t.t==="chip"&&!vis&&L.num&&t.n===S.g+1)cls+=" next";
+    if(t.t==="start")inner=`<span class="lbl">START</span>`;
+    else if(t.t==="end")inner=svg("bun");
+    else if(t.t==="x")inner=svg("xx");
+    else if(t.t==="chip")inner=vis?svg("ck"):(L.num?`<span class="cn">${t.n}</span>`:svg("chip"));
+    else if(t.t==="arrow")inner=`<svg viewBox="0 0 24 24" style="transform:rotate(${ROT[t.d]}deg)"><use href="#ch"/></svg>`;
+    else if(t.t==="portal")inner=svg("sw");
+    if(me)inner+='<i class="me"></i>';
+    h+=`<div class="t ${cls}" data-r="${r}" data-c="${c}">${inner}</div>`;
+  }
+  $("grid").innerHTML=h;
+  $("cnt").textContent=String(S.g).padStart(2,"0")+"/"+String(L.n).padStart(2,"0");
+  $("lv").textContent="LV "+lvl;
+  $("mv").textContent="Moves "+(H.length-1);
+  $("goal").textContent=S.g>=L.n?"All chips collected. Reach the bunny.":(L.num?`Next chip: ${S.g+1}`:"Collect all chips in any order");
+}
+
+$("grid").addEventListener("click",e=>{
+  const t=e.target.closest(".t");if(!t)return;
+  const dr=+t.dataset.r-S.r,dc=+t.dataset.c-S.c;
+  const d=Object.keys(DIR).find(k=>DIR[k][0]===dr&&DIR[k][1]===dc);
+  if(d)go(d);else msg("Tap a tile next to you");
+});
+$("b-restart").onclick=$("b-restart2").onclick=restart;
+$("b-undo").onclick=$("b-undo2").onclick=undo;
+$("b-hint").onclick=hint;
+$("b-new").onclick=$("b-next").onclick=newLevel;
+$("b-help").onclick=()=>$("m-help").classList.toggle("on");
+$("b-close").onclick=()=>$("m-help").classList.remove("on");
+document.addEventListener("keydown",e=>{
+  const k=e.key.toLowerCase(),m={arrowup:"U",w:"U",arrowdown:"D",s:"D",arrowleft:"L",a:"L",arrowright:"R",d:"R"};
+  if(m[k]){e.preventDefault();go(m[k]);}
+  else if(k==="z")undo();else if(k==="h")hint();else if(k==="r")restart();else if(k==="n")newLevel();
+});
+newLevel();
+</script>
+</body>
+</html>
