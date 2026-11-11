@@ -27,14 +27,31 @@ ul,ol{margin:6px 0;padding-left:22px}
 li{margin:3px 0}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .note{border-left:3px solid var(--acc);padding:2px 12px;color:var(--mute);margin:12px 0}
-@media (max-width:640px){h1{font-size:2rem}section{padding:18px}.two{grid-template-columns:1fr}}
-@media print{body{background:#fff;font-size:12px}section{break-inside:avoid;border-color:#ccc}pre{white-space:pre-wrap}}
+.bar{position:sticky;top:8px;z-index:5;display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:0 0 20px}
+.track{flex:1;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+#fill{height:100%;width:0;background:var(--acc);transition:width .2s}
+#count{font-size:.9rem;color:var(--mute);white-space:nowrap}
+button{font:inherit;font-size:.85rem;color:var(--acc);background:none;border:1px solid var(--acc);border-radius:6px;padding:3px 10px;cursor:pointer}
+input[type=checkbox]{accent-color:var(--acc);width:16px;height:16px;margin:0;cursor:pointer;flex:none}
+label.chip{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+li.has-box{list-style:none;position:relative;padding-left:26px;margin-left:-22px}
+li.has-box>input{position:absolute;left:0;top:.4em}
+.chip.done code{text-decoration:line-through;opacity:.55}
+li.done{opacity:.55}
+@media (max-width:640px){h1{font-size:2rem}section{padding:18px}.two{grid-template-columns:1fr}.bar{gap:10px;padding:8px 12px}}
+@media print{body{background:#fff;font-size:12px}section{break-inside:avoid;border-color:#ccc}pre{white-space:pre-wrap}.bar,input[type=checkbox]{display:none}li.has-box{padding-left:0;margin-left:0;list-style:disc}.chip.done code,li.done{opacity:1;text-decoration:none}}
 </style>
 </head>
 <body>
 <main>
 <h1>CSS Keywords Cheat Sheet</h1>
-<p class="lead">The key words every CSS beginner should learn, grouped by topic.</p>
+<p class="lead">The key words every CSS beginner should learn, grouped by topic. Tick each item as you study it; your progress is saved in this browser.</p>
+
+<div class="bar">
+<span id="count" aria-live="polite"></span>
+<div class="track"><div id="fill"></div></div>
+<button type="button" id="reset">Reset</button>
+</div>
 
 <section>
 <h2>Beginner Priority List</h2>
@@ -76,7 +93,7 @@ li{margin:3px 0}
 <section>
 <h2>2. Specificity and the Cascade</h2>
 <p>When two rules clash, the more specific selector wins. From strongest to weakest:</p>
-<ol><li>Inline styles</li><li>ID selectors</li><li>Class, attribute and pseudo-class selectors</li><li>Element selectors</li></ol>
+<ol data-plain><li>Inline styles</li><li>ID selectors</li><li>Class, attribute and pseudo-class selectors</li><li>Element selectors</li></ol>
 <p>If specificity is equal, the rule written last wins. <code>!important</code> overrides everything, so avoid it.</p>
 </section>
 
@@ -344,5 +361,80 @@ aspect-ratio: 16 / 9;</code></pre>
 </ul>
 </section>
 </main>
+<script>
+(function () {
+  var KEY = "css-cheat-sheet-progress";
+  var saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {};
+  } catch (e) {
+    saved = {};
+  }
+  var boxes = [];
+
+  function persist() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(saved));
+    } catch (e) {}
+  }
+
+  function refresh() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      if (b.checked) done++;
+    });
+    var total = boxes.length;
+    document.getElementById("count").textContent = done + " of " + total + " studied";
+    document.getElementById("fill").style.width = total ? (done / total) * 100 + "%" : "0";
+  }
+
+  document.querySelectorAll("section").forEach(function (sec, s) {
+    var n = 0;
+    sec.querySelectorAll(".k > code, li").forEach(function (el) {
+      if (el.closest("[data-plain]")) return;
+      var id = s + "-" + n++;
+      var box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = !!saved[id];
+      box.setAttribute("aria-label", "Mark as studied");
+      var host;
+      if (el.tagName === "LI") {
+        host = el;
+        host.classList.add("has-box");
+        host.insertBefore(box, host.firstChild);
+      } else {
+        host = document.createElement("label");
+        host.className = "chip";
+        el.parentNode.insertBefore(host, el);
+        host.appendChild(box);
+        host.appendChild(el);
+      }
+      host.classList.toggle("done", box.checked);
+      box.addEventListener("change", function () {
+        if (box.checked) saved[id] = 1;
+        else delete saved[id];
+        host.classList.toggle("done", box.checked);
+        persist();
+        refresh();
+      });
+      box._host = host;
+      boxes.push(box);
+    });
+  });
+
+  document.getElementById("reset").addEventListener("click", function () {
+    if (!window.confirm("Clear all ticked items?")) return;
+    saved = {};
+    boxes.forEach(function (b) {
+      b.checked = false;
+      b._host.classList.remove("done");
+    });
+    persist();
+    refresh();
+  });
+
+  refresh();
+})();
+</script>
 </body>
 </html>
