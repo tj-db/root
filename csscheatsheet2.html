@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSS Keywords Cheat Sheet</title>
+<style>
+:root{--bg:#f6f8fa;--card:#fff;--ink:#1c2530;--mute:#5b6775;--line:#dde3ea;--acc:#0b6e6e;--chip:#e3f1f0;--chipink:#07504f;--code:#17202b;--codeink:#e8eef5}
+@media (prefers-color-scheme:dark){:root{--bg:#10161d;--card:#18212b;--ink:#e6ecf2;--mute:#9aa7b5;--line:#2a3643;--acc:#5fd0c8;--chip:#1f3a3b;--chipink:#a8ece6;--code:#0b1016;--codeink:#e8eef5}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+html[lang="zh-Hant"] body{font-family:system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:820px;margin:0 auto;padding:64px 20px 80px}
+h1,h2{font-family:Georgia,"Iowan Old Style",serif;font-weight:700;line-height:1.2}
+html[lang="zh-Hant"] h1,html[lang="zh-Hant"] h2{font-family:"Noto Serif TC","PMingLiU",Georgia,serif}
+h1{font-size:2.6rem;margin:0 0 8px}
+.lead{color:var(--mute);margin:0 0 36px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:24px 28px;margin:0 0 20px}
+h2{font-size:1.5rem;margin:0 0 6px;padding-left:14px;border-left:4px solid var(--acc)}
+h3{font-size:.95rem;margin:18px 0 6px;color:var(--mute);font-weight:600}
+p{margin:6px 0}
+.k{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+code{font:.88rem ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.k code,p code,li code{background:var(--chip);color:var(--chipink);padding:2px 8px;border-radius:5px}
+pre{background:var(--code);color:var(--codeink);padding:14px 16px;border-radius:8px;overflow-x:auto;margin:12px 0;line-height:1.5}
+pre code{background:none;color:inherit;padding:0}
+ul,ol{margin:6px 0;padding-left:22px}
+li{margin:3px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.note{border-left:3px solid var(--acc);padding:2px 12px;color:var(--mute);margin:12px 0}
+.bar{position:sticky;top:56px;z-index:5;display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:0 0 20px}
+.track{flex:1;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+#fill{height:100%;width:0;background:var(--acc);transition:width .2s}
+#count{font-size:.9rem;color:var(--mute);white-space:nowrap}
+button{font:inherit;font-size:.85rem;color:var(--acc);background:none;border:1px solid var(--acc);border-radius:6px;padding:3px 10px;cursor:pointer}
+.lang{position:fixed;top:12px;right:12px;z-index:10;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.15);padding:6px 14px;font-weight:600}
+input[type=checkbox]{accent-color:var(--acc);width:16px;height:16px;margin:0;cursor:pointer;flex:none}
+label.chip{display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+li.has-box{list-style:none;position:relative;padding-left:26px;margin-left:-22px}
+li.has-box>input{position:absolute;left:0;top:.4em}
+.chip.done code{text-decoration:line-through;opacity:.55}
+li.done{opacity:.55}
+@media (max-width:640px){h1{font-size:2rem}section{padding:18px}.two{grid-template-columns:1fr}.bar{gap:10px;padding:8px 12px}}
+@media print{body{background:#fff;font-size:12px}section{break-inside:avoid;border-color:#ccc}pre{white-space:pre-wrap}.bar,.lang,input[type=checkbox]{display:none}li.has-box{padding-left:0;margin-left:0;list-style:disc}.chip.done code,li.done{opacity:1;text-decoration:none}}
+</style>
+</head>
+<body>
+<button type="button" id="lang" class="lang" aria-label="Switch language">中文</button>
+<main>
+<h1>CSS Keywords Cheat Sheet</h1>
+<p class="lead">The key words every CSS beginner should learn, grouped by topic. Tick each item as you study it; your progress is saved in this browser.</p>
+
+<div class="bar">
+<span id="count" aria-live="polite"></span>
+<div class="track"><div id="fill"></div></div>
+<button type="button" id="reset">Reset</button>
+</div>
+
+<section>
+<h2>Beginner Priority List</h2>
+<div class="two">
+<div><h3>Week 1</h3>
+<ol><li><code>color</code></li><li><code>background-color</code></li><li><code>font-size</code></li><li><code>font-family</code></li><li><code>width</code> and <code>height</code></li><li><code>margin</code> and <code>padding</code></li><li><code>border</code></li><li><code>box-sizing</code></li><li><code>display</code></li></ol></div>
+<div><h3>Week 2</h3>
+<ol><li><code>position</code></li><li>Flexbox</li><li>Grid</li><li><code>:hover</code></li><li>Media queries</li><li>Transitions</li></ol></div>
+</div>
+<p>These topics cover most everyday CSS work.</p>
+</section>
+
+<section>
+<h2>1. Selectors</h2>
+<p>Selectors choose which HTML elements to style.</p>
+<ul>
+<li><code>p</code> element selector</li>
+<li><code>.class</code> class selector</li>
+<li><code>#id</code> ID selector</li>
+<li><code>*</code> universal selector</li>
+<li><code>div p</code> descendant selector</li>
+<li><code>div &gt; p</code> child selector</li>
+<li><code>h1, h2</code> grouping (same styles for both)</li>
+<li><code>h1 + p</code> adjacent sibling</li>
+<li><code>h1 ~ p</code> general sibling</li>
+<li><code>a[href]</code> attribute selector</li>
+</ul>
+<h3>Pseudo-classes (a state or position)</h3>
+<div class="k"><code>:hover</code><code>:active</code><code>:focus</code><code>:focus-within</code><code>:visited</code><code>:first-child</code><code>:last-child</code><code>:nth-child()</code><code>:not()</code></div>
+<h3>Pseudo-elements (a part of an element)</h3>
+<div class="k"><code>::before</code><code>::after</code><code>::first-line</code><code>::placeholder</code></div>
+<p class="note"><code>::before</code> and <code>::after</code> only appear when the <code>content</code> property is set.</p>
+<pre><code>.note::before {
+  content: "Note: ";
+  font-weight: bold;
+}</code></pre>
+</section>
+
+<section>
+<h2>2. Specificity and the Cascade</h2>
+<p>When two rules clash, the more specific selector wins. From strongest to weakest:</p>
+<ol data-plain><li>Inline styles</li><li>ID selectors</li><li>Class, attribute and pseudo-class selectors</li><li>Element selectors</li></ol>
+<p>If specificity is equal, the rule written last wins. <code>!important</code> overrides everything, so avoid it.</p>
+</section>
+
+<section>
+<h2>3. Colours</h2>
+<pre><code>color: red;
+background-color: blue;</code></pre>
+<h3>Colour keywords</h3>
+<div class="k"><code>red</code><code>blue</code><code>green</code><code>yellow</code><code>black</code><code>white</code><code>gray</code><code>purple</code><code>orange</code><code>pink</code><code>transparent</code><code>currentColor</code></div>
+<p><code>currentColor</code> uses the element’s current text colour.</p>
+<h3>Colour formats</h3>
+<pre><code>#ff0000
+rgb(255, 0, 0)
+rgba(255, 0, 0, 0.5)
+rgb(255 0 0 / 50%)
+hsl(0, 100%, 50%)</code></pre>
+</section>
+
+<section>
+<h2>4. Units</h2>
+<h3>Absolute</h3>
+<div class="k"><code>px</code></div>
+<h3>Relative</h3>
+<ul>
+<li><code>%</code> percentage of the parent element</li>
+<li><code>em</code> relative to the parent’s font size</li>
+<li><code>rem</code> relative to the root font size</li>
+<li><code>vw</code> 1% of viewport width</li>
+<li><code>vh</code> 1% of viewport height</li>
+<li><code>vmin</code> and <code>vmax</code> 1% of the smaller or larger viewport side</li>
+<li><code>ch</code> width of the character 0</li>
+<li><code>fr</code> a share of free space (Grid only)</li>
+</ul>
+<pre><code>width: 50%;
+font-size: 2rem;
+height: 100vh;</code></pre>
+</section>
+
+<section>
+<h2>5. The Box Model</h2>
+<p>Every element is a box made of content, padding, border and margin.</p>
+<pre><code>margin: 10px;
+padding: 10px;
+border: 1px solid black;
+box-sizing: border-box;</code></pre>
+<h3>Properties</h3>
+<div class="k"><code>margin</code><code>padding</code><code>border</code><code>width</code><code>height</code><code>min-width</code><code>max-width</code><code>min-height</code><code>max-height</code></div>
+<h3>box-sizing</h3>
+<ul>
+<li><code>content-box</code> default: padding and border are added to the width</li>
+<li><code>border-box</code> padding and border are included in the width</li>
+</ul>
+<h3>Shorthand</h3>
+<pre><code>margin: 10px 20px;
+margin: 10px 20px 30px 40px;</code></pre>
+<p>One value sets all sides, two values set top/bottom then left/right, and four values go clockwise from the top.</p>
+<h3>Size values</h3>
+<div class="k"><code>auto</code><code>fit-content</code><code>min-content</code><code>max-content</code></div>
+</section>
+
+<section>
+<h2>6. Display</h2>
+<p>Determines how an element behaves in the layout.</p>
+<pre><code>display: block;</code></pre>
+<div class="k"><code>block</code><code>inline</code><code>inline-block</code><code>flex</code><code>inline-flex</code><code>grid</code><code>inline-grid</code><code>none</code></div>
+<p><code>none</code> removes the element from the layout.</p>
+</section>
+
+<section>
+<h2>7. Position</h2>
+<p>Controls element placement.</p>
+<pre><code>position: relative;
+top: 10px;</code></pre>
+<h3>Position values</h3>
+<ul>
+<li><code>static</code> default</li>
+<li><code>relative</code> offset from its normal spot</li>
+<li><code>absolute</code> placed against the nearest positioned ancestor</li>
+<li><code>fixed</code> placed against the viewport</li>
+<li><code>sticky</code> scrolls, then sticks</li>
+</ul>
+<h3>Related properties</h3>
+<div class="k"><code>top</code><code>right</code><code>bottom</code><code>left</code><code>inset</code><code>z-index</code></div>
+<p><code>inset</code> is shorthand for all four sides.</p>
+</section>
+
+<section>
+<h2>8. Flexbox</h2>
+<p>Used for one-dimensional layouts (a row or a column).</p>
+<pre><code>.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}</code></pre>
+<h3>flex-direction</h3>
+<div class="k"><code>row</code><code>column</code><code>row-reverse</code><code>column-reverse</code></div>
+<h3>justify-content (main axis)</h3>
+<div class="k"><code>flex-start</code><code>center</code><code>flex-end</code><code>space-between</code><code>space-around</code><code>space-evenly</code></div>
+<h3>align-items (cross axis)</h3>
+<div class="k"><code>stretch</code><code>flex-start</code><code>center</code><code>flex-end</code><code>baseline</code></div>
+<h3>flex-wrap</h3>
+<div class="k"><code>nowrap</code><code>wrap</code><code>wrap-reverse</code></div>
+<h3>Other flexbox properties</h3>
+<div class="k"><code>gap</code><code>align-content</code><code>align-self</code><code>order</code><code>flex</code><code>flex-grow</code><code>flex-shrink</code><code>flex-basis</code></div>
+<p><code>align-self</code>, <code>order</code> and the <code>flex</code> properties are set on a child.</p>
+</section>
+
+<section>
+<h2>9. CSS Grid</h2>
+<p>Used for two-dimensional layouts (rows and columns together).</p>
+<pre><code>.container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}</code></pre>
+<h3>Important properties</h3>
+<div class="k"><code>grid-template-columns</code><code>grid-template-rows</code><code>grid-template-areas</code><code>gap</code><code>grid-column</code><code>grid-row</code><code>place-items</code><code>justify-items</code><code>align-items</code></div>
+<h3>Functions and keywords</h3>
+<div class="k"><code>repeat()</code><code>minmax()</code><code>fr</code><code>auto-fill</code><code>auto-fit</code></div>
+<pre><code>grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));</code></pre>
+</section>
+
+<section>
+<h2>10. Text Styling</h2>
+<pre><code>font-family: Arial, sans-serif;
+font-size: 1.2rem;
+line-height: 1.5;</code></pre>
+<h3>Generic font families</h3>
+<div class="k"><code>serif</code><code>sans-serif</code><code>monospace</code><code>cursive</code><code>fantasy</code></div>
+<h3>font-weight</h3>
+<div class="k"><code>normal</code><code>bold</code><code>lighter</code><code>bolder</code><code>100</code><code>900</code></div>
+<p>Numeric weights run from <code>100</code> to <code>900</code>.</p>
+<h3>font-style</h3>
+<div class="k"><code>normal</code><code>italic</code></div>
+<h3>text-align</h3>
+<div class="k"><code>left</code><code>center</code><code>right</code><code>justify</code></div>
+<h3>text-transform</h3>
+<div class="k"><code>uppercase</code><code>lowercase</code><code>capitalize</code></div>
+<h3>text-decoration</h3>
+<div class="k"><code>none</code><code>underline</code><code>line-through</code></div>
+<h3>Other text properties</h3>
+<div class="k"><code>line-height</code><code>letter-spacing</code><code>text-shadow</code><code>white-space</code><code>text-overflow: ellipsis</code></div>
+</section>
+
+<section>
+<h2>11. Background</h2>
+<pre><code>background-color: #f0f0f0;
+background-image: url("photo.jpg");
+background-repeat: no-repeat;
+background-size: cover;
+background-position: center;</code></pre>
+<h3>background-repeat</h3>
+<div class="k"><code>repeat</code><code>no-repeat</code><code>repeat-x</code><code>repeat-y</code></div>
+<h3>background-size</h3>
+<div class="k"><code>cover</code><code>contain</code><code>auto</code></div>
+<h3>background-position</h3>
+<div class="k"><code>center</code><code>top</code><code>bottom</code><code>left</code><code>right</code></div>
+<h3>Gradients</h3>
+<pre><code>background: linear-gradient(to right, red, blue);</code></pre>
+</section>
+
+<section>
+<h2>12. Border and Outline</h2>
+<pre><code>border: 2px solid black;
+border-radius: 8px;</code></pre>
+<h3>border-style</h3>
+<div class="k"><code>solid</code><code>dashed</code><code>dotted</code><code>double</code><code>none</code></div>
+<h3>Related properties</h3>
+<div class="k"><code>border-width</code><code>border-style</code><code>border-color</code><code>border-radius</code><code>outline</code></div>
+<p>Use <code>border-radius: 50%</code> for a circle.</p>
+</section>
+
+<section>
+<h2>13. Overflow</h2>
+<p>Controls content that doesn’t fit its box.</p>
+<pre><code>overflow: hidden;</code></pre>
+<div class="k"><code>visible</code><code>hidden</code><code>scroll</code><code>auto</code></div>
+<p>Also available: <code>overflow-x</code> and <code>overflow-y</code>.</p>
+</section>
+
+<section>
+<h2>14. Visibility and Opacity</h2>
+<pre><code>visibility: hidden;
+opacity: 0.5;</code></pre>
+<ul>
+<li><code>visibility</code> accepts <code>visible</code> or <code>hidden</code></li>
+<li><code>opacity</code> is a number from <code>0</code> (invisible) to <code>1</code> (solid)</li>
+</ul>
+<p class="note"><code>display: none</code> removes the element and its space. <code>visibility: hidden</code> hides it but keeps its space.</p>
+</section>
+
+<section>
+<h2>15. Cursor</h2>
+<p>Changes the mouse pointer.</p>
+<pre><code>cursor: pointer;</code></pre>
+<div class="k"><code>pointer</code><code>default</code><code>text</code><code>wait</code><code>not-allowed</code><code>move</code></div>
+</section>
+
+<section>
+<h2>16. Transitions and Transforms</h2>
+<pre><code>.button {
+  transition: all 0.3s ease;
+}
+
+.button:hover {
+  transform: scale(1.1);
+}</code></pre>
+<h3>Timing keywords</h3>
+<div class="k"><code>ease</code><code>linear</code><code>ease-in</code><code>ease-out</code><code>ease-in-out</code></div>
+<h3>Transform functions</h3>
+<div class="k"><code>translate()</code><code>rotate()</code><code>scale()</code></div>
+</section>
+
+<section>
+<h2>17. Custom Properties and Functions</h2>
+<pre><code>:root {
+  --main-color: teal;
+}
+
+p {
+  color: var(--main-color);
+  width: calc(100% - 20px);
+}</code></pre>
+<ul>
+<li><code>--name</code> defines a custom property</li>
+<li><code>var()</code> uses a custom property</li>
+<li><code>calc()</code> does maths with mixed units</li>
+</ul>
+</section>
+
+<section>
+<h2>18. Media Queries</h2>
+<p>Apply styles only when a condition is true, such as a small screen.</p>
+<pre><code>@media (max-width: 768px) {
+  .menu {
+    display: none;
+  }
+}</code></pre>
+<ul>
+<li><code>@media</code> starts a media query</li>
+<li><code>max-width</code> applies at this width and below</li>
+<li><code>min-width</code> applies at this width and above</li>
+<li><code>orientation</code> accepts <code>portrait</code> or <code>landscape</code></li>
+</ul>
+</section>
+
+<section>
+<h2>19. Effects and Media</h2>
+<div class="k"><code>box-shadow</code><code>object-fit</code><code>aspect-ratio</code><code>list-style</code></div>
+<p><code>object-fit</code> accepts <code>cover</code>, <code>contain</code> and <code>fill</code>. <code>list-style</code> accepts <code>none</code>, <code>disc</code>, <code>circle</code>, <code>square</code> and <code>decimal</code>.</p>
+<pre><code>box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+object-fit: cover;
+aspect-ratio: 16 / 9;</code></pre>
+</section>
+
+<section>
+<h2>20. Global Values</h2>
+<p>These work on any property.</p>
+<ul>
+<li><code>inherit</code> take the parent’s value</li>
+<li><code>initial</code> use the CSS default</li>
+<li><code>unset</code> inherit if possible, otherwise initial</li>
+<li><code>revert</code> go back to the browser’s default style</li>
+</ul>
+</section>
+</main>
+<script>
+(function () {
+  var KEY = "css-cheat-sheet-progress";
+  var LANG_KEY = "css-cheat-sheet-lang";
+  var ZH = {
+    "CSS Keywords Cheat Sheet": "CSS 關鍵字速查表",
+    "The key words every CSS beginner should learn, grouped by topic. Tick each item as you study it; your progress is saved in this browser.": "每位 CSS 初學者都該學會的關鍵字，依主題分類。學習時請逐項勾選，進度會儲存在此瀏覽器中。",
+    "Reset": "重設",
+    "Beginner Priority List": "初學者優先清單",
+    "Week 1": "第 1 週",
+    "Week 2": "第 2 週",
+    "and": "和",
+    "and the": "與",
+    "or": "或",
+    "to": "到",
+    "accepts": "可接受",
+    ",": "、",
+    ".": "。",
+    "Flexbox": "Flexbox 彈性盒",
+    "Grid": "Grid 格線",
+    "Media queries": "媒體查詢",
+    "Transitions": "過渡效果",
+    "These topics cover most everyday CSS work.": "這些主題涵蓋了大部分日常的 CSS 工作。",
+    "1. Selectors": "1. 選擇器",
+    "Selectors choose which HTML elements to style.": "選擇器用來選定要套用樣式的 HTML 元素。",
+    "element selector": "元素選擇器",
+    "class selector": "類別選擇器",
+    "ID selector": "ID 選擇器",
+    "universal selector": "通用選擇器",
+    "descendant selector": "後代選擇器",
+    "child selector": "子選擇器",
+    "grouping (same styles for both)": "群組（兩者套用相同樣式）",
+    "adjacent sibling": "相鄰兄弟選擇器",
+    "general sibling": "一般兄弟選擇器",
+    "attribute selector": "屬性選擇器",
+    "Pseudo-classes (a state or position)": "偽類別（狀態或位置）",
+    "Pseudo-elements (a part of an element)": "偽元素（元素的一部分）",
+    "only appear when the": "僅在設定",
+    "property is set.": "屬性時才會顯示。",
+    "2. Specificity and the Cascade": "2. 優先權與層疊",
+    "When two rules clash, the more specific selector wins. From strongest to weakest:": "當兩條規則衝突時，更具體的選擇器勝出。由強到弱依序為：",
+    "Inline styles": "行內樣式",
+    "ID selectors": "ID 選擇器",
+    "Class, attribute and pseudo-class selectors": "類別、屬性與偽類別選擇器",
+    "Element selectors": "元素選擇器",
+    "If specificity is equal, the rule written last wins.": "若優先權相同，寫在最後的規則勝出。",
+    "overrides everything, so avoid it.": "會覆蓋一切，因此請避免使用。",
+    "3. Colours": "3. 顏色",
+    "Colour keywords": "顏色關鍵字",
+    "uses the element’s current text colour.": "使用元素目前的文字顏色。",
+    "Colour formats": "顏色格式",
+    "4. Units": "4. 單位",
+    "Absolute": "絕對單位",
+    "Relative": "相對單位",
+    "percentage of the parent element": "父元素的百分比",
+    "relative to the parent’s font size": "相對於父元素的字體大小",
+    "relative to the root font size": "相對於根元素的字體大小",
+    "1% of viewport width": "視窗寬度的 1%",
+    "1% of viewport height": "視窗高度的 1%",
+    "1% of the smaller or larger viewport side": "視窗較小或較大邊的 1%",
+    "width of the character 0": "字元 0 的寬度",
+    "a share of free space (Grid only)": "可用空間的一份（僅限 Grid）",
+    "5. The Box Model": "5. 盒模型",
+    "Every element is a box made of content, padding, border and margin.": "每個元素都是由內容、內距、邊框和外距組成的盒子。",
+    "Properties": "屬性",
+    "default: padding and border are added to the width": "預設值：內距與邊框會加在寬度之外",
+    "padding and border are included in the width": "內距與邊框包含在寬度之內",
+    "Shorthand": "簡寫",
+    "One value sets all sides, two values set top/bottom then left/right, and four values go clockwise from the top.": "一個值設定四邊，兩個值依序設定上下與左右，四個值則從上方開始順時針。",
+    "Size values": "尺寸值",
+    "6. Display": "6. 顯示方式",
+    "Determines how an element behaves in the layout.": "決定元素在版面中的行為。",
+    "removes the element from the layout.": "會將元素從版面中移除。",
+    "7. Position": "7. 定位",
+    "Controls element placement.": "控制元素的擺放位置。",
+    "Position values": "定位值",
+    "default": "預設",
+    "offset from its normal spot": "從原本位置偏移",
+    "placed against the nearest positioned ancestor": "相對於最近的已定位祖先元素",
+    "placed against the viewport": "相對於視窗",
+    "scrolls, then sticks": "先隨頁面捲動，再黏附固定",
+    "Related properties": "相關屬性",
+    "is shorthand for all four sides.": "是四個方向的簡寫。",
+    "8. Flexbox": "8. Flexbox 彈性盒",
+    "Used for one-dimensional layouts (a row or a column).": "用於一維版面（單列或單欄）。",
+    "justify-content (main axis)": "justify-content（主軸）",
+    "align-items (cross axis)": "align-items（交叉軸）",
+    "Other flexbox properties": "其他 Flexbox 屬性",
+    "properties are set on a child.": "屬性要設定在子元素上。",
+    "9. CSS Grid": "9. CSS Grid 格線",
+    "Used for two-dimensional layouts (rows and columns together).": "用於二維版面（同時處理列與欄）。",
+    "Important properties": "重要屬性",
+    "Functions and keywords": "函式與關鍵字",
+    "10. Text Styling": "10. 文字樣式",
+    "Generic font families": "通用字體家族",
+    "Numeric weights run from": "數值字重範圍從",
+    "Other text properties": "其他文字屬性",
+    "11. Background": "11. 背景",
+    "Gradients": "漸層",
+    "12. Border and Outline": "12. 邊框與外框線",
+    "Use": "使用",
+    "for a circle.": "可做出圓形。",
+    "13. Overflow": "13. 溢出",
+    "Controls content that doesn’t fit its box.": "控制超出盒子範圍的內容。",
+    "Also available:": "另外還有：",
+    "14. Visibility and Opacity": "14. 可見度與不透明度",
+    "is a number from": "是一個數字，範圍從",
+    "(invisible) to": "（透明）到",
+    "(solid)": "（不透明）",
+    "removes the element and its space.": "會移除元素及其佔用的空間。",
+    "hides it but keeps its space.": "只隱藏元素，但保留其空間。",
+    "15. Cursor": "15. 游標",
+    "Changes the mouse pointer.": "改變滑鼠指標的樣式。",
+    "16. Transitions and Transforms": "16. 過渡與變形",
+    "Timing keywords": "時間函數關鍵字",
+    "Transform functions": "變形函式",
+    "17. Custom Properties and Functions": "17. 自訂屬性與函式",
+    "defines a custom property": "定義自訂屬性",
+    "uses a custom property": "使用自訂屬性",
+    "does maths with mixed units": "對混合單位進行運算",
+    "18. Media Queries": "18. 媒體查詢",
+    "Apply styles only when a condition is true, such as a small screen.": "僅在條件成立時（例如小螢幕）才套用樣式。",
+    "starts a media query": "開始一個媒體查詢",
+    "applies at this width and below": "在此寬度以下時套用",
+    "applies at this width and above": "在此寬度以上時套用",
+    "19. Effects and Media": "19. 效果與媒體",
+    "20. Global Values": "20. 全域值",
+    "These work on any property.": "這些值適用於任何屬性。",
+    "take the parent’s value": "取用父元素的值",
+    "use the CSS default": "使用 CSS 預設值",
+    "inherit if possible, otherwise initial": "可繼承時繼承，否則使用初始值",
+    "go back to the browser’s default style": "還原為瀏覽器的預設樣式"
+  };
+  var lang = "en";
+  try {
+    lang = localStorage.getItem(LANG_KEY) === "zh" ? "zh" : "en";
+  } catch (e) {}
+  var saved = {};
+  try {
+    saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {};
+  } catch (e) {
+    saved = {};
+  }
+  var boxes = [];
+  var nodes = [];
+  var langBtn = document.getElementById("lang");
+
+  function persist() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(saved));
+    } catch (e) {}
+  }
+
+  function refresh() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      if (b.checked) done++;
+    });
+    var total = boxes.length;
+    document.getElementById("count").textContent = lang === "zh"
+      ? "已學習 " + done + " / " + total
+      : done + " of " + total + " studied";
+    document.getElementById("fill").style.width = total ? (done / total) * 100 + "%" : "0";
+  }
+
+  function apply() {
+    var zh = lang === "zh";
+    document.documentElement.lang = zh ? "zh-Hant" : "en";
+    document.title = zh ? ZH["CSS Keywords Cheat Sheet"] : "CSS Keywords Cheat Sheet";
+    nodes.forEach(function (o) {
+      var key = o.orig.replace(/\s+/g, " ").trim();
+      var out = o.orig;
+      if (zh && Object.prototype.hasOwnProperty.call(ZH, key)) {
+        out = o.orig.match(/^\s*/)[0] + ZH[key] + o.orig.match(/\s*$/)[0];
+      }
+      o.node.nodeValue = out;
+    });
+    boxes.forEach(function (b) {
+      b.setAttribute("aria-label", zh ? "標記為已學習" : "Mark as studied");
+    });
+    langBtn.textContent = zh ? "English" : "中文";
+    langBtn.setAttribute("aria-label", zh ? "Switch to English" : "切換為繁體中文");
+    refresh();
+  }
+
+  document.querySelectorAll("section").forEach(function (sec, s) {
+    var n = 0;
+    sec.querySelectorAll(".k > code, li").forEach(function (el) {
+      if (el.closest("[data-plain]")) return;
+      var id = s + "-" + n++;
+      var box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = !!saved[id];
+      var host;
+      if (el.tagName === "LI") {
+        host = el;
+        host.classList.add("has-box");
+        host.insertBefore(box, host.firstChild);
+      } else {
+        host = document.createElement("label");
+        host.className = "chip";
+        el.parentNode.insertBefore(host, el);
+        host.appendChild(box);
+        host.appendChild(el);
+      }
+      host.classList.toggle("done", box.checked);
+      box.addEventListener("change", function () {
+        if (box.checked) saved[id] = 1;
+        else delete saved[id];
+        host.classList.toggle("done", box.checked);
+        persist();
+        refresh();
+      });
+      box._host = host;
+      boxes.push(box);
+    });
+  });
+
+  var walker = document.createTreeWalker(document.querySelector("main"), NodeFilter.SHOW_TEXT, {
+    acceptNode: function (n) {
+      if (!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      if (n.parentNode.closest("code,pre,#count")) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  while (walker.nextNode()) {
+    nodes.push({ node: walker.currentNode, orig: walker.currentNode.nodeValue });
+  }
+
+  document.getElementById("reset").addEventListener("click", function () {
+    var msg = lang === "zh" ? "要清除所有已勾選的項目嗎？" : "Clear all ticked items?";
+    if (!window.confirm(msg)) return;
+    saved = {};
+    boxes.forEach(function (b) {
+      b.checked = false;
+      b._host.classList.remove("done");
+    });
+    persist();
+    refresh();
+  });
+
+  langBtn.addEventListener("click", function () {
+    lang = lang === "zh" ? "en" : "zh";
+    try {
+      localStorage.setItem(LANG_KEY, lang);
+    } catch (e) {}
+    apply();
+  });
+
+  apply();
+})();
+</script>
+</body>
+</html>
