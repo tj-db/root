@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="icons/512x512.png">
     <title>POSTBOX</title>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <style>
@@ -36,6 +37,7 @@
         padding: 2rem;
       }
       .container {
+        position: relative;
         max-width: 800px;
         width: 100%;
         background-color: var(--card-bg);
@@ -190,16 +192,89 @@
         font-size: 1.8rem;
         transition: opacity 0.2s;
       }
+      #qr-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0.6rem;
+        background-color: transparent;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 1.8rem;
+        color: var(--accent);
+      }
       .tools {
         display: flex;
         justify-content: center;
         align-items: center;
         gap: 1rem;
       }
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        padding: 1.5rem;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 100;
+      }
+      .modal.open {
+        display: flex;
+      }
+      .modal-card {
+        position: relative;
+        width: 100%;
+        max-width: 340px;
+        padding: 2rem 1.5rem 1.5rem;
+        background-color: var(--card-bg);
+        border-radius: 22px;
+        text-align: center;
+      }
+      .modal-close {
+        position: absolute;
+        top: 0.6rem;
+        right: 0.6rem;
+        padding: 0.5rem 0.8rem;
+        background-color: transparent;
+        font-size: 1.3rem;
+        color: var(--text-primary);
+      }
+      .qr-frame {
+        display: inline-block;
+        padding: 12px;
+        background-color: #ffffff;
+        border-radius: 14px;
+        line-height: 0;
+      }
+      .qr-frame img {
+        width: 240px;
+        height: 240px;
+        max-width: 100%;
+        image-rendering: pixelated;
+      }
+      .qr-caption {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+      .qr-id {
+        margin-top: 0.3rem;
+        font-size: 1.6rem;
+        font-weight: bold;
+        color: var(--accent);
+      }
     </style>
   </head>
   <body>
     <div class="container">
+      <button id="qr-btn" aria-label="Show QR code" title="Show QR code">
+        <i class="fa fa-qrcode"></i>
+      </button>
       <h1>POSTBOX</h1>
       <div id="host-section">
         <div class="status"></div>
@@ -216,6 +291,7 @@
         <input type="file" id="file-input" multiple style="display: none">
         <button id="select-files">Select Files</button>
       </div>
+      <input type="file" id="resume-input" style="display: none">
       <ul class="file-list" id="file-list"></ul>
       <div class="tools">
         <button id="refresh-btn" aria-label="Refresh">
@@ -226,16 +302,28 @@
         </button>
       </div>
     </div>
+    <div class="modal" id="qr-modal" role="dialog" aria-modal="true" aria-label="QR code">
+      <div class="modal-card">
+        <button class="modal-close" id="qr-close" aria-label="Close">
+          <i class="fa fa-xmark"></i>
+        </button>
+        <div class="qr-frame" id="qr-frame"></div>
+        <div class="qr-caption">Scan to connect to</div>
+        <div class="qr-id" id="qr-id"></div>
+      </div>
+    </div>
     <script>
       const CHUNK_SIZE = 16384;
       const MAX_BUFFERED = 1024 * 1024;
       const FRAME_HEADER = 12;
       const READY_TIMEOUT = 8000;
+      const SHARE_URL = 'https://tj-db.github.io/root/postbox3.html';
 
       let peer = null;
       let conn = null;
       let nextFileId = 1;
       let nextKey = 1;
+      let hashPeerId = null;
       const outgoing = new Map();
       const partials = new Map();
       const incomingIds = new Map();
@@ -257,11 +345,12 @@
             resolve(null);
             return;
           }
-          const request = indexedDB.open('postbox', 1);
+          const request = indexedDB.open('postbox', 2);
           request.onupgradeneeded = () => {
             const db = request.result;
-            db.createObjectStore('meta', { keyPath: 'sig' });
-            db.createObjectStore('chunks');
+            if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'sig' });
+            if (!db.objectStoreNames.contains('chunks')) db.createObjectStore('chunks');
+            if (!db.objectStoreNames.contains('outgoing')) db.createObjectStore('outgoing', { keyPath: 'sig' });
           };
           request.onsuccess = () => resolve(request.result);
           request.onerror = () => resolve(null);
@@ -290,6 +379,54 @@
           tx.objectStore('meta').put({ sig: info.sig, name: info.name, size: info.size });
           await transactionDone(tx);
         });
+      }
+
+      function saveOutgoing(entry) {
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('outgoing', 'readwrite');
+          tx.objectStore('outgoing').put({ sig: entry.sig, name: entry.name, size: entry.size });
+          await transactionDone(tx);
+        });
+      }
+
+      function deleteOutgoing(sig) {
+        flushing = flushing.then(async () => {
+          const db = await openDb();
+          if (!db) return;
+          const tx = db.transaction('outgoing', 'readwrite');
+          tx.objectStore('outgoing').delete(sig);
+          await transactionDone(tx);
+        });
+      }
+
+      async function restoreOutgoing() {
+        const db = await openDb();
+        if (!db) return;
+
+        const records = await new Promise((resolve) => {
+          const request = db.transaction('outgoing').objectStore('outgoing').getAll();
+          request.onsuccess = () => resolve(request.result || []);
+          request.onerror = () => resolve([]);
+        });
+
+        for (const record of records) {
+          if (outgoing.has(record.sig)) continue;
+          const entry = {
+            sig: record.sig,
+            name: record.name,
+            size: record.size,
+            file: null,
+            key: `s${nextKey++}`,
+            fileId: 0,
+            active: false,
+            awaiting: false
+          };
+          outgoing.set(entry.sig, entry);
+          addFileToList(entry.key, entry.name, 'Unfinished, choose the file again to resume');
+          setSenderActions(entry);
+        }
       }
 
       function queueChunk(sig, offset, data) {
@@ -455,12 +592,27 @@
         return false;
       }
 
+      function readHashPeerId() {
+        const value = decodeURIComponent(location.hash.slice(1)).trim();
+        return /^\d{4}$/.test(value) ? value : null;
+      }
+
+      function consumeHashPeerId() {
+        if (!hashPeerId) return;
+        const target = hashPeerId;
+        hashPeerId = null;
+        history.replaceState(null, '', location.pathname + location.search);
+        document.getElementById('connect-id').value = target;
+        connectTo(target);
+      }
+
       function initializePeer() {
         const current = new Peer(generatePeerId());
         peer = current;
 
         current.on('open', (id) => {
           document.getElementById('peer-id').textContent = id;
+          consumeHashPeerId();
         });
 
         current.on('disconnected', () => {
@@ -501,6 +653,7 @@
           conn = connection;
           showMessage('Connected successfully!', false);
           showFileTransfer(true);
+          closeQrModal();
         });
 
         connection.on('data', handleData);
@@ -582,6 +735,10 @@
       }
 
       function connectToPeer() {
+        connectTo(document.getElementById('connect-id').value.trim());
+      }
+
+      function connectTo(connectId) {
         if (!peer || !peer.open) {
           showMessage('Still connecting to the server, try again in a moment', true);
           return;
@@ -590,7 +747,6 @@
           showMessage('Already connected', true);
           return;
         }
-        const connectId = document.getElementById('connect-id').value.trim();
         if (!/^\d{4}$/.test(connectId)) {
           showMessage('Please enter a valid 4-digit Peer ID', true);
           return;
@@ -601,6 +757,26 @@
         }
         showMessage('Connecting...', false);
         attachConnection(peer.connect(connectId, { reliable: true, serialization: 'raw' }));
+      }
+
+      function openQrModal() {
+        if (!peer || !peer.open || !peer.id) {
+          showMessage('Still connecting to the server, try again in a moment', true);
+          return;
+        }
+        const qr = qrcode(0, 'M');
+        qr.addData(`${SHARE_URL}#${encodeURIComponent(peer.id)}`);
+        qr.make();
+        const img = document.createElement('img');
+        img.alt = 'QR code';
+        img.src = qr.createDataURL(8, 0);
+        document.getElementById('qr-frame').replaceChildren(img);
+        document.getElementById('qr-id').textContent = peer.id;
+        document.getElementById('qr-modal').classList.add('open');
+      }
+
+      function closeQrModal() {
+        document.getElementById('qr-modal').classList.remove('open');
       }
 
       function percent(done, total) {
@@ -692,9 +868,17 @@
         ];
       }
 
+      let pickTarget = null;
+
+      function pickFile(entry, restart) {
+        pickTarget = { entry: entry, restart: Boolean(restart) };
+        document.getElementById('resume-input').click();
+      }
+
       function cancelSend(entry, notify) {
         if (entry.active) return;
         outgoing.delete(entry.sig);
+        deleteOutgoing(entry.sig);
         removeItem(entry.key);
         if (notify) sendJson({ type: 'cancel-send', sig: entry.sig });
       }
@@ -742,6 +926,8 @@
         }
         entry = {
           sig: sig,
+          name: file.name,
+          size: file.size,
           file: file,
           key: `s${nextKey++}`,
           fileId: 0,
@@ -749,6 +935,7 @@
           awaiting: false
         };
         outgoing.set(sig, entry);
+        saveOutgoing(entry);
         addFileToList(entry.key, file.name, 'Waiting...');
         return entry;
       }
@@ -760,6 +947,10 @@
           return;
         }
         if (entry.active) return;
+        if (!entry.file) {
+          pickFile(entry, restart);
+          return;
+        }
 
         entry.active = true;
         entry.awaiting = false;
@@ -951,6 +1142,7 @@
         if (data.ok) {
           setStatus(entry.key, 'Delivered');
           clearActions(entry.key);
+          deleteOutgoing(entry.sig);
         } else {
           setStatus(entry.key, 'Corrupted on receiver, please resend', true);
           setActions(entry.key, [
@@ -964,6 +1156,11 @@
         const entry = typeof data.sig === 'string' ? outgoing.get(data.sig) : null;
         if (!entry) {
           sendJson({ type: 'resume-unavailable', sig: data.sig });
+          return;
+        }
+        if (!entry.file) {
+          setStatus(entry.key, 'Receiver asked to resume, choose the file to continue', true);
+          setSenderActions(entry);
           return;
         }
         startTransfer(entry, Boolean(data.restart));
@@ -1079,6 +1276,25 @@
         if (e.key === 'Enter') connectToPeer();
       });
 
+      document.getElementById('qr-btn').addEventListener('click', openQrModal);
+
+      document.getElementById('qr-close').addEventListener('click', closeQrModal);
+
+      document.getElementById('qr-modal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeQrModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeQrModal();
+      });
+
+      window.addEventListener('hashchange', () => {
+        const id = readHashPeerId();
+        if (!id) return;
+        hashPeerId = id;
+        if (peer && peer.open) consumeHashPeerId();
+      });
+
       document.getElementById('select-files').addEventListener('click', () => {
         document.getElementById('file-input').click();
       });
@@ -1098,6 +1314,20 @@
           if (!connection.open || connection !== conn) break;
           await startTransfer(getOrCreateEntry(file), false);
         }
+      });
+
+      document.getElementById('resume-input').addEventListener('change', async (e) => {
+        const target = pickTarget;
+        pickTarget = null;
+        const file = e.target.files[0];
+        e.target.value = '';
+        if (!target || !file) return;
+        if (signatureOf(file) !== target.entry.sig) {
+          showMessage('That is not the same file: name, size and modified date must match', true);
+          return;
+        }
+        target.entry.file = file;
+        await startTransfer(target.entry, target.restart);
       });
 
       document.getElementById('refresh-btn').addEventListener('click', () => {
@@ -1163,7 +1393,9 @@
       }
 
       removeLegacyPeerId();
+      hashPeerId = readHashPeerId();
       restorePartials();
+      restoreOutgoing();
       initializePeer();
 
       if ("serviceWorker" in navigator) {
