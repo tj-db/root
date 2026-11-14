@@ -461,7 +461,7 @@
       const CHUNK_SIZE = 16384;
       const MAX_BUFFERED = 1024 * 1024;
       const FRAME_HEADER = 12;
-      const READY_TIMEOUT = 8000;
+      const READY_TIMEOUT = 60000;
       const SHARE_URL = 'https://tj-db.github.io/root/postbox2.html';
 
       let peer = null;
@@ -601,7 +601,8 @@
           bufBytes: 0,
           crc: 0xFFFFFFFF,
           endCrc: null,
-          finishing: false
+          finishing: false,
+          header: 0
         };
       }
 
@@ -651,7 +652,9 @@
         let expected = 0;
         for (const offset of offsets) {
           if (offset !== expected) break;
-          expected += info.stored.get(offset);
+          const following = expected + info.stored.get(offset);
+          if (following % CHUNK_SIZE !== 0 && following !== info.size) break;
+          expected = following;
         }
         return expected;
       }
@@ -1308,20 +1311,22 @@
         info.fileId = data.fileId;
         info.endCrc = null;
         info.finishing = false;
+        info.header += 1;
+        const token = info.header;
 
         clearActions(info.key);
         setStatus(info.key, 'Preparing...');
 
         flushBuffer(info);
         await flushing;
-        if (partials.get(info.sig) !== info) return;
+        if (partials.get(info.sig) !== info || info.header !== token) return;
 
         const prefix = contiguousPrefix(info);
         trimStored(info, prefix);
 
         let start = prefix;
         let crc = await rebuildCrc(info, prefix);
-        if (partials.get(info.sig) !== info) return;
+        if (partials.get(info.sig) !== info || info.header !== token) return;
         if (crc === null) {
           resetInfo(info);
           start = 0;
@@ -1362,7 +1367,7 @@
         }
         if (offset < info.next) return;
         if (offset > info.next) {
-          failReceive(info, 'Out of order, please resend');
+          failReceive(info, `Out of order (expected ${info.next}, got ${offset}), please resend`);
           return;
         }
 
