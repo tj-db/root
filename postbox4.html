@@ -477,6 +477,7 @@
       const objectUrls = [];
       const LEGACY_PEER_ID_KEY = 'postbox-peer-id';
       const SEGMENT_SIZE = CHUNK_SIZE * 64;
+      const MAX_PENDING = 4096;
       let flushing = Promise.resolve();
       let dbPromise = null;
 
@@ -597,6 +598,7 @@
           stored: new Map(),
           mem: new Map(),
           buf: [],
+          pending: new Map(),
           bufStart: 0,
           bufBytes: 0,
           crc: 0xFFFFFFFF,
@@ -673,6 +675,7 @@
         info.stored.clear();
         info.mem.clear();
         info.buf = [];
+        info.pending.clear();
         info.bufStart = 0;
         info.bufBytes = 0;
         info.next = 0;
@@ -1312,6 +1315,7 @@
         info.endCrc = null;
         info.finishing = false;
         info.header += 1;
+        info.pending.clear();
         const token = info.header;
 
         clearActions(info.key);
@@ -1366,21 +1370,37 @@
           return;
         }
         if (offset < info.next) return;
+
+        const payload = new Uint8Array(buffer, FRAME_HEADER, length);
+
         if (offset > info.next) {
-          failReceive(info, `Out of order (expected ${info.next}, got ${offset}), please resend`);
+          if (info.pending.has(offset)) return;
+          if (info.pending.size >= MAX_PENDING) {
+            failReceive(info, `Out of order (expected ${info.next}, got ${offset}), please resend`);
+            return;
+          }
+          info.pending.set(offset, payload);
           return;
         }
 
-        const payload = new Uint8Array(buffer, FRAME_HEADER, length);
-        info.crc = crc32Update(info.crc, payload);
-        if (info.buf.length === 0) info.bufStart = offset;
-        info.buf.push(payload);
-        info.bufBytes += length;
-        info.next += length;
-        if (info.bufBytes >= SEGMENT_SIZE) flushBuffer(info);
+        acceptChunk(info, payload);
+        while (info.pending.has(info.next)) {
+          const queued = info.pending.get(info.next);
+          info.pending.delete(info.next);
+          acceptChunk(info, queued);
+        }
 
         updateProgress(info.key, percent(info.next, info.size));
         tryFinish(info);
+      }
+
+      function acceptChunk(info, payload) {
+        info.crc = crc32Update(info.crc, payload);
+        if (info.buf.length === 0) info.bufStart = info.next;
+        info.buf.push(payload);
+        info.bufBytes += payload.byteLength;
+        info.next += payload.byteLength;
+        if (info.bufBytes >= SEGMENT_SIZE) flushBuffer(info);
       }
 
       function receiveEnd(data) {
