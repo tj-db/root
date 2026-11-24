@@ -13,50 +13,59 @@
       --ink: #17264a;
     }
     * { box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
       margin: 0;
-      padding: 28px;
+      padding: 14px 18px;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
       color: var(--ink);
       background: #f6f8fc;
       font-family: "Trebuchet MS", Arial, sans-serif;
     }
-    h1 { text-align: center; margin: 0 0 8px; font-size: clamp(1.7rem, 4vw, 2.5rem); }
-    .intro { text-align: center; margin: 0 auto 24px; color: #536078; }
+    h1 { text-align: center; margin: 0; font-size: clamp(1.2rem, 3vw, 1.8rem); flex: none; }
     .editor {
+      flex: none;
+      width: 100%;
       max-width: 1100px;
-      margin: 0 auto 24px;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 12px;
     }
+    .editor.collapsed { display: none; }
     .input-card {
       background: white;
       border: 1px solid #dce4ef;
-      border-radius: 18px;
-      padding: 16px;
+      border-radius: 14px;
+      padding: 10px 12px;
       box-shadow: 0 5px 18px #2638580d;
     }
-    label { display: block; font-weight: 800; margin-bottom: 8px; }
+    label { display: block; font-weight: 800; margin-bottom: 6px; font-size: 14px; }
     .blue-label { color: #147fc2; }
     .gold-label { color: #a66a00; }
     textarea {
       width: 100%;
-      min-height: 150px;
-      resize: vertical;
+      height: 74px;
+      resize: none;
       border: 1px solid #ccd6e5;
-      border-radius: 12px;
-      padding: 12px;
-      font: 15px/1.5 inherit;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font: 14px/1.4 inherit;
       outline-color: var(--blue);
     }
-    .hint { color: #748096; font-size: 12px; margin: 7px 0 0; }
-    .actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 0 auto 25px; }
+    .error { flex: none; margin: 0; text-align: center; color: #b42318; font-weight: 700; font-size: 13px; }
+    .error:empty { display: none; }
+    .actions { flex: none; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
     button {
       border: 0;
       border-radius: 999px;
-      padding: 12px 20px;
+      padding: 9px 18px;
       font-weight: 800;
-      font-size: 14px;
+      font-size: 13px;
       cursor: pointer;
       background: #1e73b7;
       color: white;
@@ -65,95 +74,144 @@
     button.secondary { background: #64748b; box-shadow: 0 3px 0 #475569; }
     button:hover { filter: brightness(1.06); }
     .board {
-      max-width: 1400px;
+      flex: 1 1 0;
+      min-height: 0;
+      width: 100%;
+      max-width: 1600px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 16px;
     }
     .panel {
-      min-height: 520px;
+      min-height: 0;
+      min-width: 0;
       position: relative;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
       border: 5px solid var(--blue);
-      border-radius: 30px;
+      border-radius: 28px;
       background: var(--blue-soft);
-      padding: 88px 18px 22px;
+      padding: 14px 14px 14px;
     }
     .panel.antonyms { border-color: var(--gold); background: var(--gold-soft); }
     .panel h2 {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      margin: 0;
-      padding: 13px 28px 16px;
-      width: max-content;
-      max-width: 92%;
-      border-radius: 0 0 24px 24px;
+      flex: none;
+      align-self: center;
+      margin: -14px 0 10px;
+      padding: 8px 28px 10px;
+      border-radius: 0 0 22px 22px;
       background: #bfe4ff;
       border: 3px solid var(--blue);
       border-top: 0;
       color: #102958;
       text-align: center;
-      font-size: clamp(1.25rem, 2.5vw, 2rem);
+      font-size: clamp(1.1rem, 2.2vw, 1.7rem);
     }
     .antonyms h2 { background: #ffdf82; border-color: var(--gold); }
     .word-cloud {
-      min-height: 405px;
+      flex: 1 1 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+      font-size: var(--fs, 16px);
+    }
+    .tiles {
       display: flex;
       flex-wrap: wrap;
-      align-content: flex-start;
-      align-items: center;
-      justify-content: space-around;
-      gap: 13px 12px;
+      justify-content: center;
+      align-content: center;
+      gap: 0.55em 0.5em;
+      width: 100%;
+      padding: 0.3em;
     }
     .tile {
-      display: inline-block;
-      max-width: 100%;
-      padding: 10px 17px;
-      border-radius: 20px;
+      flex: none;
+      white-space: nowrap;
+      padding: 0.3em 0.75em;
+      border-radius: 0.7em;
       border: 2px solid;
-      font-size: clamp(16px, 1.7vw, 23px);
+      font-size: 1em;
       font-weight: 800;
       line-height: 1.15;
-      overflow-wrap: anywhere;
+      text-align: center;
       box-shadow: 0 3px 0 #17264a12;
       transform: rotate(var(--tilt));
       animation: pop .25s ease-out both;
     }
     @keyframes pop { from { opacity: 0; scale: .8; } to { opacity: 1; scale: 1; } }
-    .empty { color: #8793a6; text-align: center; padding: 70px 12px; font-style: italic; }
-    .error { max-width: 900px; margin: -12px auto 18px; text-align: center; color: #b42318; font-weight: 700; }
-    footer { text-align: center; color: #8793a6; font-size: 12px; margin: 20px 0 0; }
-    @media (max-width: 760px) {
-      body { padding: 16px 10px; }
-      .editor, .board { grid-template-columns: 1fr; }
-      .panel { min-height: 400px; padding-top: 78px; }
-      .word-cloud { min-height: 280px; }
+    .empty {
+      color: #8793a6;
+      text-align: center;
+      padding: 20px 12px;
+      font-style: italic;
+      font-size: 15px;
+      margin: auto;
     }
+    @media (max-width: 760px) {
+      body { padding: 8px 8px; gap: 7px; }
+      .editor { gap: 8px; }
+      .input-card { padding: 7px; }
+      label { font-size: 12px; margin-bottom: 4px; }
+      textarea { height: 56px; font-size: 13px; }
+      .board { gap: 7px; }
+      .panel { padding: 8px 6px 8px; border-radius: 16px; border-width: 3px; }
+      .panel h2 { font-size: 14px; padding: 6px 12px 7px; margin: -8px 0 6px; }
+      .tile { border-width: 1.5px; }
+      .actions { gap: 7px; }
+      button { padding: 8px 12px; font-size: 12px; }
+    }
+    @media (max-height: 560px) {
+      h1 { display: none; }
+    }
+    @page { size: A4 landscape; margin: 7mm; }
     @media print {
-      body { background: white; padding: 0; }
-      .editor, .actions, .intro, footer, .error { display: none !important; }
-      .board { max-width: none; gap: 10px; }
-      .panel { min-height: 90vh; break-inside: avoid; }
+      html, body { height: auto; }
+      body { background: white; padding: 0; margin: 0; display: block; overflow: visible; }
+      .editor, .actions, .error, h1 { display: none !important; }
+      .board {
+        width: 100%;
+        max-width: none;
+        height: 195mm;
+        gap: 5mm;
+        grid-template-columns: 1fr 1fr;
+      }
+      .panel {
+        height: 195mm;
+        padding: 4mm;
+        border-width: 2px;
+        border-radius: 12px;
+        break-inside: avoid;
+      }
+      .panel h2 {
+        font-size: 16pt;
+        padding: 2mm 8mm;
+        margin: -4mm 0 3mm;
+        border-width: 2px;
+      }
+      .tile {
+        border-width: 1px;
+        box-shadow: none;
+        animation: none;
+        break-inside: avoid;
+      }
     }
   </style>
 </head>
 <body>
   <h1>Word Scatter Board</h1>
-  <p class="intro">Type a set of words for each side, then make your own colorful word board.</p>
 
-  <section class="editor" aria-label="Word inputs">
+  <section class="editor" id="editor" aria-label="Word inputs">
     <div class="input-card">
       <label class="blue-label" for="wordsInput">Section 1 — English Words</label>
       <textarea id="wordsInput" placeholder="Happy&#10;Strong&#10;Open&#10;Beautiful"></textarea>
-      <p class="hint">Enter one word or phrase per line (or separate them with commas).</p>
     </div>
     <div class="input-card">
       <label class="gold-label" for="antonymsInput">Section 2 — Antonyms</label>
       <textarea id="antonymsInput" placeholder="Sad&#10;Weak&#10;Closed&#10;Ugly"></textarea>
-      <p class="hint">Enter the matching opposites here, one per line.</p>
     </div>
   </section>
 
@@ -161,20 +219,20 @@
   <div class="actions">
     <button id="createButton">Create word board</button>
     <button class="secondary" id="shuffleButton" type="button">Shuffle words</button>
+    <button class="secondary" id="toggleButton" type="button">Hide inputs</button>
     <button class="secondary" id="printButton" type="button">Print board</button>
   </div>
 
   <main class="board">
     <section class="panel">
       <h2>English Words</h2>
-      <div class="word-cloud" id="wordsCloud"><div class="empty">Your English words will appear here.</div></div>
+      <div class="word-cloud" id="wordsCloud"></div>
     </section>
     <section class="panel antonyms">
       <h2>Antonyms</h2>
-      <div class="word-cloud" id="antonymsCloud"><div class="empty">Your antonyms will appear here.</div></div>
+      <div class="word-cloud" id="antonymsCloud"></div>
     </section>
   </main>
-  <footer>Tip: Use “Print board” to print or save your word board as a PDF.</footer>
 
   <script>
     const palette = [
@@ -191,6 +249,8 @@
     const wordsCloud = document.getElementById("wordsCloud");
     const antonymsCloud = document.getElementById("antonymsCloud");
     const errorMessage = document.getElementById("errorMessage");
+    const editor = document.getElementById("editor");
+    const toggleButton = document.getElementById("toggleButton");
 
     function parseWords(value) {
       return value.split(/[\n,;]+/).map(word => word.trim()).filter(Boolean);
@@ -205,15 +265,41 @@
       return result;
     }
 
-    function renderCloud(container, items) {
+    function fits(cloud, tiles) {
+      return tiles.offsetHeight <= cloud.clientHeight && tiles.scrollWidth <= tiles.clientWidth + 1;
+    }
+
+    function fitCloud(cloud) {
+      const tiles = cloud.querySelector(".tiles");
+      if (!tiles) return;
+      let low = 6;
+      let high = 44;
+      cloud.style.setProperty("--fs", low + "px");
+      if (!fits(cloud, tiles)) return;
+      while (high - low > 0.25) {
+        const mid = (low + high) / 2;
+        cloud.style.setProperty("--fs", mid + "px");
+        if (fits(cloud, tiles)) low = mid; else high = mid;
+      }
+      cloud.style.setProperty("--fs", low + "px");
+    }
+
+    function fitAll() {
+      fitCloud(wordsCloud);
+      fitCloud(antonymsCloud);
+    }
+
+    function renderCloud(container, items, emptyText) {
       container.replaceChildren();
       if (!items.length) {
         const empty = document.createElement("div");
         empty.className = "empty";
-        empty.textContent = "Add some words above to fill this side.";
+        empty.textContent = emptyText;
         container.appendChild(empty);
         return;
       }
+      const tiles = document.createElement("div");
+      tiles.className = "tiles";
       shuffled(items).forEach((word, index) => {
         const tile = document.createElement("span");
         const colors = palette[Math.floor(Math.random() * palette.length)];
@@ -222,25 +308,35 @@
         tile.style.background = colors[0];
         tile.style.borderColor = colors[1];
         tile.style.color = colors[2];
-        tile.style.setProperty("--tilt", `${(Math.random() * 10 - 5).toFixed(1)}deg`);
+        tile.style.setProperty("--tilt", `${(Math.random() * 6 - 3).toFixed(1)}deg`);
         tile.style.animationDelay = `${Math.min(index * 15, 250)}ms`;
-        container.appendChild(tile);
+        tiles.appendChild(tile);
       });
+      container.appendChild(tiles);
+      fitCloud(container);
     }
 
     function createBoard() {
       errorMessage.textContent = "";
-      renderCloud(wordsCloud, parseWords(wordsInput.value));
-      renderCloud(antonymsCloud, parseWords(antonymsInput.value));
+      renderCloud(wordsCloud, parseWords(wordsInput.value), "Add English words above to fill this side.");
+      renderCloud(antonymsCloud, parseWords(antonymsInput.value), "Add antonyms above to fill this side.");
     }
 
     document.getElementById("createButton").addEventListener("click", createBoard);
     document.getElementById("shuffleButton").addEventListener("click", createBoard);
     document.getElementById("printButton").addEventListener("click", () => window.print());
+    toggleButton.addEventListener("click", () => {
+      const hidden = editor.classList.toggle("collapsed");
+      toggleButton.textContent = hidden ? "Show inputs" : "Hide inputs";
+      requestAnimationFrame(fitAll);
+    });
 
-    // Load a small example so the layout is visible immediately.
-    wordsInput.value = "Happy\nStrong\nOpen\nBeautiful\nFast\nKind\nClean\nBright\nBrave\nWide\nSimple\nTruth";
-    antonymsInput.value = "Sad\nWeak\nClosed\nUgly\nSlow\nCruel\nDirty\nDark\nCowardly\nNarrow\nComplicated\nLie";
+    window.addEventListener("resize", fitAll);
+    window.addEventListener("beforeprint", fitAll);
+    window.addEventListener("afterprint", fitAll);
+    window.matchMedia("print").addEventListener("change", fitAll);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+
     createBoard();
   </script>
 </body>
