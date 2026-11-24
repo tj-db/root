@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+
+<!-- Legal Footnote: This content is subject to copyright and should not be reproduced without permission. -->
+<!-- Written and created by Thomas John-Michael de Beer, feel free to contact me via tjdebeer@gmail.com  -->
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GLORIA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent-color: #b91c1c;
+      --accent-contrast: #ffffff;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:linear-gradient(135deg,#c0392b 0%,#8e44ad 100%);
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+      padding:28px 16px;
+    }
+    .panel{
+      max-width:980px;
+      margin:0 auto;
+      background:#0000;
+      border-radius:22px;
+      box-shadow:0 20px 60px rgba(0,0,0,.28);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:72vh;
+      gap:0;
+    }
+    .panel-top{background:var(--accent-color)}
+    .tabs{
+      display:flex;
+      gap:10px;
+      padding:12px 18px 8px 18px;
+      background:var(--accent-color);
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .tab{
+      padding:10px 16px;
+      border-radius:999px;
+      border:none;
+      font-family: 'Rubik', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      opacity:.98;
+      color:var(--accent-contrast);
+      box-shadow:
+        inset 0 3px 6px rgba(0,0,0,0.28),
+        inset 0 -1px 3px rgba(255,255,255,0.06);
+      letter-spacing: 2px;
+      font-size: 0.95rem;
+    }
+    .tab:active{transform:scale(.99)}
+    .tab[aria-selected="true"], .tab.active{
+      box-shadow: none;
+      transform:translateY(1px);
+    }
+    .tab:focus{
+      outline: none;
+      box-shadow: none;
+    }
+    .tab:focus-visible{
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.12);
+    }
+    .tab[data-folder="YELLOW BOOK"]{
+      color:#ffffff !important;
+    }
+    .accent-bar{
+      height:6px;
+      background:var(--accent-color);
+    }
+    .search-bar{
+      padding:14px 18px;
+      background:var(--accent-color);
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    input[type="search"]{
+      flex:1;
+      padding:10px 12px;
+      border-radius:22px;
+      border:2px solid rgba(255,255,255,.6);
+      background:#ffffff;
+      color:#111827;
+      font-size:1rem;
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:#6b7280}
+    input[type="search"]:focus{
+      border-color:#ffffff;
+      box-shadow:0 6px 18px rgba(0,0,0,.08);
+    }
+    .content{
+      display:flex;
+      gap:18px;
+      padding:18px;
+      flex:1;
+      min-height:48vh;
+      background:var(--accent-color);
+    }
+    .list{
+      flex:1;
+      overflow:auto;
+      padding:8px 8px 40px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.35);
+      background:#ffffff;
+    }
+    .list-item{display:block;padding:6px 0;border-bottom:1px solid #f3f4f6}
+    .list-item:last-child{border-bottom:0}
+    .meta{display:block;width:100%}
+    .link-badge{
+      display:block;
+      width:100%;
+      padding:12px 14px;
+      border-radius:10px;
+      background:#f3f4f6;
+      color:#111827;
+      font-weight:600;
+      text-decoration:none;
+      text-align:center;
+    }
+    .link-badge:hover{background:#e9eef2}
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;border:0;padding:0;margin:-1px}
+    .no-results{padding:20px;text-align:center;color:#111827}
+    @media (max-width:900px){.content{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <div class="panel" role="application" aria-labelledby="appTitle">
+    <div class="panel-top">
+      <div class="tabs" role="tablist" aria-label="Books">
+<button class="tab" data-folder="RED BOOK" data-color="#b91c1c" aria-selected="true">LLL1</button>
+<button class="tab" data-folder="YELLOW BOOK" data-color="#f59e0b" aria-selected="false">LLL2</button>
+<button class="tab" data-folder="RT3" data-color="#059669" aria-selected="false">RT3</button>
+<button class="tab" data-folder="KB" data-color="#0f172a" aria-selected="false">KB</button>
+<button class="tab" data-folder="GE1" data-color="#0f766e" aria-selected="false">GE1</button>
+<button class="tab" data-folder="GE2" data-color="#4338ca" aria-selected="false">GE2</button>
+<button class="tab" data-folder="SER 1" data-color="#9f1239" aria-selected="false">SER1</button>
+<button class="tab" data-folder="SER 2" data-color="#ea580c" aria-selected="false">SER2</button>
+<button class="tab" data-folder="VER 1" data-color="#0891b2" aria-selected="false">VER1</button>
+<button class="tab" data-folder="VER 2" data-color="#6d28d9" aria-selected="false">VER2</button>
+      </div>
+      <div class="accent-bar" aria-hidden="true"></div>
+    </div>
+
+    <div class="search-bar" role="search" aria-label="Search files">
+      <input id="searchInput" type="search" placeholder="Search . . ." aria-label="Search files" />
+    </div>
+
+    <div class="content">
+      <div class="list" id="fileList" role="list" aria-label="Files list"></div>
+    </div>
+  </div>
+
+  <script>
+
+    const filesByFolder = {
+      "RED BOOK": [
+      {name:"LLL1-L53.pptx",url:"https://docs.google.com/presentation/d/10MqJx-oY8ajPhal7cWRU0iqeoSga_Zw3/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L25.pptx",url:"https://docs.google.com/presentation/d/1_TWeAlZ9y5MRIQ0Eei2t--gWroEry7lN/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L21.pptx",url:"https://docs.google.com/presentation/d/1HpNHULmcg9bGgcUl_IWzPGjJ7DPSqX9S/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L17.pptx",url:"https://docs.google.com/presentation/d/1eceZ_yWHDMGQNaBed3Q9jdyjJiR8Gg1K/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L15.pptx",url:"https://docs.google.com/presentation/d/1DjHCfT76pAVbjSmVo4rXKm8OLsRage5J/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L13.pptx",url:"https://docs.google.com/presentation/d/1DSHJ5heBBMIt71sq-5l8UIn5tl62Sq8C/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L11.pptx",url:"https://docs.google.com/presentation/d/1nihv6yptlcDP0D-DE8szaz07cNWbvlN-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L9.pptx",url:"https://docs.google.com/presentation/d/1Pww1plBp-bhiUfkWD_FhqHc9VnH8OWiz/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L7.pptx",url:"https://docs.google.com/presentation/d/15_03VnqTVESEuO7DAneGuYBo3FByUqub/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L5.pptx",url:"https://docs.google.com/presentation/d/104JN2h5qJzaw1WHbyQkCApwHr2ydCqJr/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L3.pptx",url:"https://docs.google.com/presentation/d/1UNpBF-kGm1Pu5KDoyRlugS0KMJKwn9ne/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L1.pptx",url:"https://docs.google.com/presentation/d/1tp5TOIUJPorIwoNy3rn8LdKnPpa7_afK/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L59.pptx",url:"https://docs.google.com/presentation/d/1d8H47yKK0FJzEp_uGgWtWu1iEU7MFlBX/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L57.pptx",url:"https://docs.google.com/presentation/d/1NiBceYpcnxyCR2aojyDZQnsxJA8XOqMD/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L55.pptx",url:"https://docs.google.com/presentation/d/1J0nv1RRg4Af7tjuYisXJWWqW1cLOnMA0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L51.pptx",url:"https://docs.google.com/presentation/d/1kt8qLDl6KvtC_ipTr11RTaWXQIXlA8x_/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L49.pptx",url:"https://docs.google.com/presentation/d/10KXNM834YA3jH7tDIKmPfY837UuSUPR5/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L47.pptx",url:"https://docs.google.com/presentation/d/1OUulJA-tT951HrLmtp5rFHvaUb5I2_Xa/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L45.pptx",url:"https://docs.google.com/presentation/d/1kgxTfpub9nppXCkgJRue_G0eBDhN4IwI/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L43.pptx",url:"https://docs.google.com/presentation/d/1bsx7Nh46MwQxc784aANeKM7wSjokGk4Q/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L41.pptx",url:"https://docs.google.com/presentation/d/1k30gmN12qkYTEtfXQhF5bxyVzF3IGxvA/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L39.pptx",url:"https://docs.google.com/presentation/d/1yXOuhY7KNBUGsZ8FSuS2Mkz61QbqAkGD/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L37.pptx",url:"https://docs.google.com/presentation/d/1lQBrku087OexdEEUrSRf0cS7GKuz_wO0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L35.pptx",url:"https://docs.google.com/presentation/d/1fas8oup_zu0G-6mM_jdPvrl67FBwCxmi/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L33.pptx",url:"https://docs.google.com/presentation/d/1Vv8A5cIQwH60w2ak88ehIQVNde90zqU-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L31.pptx",url:"https://docs.google.com/presentation/d/1dnveunFNr-j6YFvK-PGtC10QiaqYXOsC/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L29.pptx",url:"https://docs.google.com/presentation/d/13NgemRhQkCclqhuEE4wZ-scqOFNy0c2J/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L27.pptx",url:"https://docs.google.com/presentation/d/1pnXXZmHX-hZqremuIVBrR-9KTcYxIzDl/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L23.pptx",url:"https://docs.google.com/presentation/d/1mx7LO8sLktCaN0YggYpSjnSJxZz94zGe/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L19.pptx",url:"https://docs.google.com/presentation/d/1DEcAgOqsax_RBgPhq9Zc_-VGqqXZBLno/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L97.pptx",url:"https://docs.google.com/presentation/d/18bsLpX2x7ll4LFPjQYQgtYxKev0ETAN1/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L95.pptx",url:"https://docs.google.com/presentation/d/1pWTLI2MHUTefmp7lNRjAS0JmH6cCulf2/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L69.pptx",url:"https://docs.google.com/presentation/d/1nT7taZ9aZ8jOorq5IgbvpiFvV_ANJ88m/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L75.pptx",url:"https://docs.google.com/presentation/d/1uSVDF012wpOrSh5vPtCtWpezrGxSchlw/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L83.pptx",url:"https://docs.google.com/presentation/d/1nZ1PDYZ2yx4IDbQOoaoBs8AJuh8WIDgD/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L67.pptx",url:"https://docs.google.com/presentation/d/1-XlOCf5QSon1lD7Yobe4gaj9x8padVyf/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L93.pptx",url:"https://docs.google.com/presentation/d/1nzb0QRR4Yu9r1Bljy9WLi1cGWl5uwm-S/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L103.pptx",url:"https://docs.google.com/presentation/d/1eAHPSLXL2G7L0rNubY4LL_3EhMQrZfAZ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L87.pptx",url:"https://docs.google.com/presentation/d/1-RZz7sd2JLB7gdkv2AWgCIHDpoAfE9yq/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L63.pptx",url:"https://docs.google.com/presentation/d/10vluKdyoDixv4ByLrAuKSOGJ5zglyXDX/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L77.pptx",url:"https://docs.google.com/presentation/d/13JC-SxpOjz2E0_5HHEHIzR_ihdpABqGk/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L79.pptx",url:"https://docs.google.com/presentation/d/17T6GHRfQ_VbuGFqdtEJDWDOpfM9bWmfw/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L91.pptx",url:"https://docs.google.com/presentation/d/17uReaK2p2vynouSf9yDX-gQw003Y5Q4w/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L99.pptx",url:"https://docs.google.com/presentation/d/1AGucTEc1HNjWE_sS6EkR8o_QbWldHVDG/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L73.pptx",url:"https://docs.google.com/presentation/d/1BkV8t4NUYsNFLu3UcGxa1rDu2-PlWrPv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L119.pptx",url:"https://docs.google.com/presentation/d/1NT8oSmxUzOkrWnya5lDBGFJ1Rh2IjQIb/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L101.pptx",url:"https://docs.google.com/presentation/d/1Obq-usJ-7IQYzR841F1Dp-KwyCa0lufz/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L117.pptx",url:"https://docs.google.com/presentation/d/1Ox4YYxoaVcNDb73FtrWALKzBNUO5olgv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L61.pptx",url:"https://docs.google.com/presentation/d/1RIpyG3f7PQxbkfmSvJVI_TileyxOKSNa/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L115.pptx",url:"https://docs.google.com/presentation/d/1S4vnZZRBEvvaterXAbSRta6ecxud1lx0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L65.pptx",url:"https://docs.google.com/presentation/d/1T4ZiI-0Wj4AL3qMUPFrRZfqMN-7wvubj/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L111.pptx",url:"https://docs.google.com/presentation/d/1Vf0Ar1_gaCWL-peHO4aDvjOp3RRugPsg/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L105.pptx",url:"https://docs.google.com/presentation/d/1aDDIa9X47hIJYVYMbgNnhAKFs5dTmzqi/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L107.pptx",url:"https://docs.google.com/presentation/d/1hI_fPjp4X2zpWijJFrZF11SULA4rhbin/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L89.pptx",url:"https://docs.google.com/presentation/d/1jMGE5DMTtEFRArLnNGuFWS57EIraJeTV/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L71.pptx",url:"https://docs.google.com/presentation/d/1mXS1F2gbkLu3XhO5x74eopUu_0xo5bYV/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L113.pptx",url:"https://docs.google.com/presentation/d/1nfFkMh-51m-M5EBHXN7zFOiSX3i-k5nW/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L109.pptx",url:"https://docs.google.com/presentation/d/1q_NNnKHF5KeSzWOaMjXM3yiwpzl0Fbtv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L85.pptx",url:"https://docs.google.com/presentation/d/1s2pvc9PO4q91yb4nNtP35zhgyLLEC5xT/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+      {name:"LLL1-L81.pptx",url:"https://docs.google.com/presentation/d/1xdTDUgS3JNv1O1WieiaBZEjefYJ5i9Hm/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+      ],
+
+
+"YELLOW BOOK": [
+    {"name":"LLL2-L95.pptx","url":"https://docs.google.com/presentation/d/1IUBdzFdbfj3pdim5VkXmKA34RKjOKZ-x/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L21.pptx","url":"https://docs.google.com/presentation/d/1rKLZt14YCchpaaOX60zCcqW7xu-g1vNj/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L45.pptx","url":"https://docs.google.com/presentation/d/1y1ePJ9KQMAptFjNjPRuCZ1nreyrEkU0w/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L117.pptx","url":"https://docs.google.com/presentation/d/1cVH-_eNSmhFts9m_-RKOJg1BUibiquzT/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L119.pptx","url":"https://docs.google.com/presentation/d/1NscUrhTL5QJ5z-YigaMqS8RXMh5U-7c6/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L113.pptx","url":"https://docs.google.com/presentation/d/1WHxFN-RviQpafKTbMGD4OF8dFUiKGbzK/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L111.pptx","url":"https://docs.google.com/presentation/d/1ADsktQ8j7tFn2k_d0uu5Q_JF_qQlLFkR/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L109.pptx","url":"https://docs.google.com/presentation/d/1p1qeq6xqEr_Vru6j70Tk__iTpRsK9Q4J/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L105.pptx","url":"https://docs.google.com/presentation/d/1LE7tamScQPMthGmAXYwSXNlqM6wR_Gus/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L103.pptx","url":"https://docs.google.com/presentation/d/18u23SoywXT3496_QagToZ5nSGPkh2MRb/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L101.pptx","url":"https://docs.google.com/presentation/d/1TZVfog6gfyVlawa2_7rgTjGF_rPIbyRw/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L99.pptx","url":"https://docs.google.com/presentation/d/1An7jaj0GrPn40zRC5JbwSqJaReK0eiKq/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L97.pptx","url":"https://docs.google.com/presentation/d/1OyxC1qlQ_OAnq5FwrmE5RnqFoa7q2chS/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L93.pptx","url":"https://docs.google.com/presentation/d/1T5KYtkHvJeU03vKbbiYxdagoZEjpnURi/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L89.pptx","url":"https://docs.google.com/presentation/d/1m_UftRR6a4l5EkmHtuD-FO1pQe_TVSLa/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L81.pptx","url":"https://docs.google.com/presentation/d/1wmdtQ2I7cXHWTVWev-gBs1KgFqkd7Nd2/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L79.pptx","url":"https://docs.google.com/presentation/d/1e6jC8p_FZwdMqiFW4J2aRVcDwilDm4Bi/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L77.pptx","url":"https://docs.google.com/presentation/d/1-w6XLb6-GiISQq9EtlYKzU_Zh4gj32oG/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L75.pptx","url":"https://docs.google.com/presentation/d/1lj8GE_DYrID4fdCNUzD07KXf4NumaLOn/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L73.pptx","url":"https://docs.google.com/presentation/d/1d5HR6fjCxwP33uEjGsWu31gPycoM8pnJ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L71.pptx","url":"https://docs.google.com/presentation/d/1DCd7Bwtw6AJ-NkKT18M9QSx75gCzg_pp/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L69.pptx","url":"https://docs.google.com/presentation/d/1YYk61K2mOu80j__UkE9588ZuleK2SbpU/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L67.pptx","url":"https://docs.google.com/presentation/d/1yi8liuRUz9TxBKQQdewJLprLxMbjMFbe/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L59.pptx","url":"https://docs.google.com/presentation/d/1090kqt9i0Cj2oQ2MZ7otmWSDitsZvn7_/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L57.pptx","url":"https://docs.google.com/presentation/d/1L1DqGxx4hKPlcdx2iBkecJIOxYi-wa42/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L43.pptx","url":"https://docs.google.com/presentation/d/14rh8oQc8EmLdajyZWGHHCtf_Wn0sCgE6/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L41.pptx","url":"https://docs.google.com/presentation/d/13SKwiWHLQtybFCqxFCM8n9RXjzh4Y76u/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L37.pptx","url":"https://docs.google.com/presentation/d/1UdyHZeikQxZ2HcF55MM2ROd933rhPl68/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L35.pptx","url":"https://docs.google.com/presentation/d/1X61-p2AT7bN3kfjMSwCxWDPXsa7AwNW9/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L29.pptx","url":"https://docs.google.com/presentation/d/1FdP5Fvb3_h0vVEHoNzyK2J05wjkhxCCl/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L27.pptx","url":"https://docs.google.com/presentation/d/1kzwjNjVnfdI-fRQGJqSpT2-GLrMwvw02/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L25.pptx","url":"https://docs.google.com/presentation/d/18viMshIutAV92E1uqgqkKm2OCJNu9xG6/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L19.pptx","url":"https://docs.google.com/presentation/d/1OSNTN3q6goK8Y94V9VARA8GYND7dZGNf/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L17.pptx","url":"https://docs.google.com/presentation/d/1oFXYwV24Yh_-E4_hSiVpW8QQSCphgH6-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L15.pptx","url":"https://docs.google.com/presentation/d/1SBilqGvMCZff_-cQfIwe2j_2VOoPGpu6/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L3.pptx","url":"https://docs.google.com/presentation/d/1BR-fG93T9HJlsJYrJUd9mzFkIQKaAgwX/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L115.pptx","url":"https://docs.google.com/presentation/d/17-dkYAr3ykx6ZgTwHJnkF8nYrwBZ88DQ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L107.pptx","url":"https://docs.google.com/presentation/d/1FTo6mYAWk9z32IOiKV5kXktLckELBHQK/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L91.pptx","url":"https://docs.google.com/presentation/d/1cAcTTHEuxTxvMgeIZqnkDgOVG8DDwIpx/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L87.pptx","url":"https://docs.google.com/presentation/d/14vs9cRTs35znRDmnFgaL-inno0GAnxe0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L85.pptx","url":"https://docs.google.com/presentation/d/1gpKd6OTR7Iw-mNAsgO1HRSbgTCq-bAoD/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L83.pptx","url":"https://docs.google.com/presentation/d/1sn51Qx1deBo3__R_FOTe477R4sn0yMAE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L65.pptx","url":"https://docs.google.com/presentation/d/1OOHb8zzA-We8GJAy3MhQDhDDoJhcUNni/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L63.pptx","url":"https://docs.google.com/presentation/d/1UTKENWOtFwtSNAzR8ASqI90dSLG4AseN/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L61.pptx","url":"https://docs.google.com/presentation/d/1_sfiwMZvHmAboOfS4IkDFLguknTQiE34/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L33.pptx","url":"https://docs.google.com/presentation/d/1O0rUCvhgDxYgVVgdmdAe3udNK34Cy8h4/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L55.pptx","url":"https://docs.google.com/presentation/d/1CjRutOdunSfAq4jQPTVzIkvElLRkoBwt/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L53.pptx","url":"https://docs.google.com/presentation/d/1Xes4a4xykNgHNBD_WtB8Sex-guj81Qcp/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L51.pptx","url":"https://docs.google.com/presentation/d/16wJxSCHWeDOZ7lEBDCgh82p_UQJxrcLJ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L49.pptx","url":"https://docs.google.com/presentation/d/1w1jjds_qf9xNk2wXqtGP5wQNnwhI-krJ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L47.pptx","url":"https://docs.google.com/presentation/d/1AlVd1Hl14_S8F963B26GZ8bTqWRH6cl7/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L39.pptx","url":"https://docs.google.com/presentation/d/1WwV56pEg--KovNTWDOp1sz4btUfDH27f/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L31.pptx","url":"https://docs.google.com/presentation/d/1YcyBumBJrtBNMFQQOinCaoiQ9VqBoQwM/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L23.pptx","url":"https://docs.google.com/presentation/d/1ORCmPtbjDXTDUCKBdOxfPfn1LDH-3mnA/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L13.pptx","url":"https://docs.google.com/presentation/d/1_qLeR89XHxRCgthBoRKmkUoTZ3yEDqmc/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L5.pptx","url":"https://docs.google.com/presentation/d/1RQaiu935J6tbthGluweeaUU-qKdcx9uR/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L11.pptx","url":"https://docs.google.com/presentation/d/1gM_623BMEPiLOzU4z74D2iYXHVm4FKPI/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L9.pptx","url":"https://docs.google.com/presentation/d/1X7BPcE-hx6McZf19aLL8QioqnIFdhSCs/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L7.pptx","url":"https://docs.google.com/presentation/d/1-p_6pzBbH5jPhJoSFeu2V5i61QTHZKVJ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+    {"name":"LLL2-L1.pptx","url":"https://docs.google.com/presentation/d/1AWnXLc7ZAhfV9c1uaK5lU-_7VQ-eaiWA/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+  ],
+
+"KB": [
+  {"name":"KB_L10.pptx","url":"https://docs.google.com/presentation/d/1X6gpX_tuN5QNcAUn3IdYbMlsZXMEGMRF/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L24.pptx","url":"https://docs.google.com/presentation/d/1Q1mq0gctco3kCJMFih8zvaqXdftVDFOq/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L23.pptx","url":"https://docs.google.com/presentation/d/1P1-RZAreYbKfeMHpeqc0-w3Qt_ET8MGG/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L22.pptx","url":"https://docs.google.com/presentation/d/1k-q-JbKDeXxyUQgEjzpO4T8aoonMklC5/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L21.pptx","url":"https://docs.google.com/presentation/d/1RNLH9GBqqF9JpZkego4vExqzEra4zBBl/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L20.pptx","url":"https://docs.google.com/presentation/d/1px3iaiT0jg-2D1cWVfyqRwM9GsCLdSnH/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L19.pptx","url":"https://docs.google.com/presentation/d/1Nb4neNQ5aEu3rTdiwhI-qGu0ebxv1Kv1/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L18.pptx","url":"https://docs.google.com/presentation/d/14BUm-MqEa7gLib-1jfPCDco_Zalz1D8p/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L17.pptx","url":"https://docs.google.com/presentation/d/19sKz0sIxCbo7MakAweDMbPGu1A_aj-yC/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L16.pptx","url":"https://docs.google.com/presentation/d/1vX6oFrLJdNg2lMyjh43N2E-4Km23H2yU/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L64.pptx","url":"https://docs.google.com/presentation/d/1yaR_hmNYWuDezd0oZz1UFBOSeSUPKSz0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L63.pptx","url":"https://docs.google.com/presentation/d/1iTdkLfYRrPP5KH9FCz4x6F1viHk8zLb4/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L62.pptx","url":"https://docs.google.com/presentation/d/1M31BxXP1mqOAJsqAu6PisGKSqEIKEdyQ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L61.pptx","url":"https://docs.google.com/presentation/d/1dUYYn2A3j0fGzgrtPs3aXHIT49iCMDjg/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L60.pptx","url":"https://docs.google.com/presentation/d/1Whj_on5BrJfNYCcKX1GxH9d7lS4C5_3d/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L59.pptx","url":"https://docs.google.com/presentation/d/1D-gJWxQhqrQ3VApIB5Gyau8lVxVEjClH/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L58.pptx","url":"https://docs.google.com/presentation/d/1iO0UImHMA8_CzbBVgVVxJ1RovgUqyCjc/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L57.pptx","url":"https://docs.google.com/presentation/d/11odDlogwzARp7NUYYqHqnxtNRkz9OVHE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L56.pptx","url":"https://docs.google.com/presentation/d/1zLL5GE3GpRn9oUUcmeUmWKs0cuqZnyNB/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L55.pptx","url":"https://docs.google.com/presentation/d/1RC7tkssbW8z2mMfaLkDDeyAOAo_vfqcs/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L51.pptx","url":"https://docs.google.com/presentation/d/1vOu7cz0Lf81OcSguv2SGUOYuNawmaj_X/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L50.pptx","url":"https://docs.google.com/presentation/d/1XA5oFvKxPh8KWe1G2S1yN8wM-xT4rrtn/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L49.pptx","url":"https://docs.google.com/presentation/d/1Im5_d1x0qlRD8Mfvs_Am1p-pOkGrnH7Z/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L48.pptx","url":"https://docs.google.com/presentation/d/1U7BnpkuvB9sPkdyuEkMF7wlxBjf0_OXP/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L47.pptx","url":"https://docs.google.com/presentation/d/1PbLlQTtg631XgLjStKmepMN-uFIf6Ylq/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L46.pptx","url":"https://docs.google.com/presentation/d/1vm78Zl7a2AIsWzVq_pU2iTPjLgIkDYg8/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L45.pptx","url":"https://docs.google.com/presentation/d/1vgs37-tNzGAW0ocNWd5DIvOxqmChBC7d/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L44.pptx","url":"https://docs.google.com/presentation/d/1hHwKIZnwRpI55PMoBsTKjHkeXdF4dd3V/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L43.pptx","url":"https://docs.google.com/presentation/d/1smscLw4MKcysiAeH18qK7kiUGMFoQuKY/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L39.pptx","url":"https://docs.google.com/presentation/d/1iltF_wTmYSdTn_49jrD4CgF370G8yI8E/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L38.pptx","url":"https://docs.google.com/presentation/d/1_PPqupKFqa6Dh_8Q5gfaT_M9wRBOd1ww/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L37.pptx","url":"https://docs.google.com/presentation/d/1iFEf7DxIqIvNlMiKv_ECRE7FdtQLamIn/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L36.pptx","url":"https://docs.google.com/presentation/d/15y3kawxn5zRecJhGL_8_tyRq5WbXYARF/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L35.pptx","url":"https://docs.google.com/presentation/d/1O9R4cUW1c_Hooq60WIdBZdSkk4DLkSs0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L34.pptx","url":"https://docs.google.com/presentation/d/1U4jzOrd5DWYbBOXmrcDS_mrXb41LSZHc/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L33.pptx","url":"https://docs.google.com/presentation/d/1dzNNW9nS-L8B6n_nOEcnvYHqSZ2gtB5I/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L32.pptx","url":"https://docs.google.com/presentation/d/1ks3B02shbU-bvlbcOPkPFGNEWLSRx1KE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L31.pptx","url":"https://docs.google.com/presentation/d/1hKxeLn-jbN2fhlJFqjXZFSqaZOJNrTcf/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L29.pptx","url":"https://docs.google.com/presentation/d/1z9QxIfKa40ElW3RN5aWJEjRELppavZFE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L30.pptx","url":"https://docs.google.com/presentation/d/1f9q1rYPXjG_5AjV2SzuISVOqpDakcuVX/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L28.pptx","url":"https://docs.google.com/presentation/d/1NBTP0rHcEukX1-SmaaN4uPn1Mv6YNdNI/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L27.pptx","url":"https://docs.google.com/presentation/d/1Sf24P2HlILlH-BD5jtf1AHoqxShaVrV0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L26.pptx","url":"https://docs.google.com/presentation/d/1aHCWH7Is99qeqAoB4D3Fc-FnXISoYM0E/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L25.pptx","url":"https://docs.google.com/presentation/d/14TDmQuhhbZATrMRpW6bOazk9GbBthqFf/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L14.pptx","url":"https://docs.google.com/presentation/d/1QIU7JR2R7rtxt8wnEBB57yQENsFDvLzN/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L13.pptx","url":"https://docs.google.com/presentation/d/14-wwFiwu75PpOinPfvMSo6z1hFTsu8Sq/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L12.pptx","url":"https://docs.google.com/presentation/d/1erhNl8W5bOPENSBqSiShlny_-9pJ-PfC/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L11.pptx","url":"https://docs.google.com/presentation/d/1U507SLPgFKlwSW3yiTtPXaMwJmnZGKv1/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L08.pptx","url":"https://docs.google.com/presentation/d/17F34jTrUxyYm6xDxq4NR7DjBnyHGIpKV/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L06.pptx","url":"https://docs.google.com/presentation/d/1X4F8ThhGDLf2ZPEqrW6VZFAhXI6SwmSY/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L04.pptx","url":"https://docs.google.com/presentation/d/10VP7lMMkVedOKw_0HOq4XueBp0nJDbv7/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L03.pptx","url":"https://docs.google.com/presentation/d/1WW2NdVfJcXCM7lvMXfCfRXcfj5XqEV-n/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L02.pptx","url":"https://docs.google.com/presentation/d/17QcTE1ca4bqtvKChV2vKLw9j7ddB1LIr/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L40.pptx","url":"https://docs.google.com/presentation/d/1JdQnqcYd8X0ogfRl1Ewo5W4_nrkHWQ25/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L42.pptx","url":"https://docs.google.com/presentation/d/1CQnCR6pfswnVOG9xpFTp_Y_NKsLL2UpG/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L52.pptx","url":"https://docs.google.com/presentation/d/1lVVsBomJs581iw6VY4LOI4eLG5c4ZBwE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L41.pptx","url":"https://docs.google.com/presentation/d/1cwaOStgLAd0v-h8a2gQucJXDly4lkzc_/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_Self_intro.pptx","url":"https://docs.google.com/presentation/d/1xBZU3yP5gctjDSo_iJ5iAr8g9rKVhzHt/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L54.pptx","url":"https://docs.google.com/presentation/d/1JCjQl0alz1eknsTdhY6k_MwvMSfsWobJ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L53.pptx","url":"https://docs.google.com/presentation/d/1FrbMuB7zfFDCUzNzQzrl8gtvPE6cIWM9/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L07.pptx","url":"https://docs.google.com/presentation/d/13H6WcZBybhRAbuKCmvBytGYrDGn4AV8g/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L09.pptx","url":"https://docs.google.com/presentation/d/1qCZUHbgBW_S0bwadXsa9dTuWdTmB-ZM1/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L15.pptx","url":"https://docs.google.com/presentation/d/1lWiDv-Ep2rGqanf4aECl7Go7rCyabkuz/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L05.pptx","url":"https://docs.google.com/presentation/d/1I-f6KHHHVKMBX2tXx1mqQGOmayfpZsRO/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"KB_L01.pptx","url":"https://docs.google.com/presentation/d/1Tdl8l6SFzn507C7hyVJaKioxUD46xqPq/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+],
+
+
+"GE1": [
+  {"name":"GE1_L20.pptx","url":"https://docs.google.com/presentation/d/1MzowTnahfWULWU83PZ3os8oAHgQdZFhS/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L19.pptx","url":"https://docs.google.com/presentation/d/1lKneTxl45_AfaldxOi1eZT8mxj7Uc8Su/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L02.pptx","url":"https://docs.google.com/presentation/d/1bxUVH10OAtbiMk6CM7uMfsFYa8O3zxVD/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L28.pptx","url":"https://docs.google.com/presentation/d/1OfBz5-N1QNPAZscC9lXwV83s12QMWwKa/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L27.pptx","url":"https://docs.google.com/presentation/d/1PXMY1rKau5vHOefkRNSZpNInmMWAhiuj/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L26.pptx","url":"https://docs.google.com/presentation/d/1ww-c65-0oAzyMGth4xeZozgKUWOrdpMr/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L25.pptx","url":"https://docs.google.com/presentation/d/1Gsc49494VuZQaABCXqDhF_3AfYY4DMpY/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L24.pptx","url":"https://docs.google.com/presentation/d/1A5zzfK2AFKGNEZpqPZJ6RgWP3iLnC4nT/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L23.pptx","url":"https://docs.google.com/presentation/d/1vjMV8sSAVSmlJILwJEDm3u1oaj_QcYUj/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L22.pptx","url":"https://docs.google.com/presentation/d/1bXXMsnK4p4xaoasqpgk-fJc8_8F-I3dk/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L21.pptx","url":"https://docs.google.com/presentation/d/1_UekoJtdsuRiScbLTg9Js7UwwuaLJFbQ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L18.pptx","url":"https://docs.google.com/presentation/d/1o864aEWEjhULuS36A8CIowjeZKuZil_s/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L17.pptx","url":"https://docs.google.com/presentation/d/1fuEVQGyOAHaL2nYcLNmzGvb6UPfD6p0L/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L16.pptx","url":"https://docs.google.com/presentation/d/1mgjnI87CA2incVuNH8rs9No6lkq1A38V/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L15.pptx","url":"https://docs.google.com/presentation/d/13zLJnW5pXdGYWRaOsqHk6eSLDnMFPlqx/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L14.pptx","url":"https://docs.google.com/presentation/d/1F25Mkc9cRVzbHfa5FvrOBOWBDtV4oYER/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L13.pptx","url":"https://docs.google.com/presentation/d/1zNEljf-ykMk69InRVJ085xIRIWaQ_AwP/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L12.pptx","url":"https://docs.google.com/presentation/d/1NCRLntmaBN8UuyMj7E7yjijB7DPmzVR0/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L11.pptx","url":"https://docs.google.com/presentation/d/1tuua-aNuQD8t4UfpFw9QD-ggGR_ppYou/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L10.pptx","url":"https://docs.google.com/presentation/d/1L7xmO_b2bNSlhcffZwWYYmn21FLoOUGQ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L09.pptx","url":"https://docs.google.com/presentation/d/1gdNzdvGenKbrhgD1uTTI0kXv1crgEmtn/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L08.pptx","url":"https://docs.google.com/presentation/d/1YYTwi9svWj-e1gqD0M9Owk7bBaPAZpzU/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L07.pptx","url":"https://docs.google.com/presentation/d/1ElzbjgaF-_b-VHH76WqCS1PTYsjlGe_W/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L06.pptx","url":"https://docs.google.com/presentation/d/1rEZYsGt74RhSiNwxcNlSKZ9YJ-0dufhV/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L05.pptx","url":"https://docs.google.com/presentation/d/1vcPPEEE795hE96BfpkihJeBwm1FYTA7s/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L04.pptx","url":"https://docs.google.com/presentation/d/17BpAAOkFoZ2FzwsZxEgdwedUEeTWc3VN/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L03.pptx","url":"https://docs.google.com/presentation/d/1-tNd1NNk4jk_WNiLNgYv-GFnvKf7PxZC/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"GE1_L01.pptx","url":"https://docs.google.com/presentation/d/1D6-OenjQ8f0Jr3YmeC1qgFBaOTvzlXLc/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+],
+
+"GE2": [
+  {"name": "GE2_L23.pptx", "url": "https://docs.google.com/presentation/d/1CLXVwFwMaFOak40CaVKWPBgw_3mV4Cak/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L16.pptx", "url": "https://docs.google.com/presentation/d/1hy7JfJb_ouLZrBfJ0YtFlDVznfiJ2Fyn/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L09.pptx", "url": "https://docs.google.com/presentation/d/1p6nTA5H_mDwasvR-CH0FGnKtKXha93Mu/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L08.pptx", "url": "https://docs.google.com/presentation/d/1hk8RIal1gCAlSmYCar4t9qN1gDZqbyOU/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L12.pptx", "url": "https://docs.google.com/presentation/d/1O56EnucyURpWDc4YAjTZcLtPExkECFhq/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L20.pptx", "url": "https://docs.google.com/presentation/d/1Gm8cH-cI5dAmmSNqNBDPp7EkKXQoy9kZ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L24.pptx", "url": "https://docs.google.com/presentation/d/192heJ8CnpVygHaCLjFp_sXku7wDvfJP4/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L28.pptx", "url": "https://docs.google.com/presentation/d/1R83ZM1UG9jbRxVqGvW0bjMBip1iE6Awi/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L27.pptx", "url": "https://docs.google.com/presentation/d/1gSRkTmCgUD7tHEDkKrt2cDtnUiHJ8o0k/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L26.pptx", "url": "https://docs.google.com/presentation/d/11ZIcFUbpMHmE5o2n5irwVoSBPTAgUt01/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L25.pptx", "url": "https://docs.google.com/presentation/d/1Lw0Qn4FNYQgBvy-RL2MAI-bZ8R_8FEdg/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L22.pptx", "url": "https://docs.google.com/presentation/d/1zOaWwHPUQXekrAt7ZzIqjvYx8IMBVMcp/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L21.pptx", "url": "https://docs.google.com/presentation/d/1yO21AwtNr3IZUSb-SB1tJHaSD_7GuVVd/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L19.pptx", "url": "https://docs.google.com/presentation/d/1-KX_gwsdmvmJpPPG4aVlSVRttMjebeFQ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L18.pptx", "url": "https://docs.google.com/presentation/d/1_33Q0MAtXGa3s5BROpz2y-xqRem0yabx/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L17.pptx", "url": "https://docs.google.com/presentation/d/14cA7DRmcF8ZHbwvpL3fpiubCwhaHKNfw/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L15.pptx", "url": "https://docs.google.com/presentation/d/1Hne-HWayO9CQFTjPXv212v0Ze26rEsDk/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L14.pptx", "url": "https://docs.google.com/presentation/d/1BD20VIPcRLF9c_M-0T-FDbQOEVoPq17N/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L13.pptx", "url": "https://docs.google.com/presentation/d/1Lz8x49UomCibI5Wik34_QgjV51EPitJ7/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L11.pptx", "url": "https://docs.google.com/presentation/d/1-DA7XthC88pIYb2xx1HuS7OJ5GFbRCX-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L10.pptx", "url": "https://docs.google.com/presentation/d/1juahhVM4ADMRl1kT9_ikoT6zCJ0PlPg_/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L07.pptx", "url": "https://docs.google.com/presentation/d/1CVzHuWap8KL1TEHooVtAUirLQ5vFvUUu/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L06.pptx", "url": "https://docs.google.com/presentation/d/1RWiFmnFrr6sT1HbykJ4fzKd7LOuxayMO/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L05.pptx", "url": "https://docs.google.com/presentation/d/1ZBpCVgzYhCPExr-sGwsS_tg-3NX4gsFC/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L04.pptx", "url": "https://docs.google.com/presentation/d/1JQOR08xm1VKAHe0MvY90DBOqyB1gjgTU/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L03.pptx", "url": "https://docs.google.com/presentation/d/1HhrQlFMnonN9yue3yZ7t8L4lIXFFefbr/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L02.pptx", "url": "https://docs.google.com/presentation/d/1MAT8-9obivBLnmwIs93OO2A8Ydb1_XVZ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name": "GE2_L01.pptx", "url": "https://docs.google.com/presentation/d/1tfTWl3OXIyjp3wlO6pdi7aPGOo1ty-Hw/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+],
+
+"RT3": [
+  {"name":"RT3_U10.pptx","url":"https://docs.google.com/presentation/d/1li-2rxWG1nC8bbO4SBS43k2ordaVAFw7/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U19.pptx","url":"https://docs.google.com/presentation/d/1bwBh3JcwS8J5QpMIuw6s4_5swhkutCzV/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U13.pptx","url":"https://docs.google.com/presentation/d/1d6HTziNVoVEiVk4EvWtsvMtITUuaXv7m/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U02.pptx","url":"https://docs.google.com/presentation/d/1wZ3Z3jscJErMIbRuquVkcG_qt3LAFN81/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U14.pptx","url":"https://docs.google.com/presentation/d/1-jZUxLkj8t5Dv3ROpMtDeSC_6brq-0tf/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U18.pptx","url":"https://docs.google.com/presentation/d/1voIupVn_6DLgHB7Y6NFB5x9Klt1XE5dy/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U20.pptx","url":"https://docs.google.com/presentation/d/1HTAZ3CdzND8HdYbb_eXNbFzvfLOmki1F/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U17.pptx","url":"https://docs.google.com/presentation/d/1x9gg3jWYNlWVY24beg0LqwJpTFg_cv5J/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U16.pptx","url":"https://docs.google.com/presentation/d/13PyoCuqg9eQOSmpwWpwCTPyP4SIxnjMu/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U15.pptx","url":"https://docs.google.com/presentation/d/1xkvnAuhgTU9DznoWxVo437qudL01v9Dm/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U12.pptx","url":"https://docs.google.com/presentation/d/11owh8JKtN4DFkHS9XllPnGB0nZ2upFNM/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U11.pptx","url":"https://docs.google.com/presentation/d/1zlKId1sPdlN8lj-pr9oYe5aklG54ZdYk/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U08.pptx","url":"https://docs.google.com/presentation/d/1dEGBKJIHAeb4PX0PECXAo019XUmQIIpO/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U09.pptx","url":"https://docs.google.com/presentation/d/1zIsM72IAWMJGba5jpkNYHOtsZWb2qVib/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U07.pptx","url":"https://docs.google.com/presentation/d/1NhYoWGzfqI5XI1tAtZUj5N2P0BpJ654i/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U04.pptx","url":"https://docs.google.com/presentation/d/1mcf2IUiGQg2SiFP14rEusul58IuELHQe/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U06.pptx","url":"https://docs.google.com/presentation/d/1KblVDLSPwJmyJlLKyn39588oq34grHG6/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U05.pptx","url":"https://docs.google.com/presentation/d/1OBfsrJ4hMjzQyo7xp5H27I80Gv-1MiMh/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U03.pptx","url":"https://docs.google.com/presentation/d/1avhxrko78WxhZlX_loF7qw6DqoofFPqA/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"RT3_U01.pptx","url":"https://docs.google.com/presentation/d/1NZhAXkRFjG97m3D6hHb_Lr-fhk1B5bF-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+],
+
+"SER 1": [
+  {"name":"SER 1 U1.pptx","url":"https://docs.google.com/presentation/d/1HPq_EAxqIGf9PyV8Ud-eYpNaDJUWynGI/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U2.pptx","url":"https://docs.google.com/presentation/d/1E1luo4dd8kWEy30L6cbOgSuznTRwkTec/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U3.pptx","url":"https://docs.google.com/presentation/d/1E5E1ueMzuc0wL7Fj0i2mYTYNgZQ5Urqg/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U4.pptx","url":"https://docs.google.com/presentation/d/1cq72fZtTdQgNDy3IZbWCZp8PQNR_ohqB/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U5.pptx","url":"https://docs.google.com/presentation/d/1-ozyuLVR2qHE-19QkR7ypeNXCv3vfulE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U6.pptx","url":"https://docs.google.com/presentation/d/101I-aa630vwwnJR8-R3cHbMMomlosODv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U7.pptx","url":"https://docs.google.com/presentation/d/1EWo-Al2tewh8e0b9LxSVlyaqmfpH-fh2/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U8.pptx","url":"https://docs.google.com/presentation/d/10iP94T6Tap5TEgrC5arpHInIULH460bb/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U9.pptx","url":"https://docs.google.com/presentation/d/1wfMA3w3AIoKiObOzrXuyfU9XIPiqKLL3/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U10.pptx","url":"https://docs.google.com/presentation/d/1tf8-v67jMYKID9sDDdRR7qNPV6p2qjAo/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U11.pptx","url":"https://docs.google.com/presentation/d/182fXhRo1ock2Qr7Pm14QkwLflDP8WV5f/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U12.pptx","url":"https://docs.google.com/presentation/d/1LLLeVrrmfSpgM4obXzdkHYW-LJK-R00H/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U13.pptx","url":"https://docs.google.com/presentation/d/1NpPRAdpxzQ1NpiRhyAEO6aVTem6RSygE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U14.pptx","url":"https://docs.google.com/presentation/d/1-XM--LpFJRRYSpUrrd-b8fd_7gKVfkjc/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U15.pptx","url":"https://docs.google.com/presentation/d/1VAIbEysQqxU1j1Ndccr6BerAy36yWH2c/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"SER 1 U16.pptx","url":"https://docs.google.com/presentation/d/16_Xso84YkRXAQuxWKli8mDveSOLPbDA5/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+],
+
+"SER 2": [
+  {name:"SER 2 U10.pptx", url:"https://docs.google.com/presentation/d/1XfECHg7PPi4uGzcJTKpftF6qjZXRcFvY/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U9.pptx", url:"https://docs.google.com/presentation/d/1pyc0yKSLkdNM6zNST0eJs9QlZ0L0Gx6O/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U16.pptx", url:"https://docs.google.com/presentation/d/1Ylq3oBvvc3V--g2geoO93qVuv9DXyAJB/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U15.pptx", url:"https://docs.google.com/presentation/d/1BaQki1oq4BL-09I50grWNo_Asyd8Wt_3/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U14.pptx", url:"https://docs.google.com/presentation/d/1_m1bXJOQJAHDWSmpDKvcKkdyTJ8fl_zv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U13.pptx", url:"https://docs.google.com/presentation/d/1FVfyDP8APscGI6dc_jwHEvaotfiBYxJj/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U12.pptx", url:"https://docs.google.com/presentation/d/14FbKSN5SNiy507LQWpPpXrSmSUZp8tee/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U11.pptx", url:"https://docs.google.com/presentation/d/1ko37CotWieFTDsbKD2Bk1RM7PNyUQ7Vs/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U7.pptx", url:"https://docs.google.com/presentation/d/16fG_qESY9iA0eNnaAelIpQ4lZEMj6Pr2/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U5.pptx", url:"https://docs.google.com/presentation/d/1rGJbgIjvdJOZCCgG1GCyiYjZPbBayHPk/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U4.pptx", url:"https://docs.google.com/presentation/d/1x3csSrrGl4PtPPdQrwriuMnUSSfEvuev/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U3.pptx", url:"https://docs.google.com/presentation/d/1DeTbyuDBsW0COteNeUTEZPkX4lpxKnrp/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U2.pptx", url:"https://docs.google.com/presentation/d/1rnb9xKPYr-SLZUe6-Uq9Zff-aCYvjj2l/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U6.pptx", url:"https://docs.google.com/presentation/d/1ZTilPJJ6tYDyzt4ziIY9_R1Prvpj_gu-/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U8.pptx", url:"https://docs.google.com/presentation/d/1ZLJ6YkNgFu1_ZlMhGje9jXAjsO7tYegE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {name:"SER 2 U1.pptx", url:"https://docs.google.com/presentation/d/131GocwMsIxoqw4wV6qRDoYIOwYslFi5q/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+],
+
+"VER 1": [
+  {"name":"VER1_U07.pptx","url":"https://docs.google.com/presentation/d/1nxd-6O1l5vjGNNf0jAwJcPDnCYLXR6To/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U13.pptx","url":"https://docs.google.com/presentation/d/1dhmV69Ht_G7QK8qTzKjhrqUj6DMHNoMX/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U15.pptx","url":"https://docs.google.com/presentation/d/1vAnjaUlpyZ2XJeJxJXPmxQjTqNWN6efa/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U16.pptx","url":"https://docs.google.com/presentation/d/1KqTTYovoyAK2lzIV5VSVXP74NzfZokay/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U06.pptx","url":"https://docs.google.com/presentation/d/1llwFmU55KKwvnkwbP3YHdy4WknpzcJgL/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U14.pptx","url":"https://docs.google.com/presentation/d/1oPF2LLuLqHi2680waOxwymUIUgLaFeGH/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U12.pptx","url":"https://docs.google.com/presentation/d/1OUVG3mq0AfLrP_XHpBSv3Vf99-oVzPLY/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U11.pptx","url":"https://docs.google.com/presentation/d/17cnXXWXYD5nBvdoXdye1RK_gb7nPPRvJ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U10.pptx","url":"https://docs.google.com/presentation/d/1DZ1DDrL8rI9FjioKB-u_7TfU6pmpRJJf/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U09.pptx","url":"https://docs.google.com/presentation/d/1G39UE8kchgcBgfC6CYiFBobPyks0p924/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U08.pptx","url":"https://docs.google.com/presentation/d/1rY-37wLulzQ1AYoQ-0h0w-wrbdZftpif/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U05.pptx","url":"https://docs.google.com/presentation/d/1tHImD__kVHKM0tUVtQRrR7Mmv1ElfmNK/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U04.pptx","url":"https://docs.google.com/presentation/d/1_Qi0QtybRiAJQ56RJ4HdYVKgLutC_won/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U03.pptx","url":"https://docs.google.com/presentation/d/1ZpAvRaPHJNAWrdqaQqwmiQptvlzkdm40/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U02.pptx","url":"https://docs.google.com/presentation/d/1dpcxpVBZ3kS27H7qWBOYjVX2rtcxR13N/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER1_U01.pptx","url":"https://docs.google.com/presentation/d/1FrOAiUAFoJPbi-xMPxtaJA84QFI_8ReL/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+],
+
+"VER 2": [
+  {"name":"VER2_Unit 12.pptx","url":"https://docs.google.com/presentation/d/1YBT8YcV_9hZrC_4j6fzAYsA9fTD0W8hJ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 14.pptx","url":"https://docs.google.com/presentation/d/1-omKP0hIM28Y-nwkYATu83Pt6DmcA803/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 5.pptx","url":"https://docs.google.com/presentation/d/10aZNMZraKVEmJBAYkBsAALk_ygAG5shg/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 9.pptx","url":"https://docs.google.com/presentation/d/13y-PcOkoYrd0k82FCQeSlbgYwbY5y0Wx/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 3.pptx","url":"https://docs.google.com/presentation/d/1ASEu49ZV9MFYaoMoqJCZx4Sq31Gs4Bqy/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 7.pptx","url":"https://docs.google.com/presentation/d/1h-pBUIofmpfQrYCEm6vUKTxJudzTAh9j/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 8.pptx","url":"https://docs.google.com/presentation/d/1kNij4xp1XTU7yy1sqLwQjsMsb6IDFN0a/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 1.pptx","url":"https://docs.google.com/presentation/d/1ob2rIM8vz5dR0HwwB_jM8cQAS8eOaS5E/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 11.pptx","url":"https://docs.google.com/presentation/d/1p-jilVOuvMglMgTaADBV0zcKsHp2Hv7p/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 6.pptx","url":"https://docs.google.com/presentation/d/1sLsO__sC4igNAgg58DexGRSrTyqyoiJv/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 10.pptx","url":"https://docs.google.com/presentation/d/1xr260FGNY1StQpEdn4toWzpJsqA1oOsE/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 16.pptx","url":"https://docs.google.com/presentation/d/1bAvu93YQEDc-b53Iw72P2ynPnp4QPQew/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 15.pptx","url":"https://docs.google.com/presentation/d/1ZCd7s--QDC__Z019zYUZ8wXpY5W2kUvH/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 13.pptx","url":"https://docs.google.com/presentation/d/1Jw5EBaUEeEidJxYYaza1OkJ_nxie-iJA/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 4.pptx","url":"https://docs.google.com/presentation/d/1eDSlKyHK3lLvogDiw9qK2gQz1zyssofK/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"},
+  {"name":"VER2_Unit 2.pptx","url":"https://docs.google.com/presentation/d/1_qwP_S4WgMgLsKxCJhBU5VbzxksxaJaQ/edit?usp=drivesdk&ouid=113048266463912813681&rtpof=true&sd=true"}
+]
+
+    };
+
+    function setAccent(color){
+      document.documentElement.style.setProperty('--accent-color', color);
+      const contrast = contrastColor(color);
+      document.documentElement.style.setProperty('--accent-contrast', contrast);
+      document.querySelectorAll('.list').forEach(el=>{
+        el.style.borderColor = (contrast === '#ffffff') ? 'rgba(255,255,255,.25)' : 'rgba(0,0,0,.06)';
+      });
+      document.querySelectorAll('.accent-bar').forEach(el=>{
+        el.style.background = color;
+      });
+    }
+    function contrastColor(hex){
+      const c = (hex || '#b91c1c').replace('#','');
+      const r = parseInt(c.length===3?c[0]+c[0]:c.slice(0,2),16);
+      const g = parseInt(c.length===3?c[1]+c[1]:c.slice(2,4),16);
+      const b = parseInt(c.length===3?c[2]+c[2]:c.slice(4,6),16);
+      const yiq = (r*299 + g*587 + b*114) / 1000;
+      return yiq >= 150 ? '#111827' : '#ffffff';
+    }
+
+    function colorizeTabs(){
+      document.querySelectorAll('.tab').forEach(tab=>{
+        const color = tab.dataset.color || '#b91c1c';
+        const text = contrastColor(color);
+        tab.style.backgroundColor = color;
+        tab.style.color = text;
+      });
+      const yellow = document.querySelector('.tab[data-folder="YELLOW BOOK"]');
+      if (yellow) yellow.style.color = '#ffffff';
+    }
+
+function extractLessonNumber(name){
+  if (!name) return Infinity;
+  const s = name.toString();
+  let m = s.match(/-L(\d{1,3})/i);
+  if (m) return Number(m[1]);
+  m = s.match(/[_\-\s]L(\d{1,3})\b/i);
+  if (m) return Number(m[1]);
+  m = s.match(/\bL(\d{1,3})(?=\.|$|\D)/i);
+  if (m) return Number(m[1]);
+  m = s.match(/\bU(\d{1,3})(?=\.|$|\D)/i);
+  if (m) return Number(m[1]);
+  m = s.match(/\bUnit[_\-\s]?(\d{1,3})(?=\.|$|\D)/i);
+  if (m) return Number(m[1]);
+  m = s.match(/[_\s]U(\d{1,3})(?=\.|$|\D)/i);
+  if (m) return Number(m[1]);
+  m = s.match(/\b(\d{1,3})\b/);
+  return m ? Number(m[1]) : Infinity;
+}
+
+
+    const fileList = document.getElementById('fileList');
+    const input = document.getElementById('searchInput');
+    let currentFolder = "RED BOOK";
+
+    function renderList(items){
+      const sorted = items.slice().sort((a,b)=>extractLessonNumber(a.name)-extractLessonNumber(b.name));
+      fileList.innerHTML = '';
+      if (!sorted.length){
+        const no = document.createElement('div');
+        no.className = 'no-results';
+        no.textContent = 'No files match your search';
+        fileList.appendChild(no);
+        return;
+      }
+      sorted.forEach(function(f){
+        const row = document.createElement('div');
+        row.className = 'list-item';
+        row.setAttribute('role','listitem');
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const lessonNum = extractLessonNumber(f.name);
+        const link = document.createElement('a');
+        link.className = 'link-badge';
+        link.textContent = Number.isFinite(lessonNum) && lessonNum !== Infinity ? 'LESSON ' + lessonNum : f.name;
+        link.href = f.url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.setAttribute('aria-label', f.name);
+        const sr = document.createElement('span');
+        sr.className = 'visually-hidden';
+        sr.textContent = f.name;
+        link.appendChild(sr);
+        meta.appendChild(link);
+        row.appendChild(meta);
+        fileList.appendChild(row);
+      });
+    }
+
+    function normalize(text){
+      return text ? text.toString().trim().toLowerCase() : '';
+    }
+
+function search(query){
+  const q = normalize(query);
+  const source = filesByFolder[currentFolder] || [];
+  if (!q) return source.slice();
+  const labeled = q.match(/\b(?:l|u|unit)[_\-\s]*?(\d{1,3})\b/i);
+  if (labeled){
+    const target = Number(labeled[1]);
+    return source.filter(f => extractLessonNumber(f.name) === target);
+  }
+  const pureNum = q.match(/^(\d{1,3})$/);
+  if (pureNum){
+    const target = Number(pureNum[1]);
+    return source.filter(f => extractLessonNumber(f.name) === target);
+  }
+  const anyNum = q.match(/(\d{1,3})/);
+  if (anyNum){
+    const target = Number(anyNum[1]);
+    const byExactLesson = source.filter(f => extractLessonNumber(f.name) === target);
+    if (byExactLesson.length) return byExactLesson;
+  }
+  const exact = source.filter(f => {
+    const name = normalize(f.name);
+    return name === q || name === q + '.pptx';
+  });
+  if (exact.length) return exact;
+  return source.filter(f => normalize(f.name).includes(q));
+}
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => {
+          t.setAttribute('aria-selected','false');
+          t.classList.remove('active');
+        });
+        tab.setAttribute('aria-selected','true');
+        tab.classList.add('active');
+        currentFolder = tab.dataset.folder;
+        const color = tab.dataset.color || '#b91c1c';
+        setAccent(color);
+        input.value = '';
+        renderList(filesByFolder[currentFolder] || []);
+      });
+    });
+
+    colorizeTabs();
+    const initTab = document.querySelector('.tab[aria-selected="true"]') || document.querySelector('.tab');
+    setAccent(initTab.dataset.color || '#b91c1c');
+    renderList(filesByFolder[currentFolder]);
+
+    input.addEventListener('input', function(){
+      const results = search(input.value);
+      renderList(results);
+    });
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Enter'){
+        const results = search(input.value);
+        if (results.length){
+          window.open(results[0].url, '_blank', 'noopener');
+        }
+      }
+    });
+
+    (function enableTabKeyboardNav(){
+      const tabs = Array.from(document.querySelectorAll('.tab'));
+      tabs.forEach((t, idx) => {
+        t.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight'){
+            const next = tabs[(idx + 1) % tabs.length];
+            next.focus();
+            next.click();
+          } else if (e.key === 'ArrowLeft'){
+            const prev = tabs[(idx - 1 + tabs.length) % tabs.length];
+            prev.focus();
+            prev.click();
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
