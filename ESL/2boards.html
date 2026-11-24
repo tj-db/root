@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Scatter Board</title>
+  <style>
+    :root {
+      --blue: #35a9f4;
+      --blue-soft: #eaf6ff;
+      --gold: #ffb629;
+      --gold-soft: #fff6df;
+      --ink: #17264a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px;
+      color: var(--ink);
+      background: #f6f8fc;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+    }
+    h1 { text-align: center; margin: 0 0 8px; font-size: clamp(1.7rem, 4vw, 2.5rem); }
+    .intro { text-align: center; margin: 0 auto 24px; color: #536078; }
+    .editor {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .input-card {
+      background: white;
+      border: 1px solid #dce4ef;
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 5px 18px #2638580d;
+    }
+    label { display: block; font-weight: 800; margin-bottom: 8px; }
+    .blue-label { color: #147fc2; }
+    .gold-label { color: #a66a00; }
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      resize: vertical;
+      border: 1px solid #ccd6e5;
+      border-radius: 12px;
+      padding: 12px;
+      font: 15px/1.5 inherit;
+      outline-color: var(--blue);
+    }
+    .hint { color: #748096; font-size: 12px; margin: 7px 0 0; }
+    .actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 0 auto 25px; }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      background: #1e73b7;
+      color: white;
+      box-shadow: 0 3px 0 #14588f;
+    }
+    button.secondary { background: #64748b; box-shadow: 0 3px 0 #475569; }
+    button:hover { filter: brightness(1.06); }
+    .board {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .panel {
+      min-height: 520px;
+      position: relative;
+      overflow: hidden;
+      border: 5px solid var(--blue);
+      border-radius: 30px;
+      background: var(--blue-soft);
+      padding: 88px 18px 22px;
+    }
+    .panel.antonyms { border-color: var(--gold); background: var(--gold-soft); }
+    .panel h2 {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 13px 28px 16px;
+      width: max-content;
+      max-width: 92%;
+      border-radius: 0 0 24px 24px;
+      background: #bfe4ff;
+      border: 3px solid var(--blue);
+      border-top: 0;
+      color: #102958;
+      text-align: center;
+      font-size: clamp(1.25rem, 2.5vw, 2rem);
+    }
+    .antonyms h2 { background: #ffdf82; border-color: var(--gold); }
+    .word-cloud {
+      min-height: 405px;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      align-items: center;
+      justify-content: space-around;
+      gap: 13px 12px;
+    }
+    .tile {
+      display: inline-block;
+      max-width: 100%;
+      padding: 10px 17px;
+      border-radius: 20px;
+      border: 2px solid;
+      font-size: clamp(16px, 1.7vw, 23px);
+      font-weight: 800;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+      box-shadow: 0 3px 0 #17264a12;
+      transform: rotate(var(--tilt));
+      animation: pop .25s ease-out both;
+    }
+    @keyframes pop { from { opacity: 0; scale: .8; } to { opacity: 1; scale: 1; } }
+    .empty { color: #8793a6; text-align: center; padding: 70px 12px; font-style: italic; }
+    .error { max-width: 900px; margin: -12px auto 18px; text-align: center; color: #b42318; font-weight: 700; }
+    footer { text-align: center; color: #8793a6; font-size: 12px; margin: 20px 0 0; }
+    @media (max-width: 760px) {
+      body { padding: 16px 10px; }
+      .editor, .board { grid-template-columns: 1fr; }
+      .panel { min-height: 400px; padding-top: 78px; }
+      .word-cloud { min-height: 280px; }
+    }
+    @media print {
+      body { background: white; padding: 0; }
+      .editor, .actions, .intro, footer, .error { display: none !important; }
+      .board { max-width: none; gap: 10px; }
+      .panel { min-height: 90vh; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Word Scatter Board</h1>
+  <p class="intro">Type a set of words for each side, then make your own colorful word board.</p>
+
+  <section class="editor" aria-label="Word inputs">
+    <div class="input-card">
+      <label class="blue-label" for="wordsInput">Section 1 — English Words</label>
+      <textarea id="wordsInput" placeholder="Happy&#10;Strong&#10;Open&#10;Beautiful"></textarea>
+      <p class="hint">Enter one word or phrase per line (or separate them with commas).</p>
+    </div>
+    <div class="input-card">
+      <label class="gold-label" for="antonymsInput">Section 2 — Antonyms</label>
+      <textarea id="antonymsInput" placeholder="Sad&#10;Weak&#10;Closed&#10;Ugly"></textarea>
+      <p class="hint">Enter the matching opposites here, one per line.</p>
+    </div>
+  </section>
+
+  <p class="error" id="errorMessage" role="alert"></p>
+  <div class="actions">
+    <button id="createButton">Create word board</button>
+    <button class="secondary" id="shuffleButton" type="button">Shuffle words</button>
+    <button class="secondary" id="printButton" type="button">Print board</button>
+  </div>
+
+  <main class="board">
+    <section class="panel">
+      <h2>English Words</h2>
+      <div class="word-cloud" id="wordsCloud"><div class="empty">Your English words will appear here.</div></div>
+    </section>
+    <section class="panel antonyms">
+      <h2>Antonyms</h2>
+      <div class="word-cloud" id="antonymsCloud"><div class="empty">Your antonyms will appear here.</div></div>
+    </section>
+  </main>
+  <footer>Tip: Use “Print board” to print or save your word board as a PDF.</footer>
+
+  <script>
+    const palette = [
+      ["#ffe17a", "#ffbd24", "#49320b"],
+      ["#d8b8ff", "#ad7be9", "#251447"],
+      ["#b9e987", "#83c94b", "#203d16"],
+      ["#ffb7d2", "#f27ca9", "#4b1830"],
+      ["#b7dcff", "#69b6f5", "#102d59"],
+      ["#ffc58f", "#ff9b43", "#51270c"]
+    ];
+
+    const wordsInput = document.getElementById("wordsInput");
+    const antonymsInput = document.getElementById("antonymsInput");
+    const wordsCloud = document.getElementById("wordsCloud");
+    const antonymsCloud = document.getElementById("antonymsCloud");
+    const errorMessage = document.getElementById("errorMessage");
+
+    function parseWords(value) {
+      return value.split(/[\n,;]+/).map(word => word.trim()).filter(Boolean);
+    }
+
+    function shuffled(items) {
+      const result = [...items];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function renderCloud(container, items) {
+      container.replaceChildren();
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Add some words above to fill this side.";
+        container.appendChild(empty);
+        return;
+      }
+      shuffled(items).forEach((word, index) => {
+        const tile = document.createElement("span");
+        const colors = palette[Math.floor(Math.random() * palette.length)];
+        tile.className = "tile";
+        tile.textContent = word;
+        tile.style.background = colors[0];
+        tile.style.borderColor = colors[1];
+        tile.style.color = colors[2];
+        tile.style.setProperty("--tilt", `${(Math.random() * 10 - 5).toFixed(1)}deg`);
+        tile.style.animationDelay = `${Math.min(index * 15, 250)}ms`;
+        container.appendChild(tile);
+      });
+    }
+
+    function createBoard() {
+      errorMessage.textContent = "";
+      renderCloud(wordsCloud, parseWords(wordsInput.value));
+      renderCloud(antonymsCloud, parseWords(antonymsInput.value));
+    }
+
+    document.getElementById("createButton").addEventListener("click", createBoard);
+    document.getElementById("shuffleButton").addEventListener("click", createBoard);
+    document.getElementById("printButton").addEventListener("click", () => window.print());
+
+    // Load a small example so the layout is visible immediately.
+    wordsInput.value = "Happy\nStrong\nOpen\nBeautiful\nFast\nKind\nClean\nBright\nBrave\nWide\nSimple\nTruth";
+    antonymsInput.value = "Sad\nWeak\nClosed\nUgly\nSlow\nCruel\nDirty\nDark\nCowardly\nNarrow\nComplicated\nLie";
+    createBoard();
+  </script>
+</body>
+</html>
